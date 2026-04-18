@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tile Inventory · Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../src/styles/inventory.css">
+<style>
+.back-home-btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:5px 12px;border:1px solid #4a3420;background:transparent;color:#6b4c2a;cursor:pointer;transition:all .15s;position:fixed;top:14px;right:20px;z-index:1000;}
+.back-home-btn:hover{border-color:#c8a060;color:#c8a060;}
+</style>
+</head>
+<body>
+</body>
+<script src="../src/data/images.js"></script>
+<script src="../src/data/crops.js"></script>
+<script src="../src/data/tiles.js"></script>
+<script src="../src/data/elements.js"></script>
+<script src="../src/scripts/shared.js"></script>
+<script>
+(function(){
+  var req=new XMLHttpRequest();
+  req.open('GET','../src/fragments/inventory_body.html',false);
+  req.send();
+  document.body.innerHTML=req.responseText;
+  var b=document.createElement('button');
+  b.className='back-home-btn';b.textContent='⌂ HOME';
+  b.onclick=function(){window.location.href='../index.html';};
+  document.body.appendChild(b);
+  preloadTileImages();
+})();
+</script>
+<script src="../src/scripts/inventory.js"></script>
+</html>

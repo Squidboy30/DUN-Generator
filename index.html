@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0806;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;}
+.home-title{font-family:'Cinzel',serif;font-size:32px;color:#c8a060;letter-spacing:5px;margin-bottom:10px;text-align:center;}
+.home-sub{font-family:'Cinzel',serif;font-size:12px;color:#4a3418;letter-spacing:3px;margin-bottom:64px;text-align:center;}
+.home-options{display:flex;border:1px solid #3a2818;flex-wrap:wrap;justify-content:center;}
+.home-btn{font-family:'Cinzel',serif;padding:40px 52px;background:#0e0b07;color:#c8a060;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:270px;border-right:1px solid #3a2818;}
+.home-btn:last-child{border-right:none;}
+.home-btn:hover{background:#1a1410;}
+.btn-icon{font-size:48px;transition:transform .2s;}
+.home-btn:hover .btn-icon{transform:scale(1.08);}
+.btn-label{font-size:14px;letter-spacing:3px;}
+.btn-desc{font-size:13px;color:#6b4c2a;font-family:'Crimson Text',serif;font-style:italic;max-width:190px;text-align:center;line-height:1.6;}
+.home-ver{position:fixed;bottom:18px;font-family:'Cinzel',serif;font-size:10px;color:#2a1c0e;letter-spacing:3px;}
+</style>
+</head>
+<body>
+<div class="home-title">&#9876; DUNGEON UNIVERSALIS</div>
+<div class="home-sub">QUEST SYSTEM · TILE CATALOGUE · DUNGEON BUILDER</div>
+<div class="home-options">
+  <a class="home-btn" href="modules/generator.html">
+    <span class="btn-icon">&#9956;</span>
+    <span class="btn-label">DUNGEON GENERATOR</span>
+    <span class="btn-desc">Randomly generate quest dungeons with fog of war and missions</span>
+  </a>
+  <a class="home-btn" href="modules/inventory.html">
+    <span class="btn-icon">&#128220;</span>
+    <span class="btn-label">TILE INVENTORY</span>
+    <span class="btn-desc">Browse all tiles grouped by setting and theme with full images</span>
+  </a>
+  <a class="home-btn" href="modules/builder.html">
+    <span class="btn-icon">&#127959;</span>
+    <span class="btn-label">DUNGEON BUILDER</span>
+    <span class="btn-desc">Place tiles to design your own dungeon, then play with fog of war</span>
+  </a>
+</div>
+<div class="home-ver">DUNGEON UNIVERSALIS · squidboy30/DUN-Generator</div>
+</body>
+</html>

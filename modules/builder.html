@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dungeon Builder · Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../src/styles/builder.css">
+</head>
+<body>
+<div id="app-builder" style="display:flex;height:100vh;flex-direction:column;background:#0e0c08;">
+  <div id="bld-header">
+    <h1>&#9876; DUNGEON BUILDER</h1>
+    <input type="text" id="bld-dungeon-name" placeholder="Dungeon name..." spellcheck="false">
+    <span id="bld-tile-count"></span>
+    <button class="bld-btn" id="bld-btn-new">+ NEW</button>
+    <button class="bld-btn" id="bld-btn-save">&#128190; SAVE</button>
+    <button class="bld-btn play" id="bld-btn-play">&#9654; PLAY</button>
+    <button class="bld-btn" id="bld-btn-export">EXPORT PNG</button>
+    <button class="bld-btn home" onclick="window.location.href='../index.html'">&#8962; HOME</button>
+  </div>
+  <div id="bld-body">
+    <div id="bld-sidebar">
+      <div id="bld-sidebar-tabs">
+        <button class="bld-tab active" data-tab="tiles">TILES</button>
+        <button class="bld-tab" data-tab="elements">ELEMENTS</button>
+        <button class="bld-tab" data-tab="saved">SAVED</button>
+      </div>
+      <div class="bld-tab-panel active" id="bld-panel-tiles"><div id="bld-picker-tiles"></div></div>
+      <div class="bld-tab-panel" id="bld-panel-elements"><div id="bld-picker-elements"></div></div>
+      <div class="bld-tab-panel" id="bld-panel-saved"><div id="bld-saved-list"></div></div>
+      <div id="bld-info-panel"><div class="bld-info-empty">Select a tile to place</div></div>
+    </div>
+    <div id="bld-map-wrap"><canvas id="builder-canvas"></canvas></div>
+  </div>
+  <div id="bld-log"></div>
+</div>
+</body>
+<script src="../src/data/images.js"></script>
+<script src="../src/data/crops.js"></script>
+<script src="../src/data/tiles.js"></script>
+<script src="../src/data/elements.js"></script>
+<script src="../src/scripts/shared.js"></script>
+<script>
+preloadTileImages();
+// Tab wiring
+document.querySelectorAll('.bld-tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.bld-tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.bld-tab-panel').forEach(function(p){p.classList.remove('active');});
+    tab.classList.add('active');
+    var panel=document.getElementById('bld-panel-'+tab.dataset.tab);
+    if(panel) panel.classList.add('active');
+  });
+});
+</script>
+<script src="../src/scripts/builder.js"></script>
+</html>
