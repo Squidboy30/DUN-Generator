@@ -1857,6 +1857,61 @@ function addLog(msg, cls) {
   // The overlay starts visible on load — no need to show it manually
 })();
 
+/* ═══════════════════════════════════════
+   BUILDER PLAY MODE HOOK
+   Called by the dungeon builder's ▶ PLAY button
+   ═══════════════════════════════════════ */
+window.loadBuilderDungeon = function(builderPlaced, builderConns) {
+  // Reset generator state
+  levelNum++;
+  seed = Math.floor(Math.random()*99999)+1000;
+  rng  = mkRng(seed);
+  placed=[]; connections=[]; logLines=[]; selectedTile=null; canalExits=[]; placedElements=[];
+  occ = new Set();
+
+  // Load builder tiles into generator format
+  builderPlaced.forEach(function(bp) {
+    var pl = {
+      id: bp.id,
+      tile: bp.tile,
+      gx: bp.gx, gy: bp.gy,
+      w: bp.w, h: bp.h,
+      rot: bp.rot||0,
+      revealed: bp.revealed||false,
+      entities: [],
+      isBoss: bp.isBoss||false,
+      isObjective: bp.isObjective||false,
+    };
+    placed.push(pl);
+    occAdd(pl);
+  });
+
+  // Load connections
+  connections = builderConns.map(function(c) {
+    return {
+      fromId: c.fromId, toId: c.toId,
+      side: c.side, slot: c.slot,
+      doorType: c.doorType||'single-door'
+    };
+  });
+
+  // Hide mission overlay, update header
+  var overlay = document.getElementById('mission-overlay');
+  if(overlay) overlay.style.display = 'none';
+  var headerP = document.querySelector('#header p');
+  if(headerP) headerP.textContent = 'BUILDER DUNGEON · CUSTOM LAYOUT';
+  var seedEl = document.getElementById('seed-val');
+  if(seedEl) seedEl.textContent = seed;
+
+  // Update stats
+  updateStats();
+  rebuildDecks();
+
+  requestAnimationFrame(function() {
+    resizeCanvas(); fitDungeon(); draw();
+  });
+};
+
    /* ═══════════════════════════════════════
    BUTTON WIRING
    ═══════════════════════════════════════ */

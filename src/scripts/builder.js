@@ -756,9 +756,16 @@ function launchPlayMode(){
   window._builderPlayData={placed:genPlaced,connections:genConns,layout:current};
   window.launchApp('generator');
   setTimeout(function(){
-    if(window.loadBuilderDungeon) window.loadBuilderDungeon(genPlaced,genConns);
-    else addBuildLog('▶ Play mode launched — generator will use layout','ok');
-  },300);
+    if(window.loadBuilderDungeon){
+      window.loadBuilderDungeon(genPlaced,genConns);
+    } else {
+      // Generator not yet ready — retry once more
+      setTimeout(function(){
+        if(window.loadBuilderDungeon) window.loadBuilderDungeon(genPlaced,genConns);
+        else addBuildLog('▶ Generator not ready — try again','warn');
+      },500);
+    }
+  },400);
 }
 
 /* ════════════════════════════════
