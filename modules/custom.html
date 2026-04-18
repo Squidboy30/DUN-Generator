@@ -8,274 +8,297 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#0a0806;color:#d4b896;font-family:'Crimson Text',serif;min-height:100vh;}
-
-/* ── Header ── */
-#cd-header{
-  display:flex;align-items:center;gap:12px;padding:12px 20px;
-  border-bottom:2px solid #3a2818;
-  background:linear-gradient(90deg,#0e0b07,#1a1410,#0e0b07);
-  flex-wrap:wrap;
-}
+#cd-header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:2px solid #3a2818;flex-wrap:wrap;background:linear-gradient(90deg,#0e0b07,#1a1410,#0e0b07);}
 #cd-header h1{font-family:'Cinzel',serif;font-size:18px;color:#c8a060;letter-spacing:3px;flex:1;}
-.cd-home-btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:5px 14px;
-  border:1px solid #3a2818;background:transparent;color:#6b4c2a;cursor:pointer;transition:all .15s;text-decoration:none;}
-.cd-home-btn:hover{border-color:#c8a060;color:#c8a060;}
-
-/* ── Body ── */
-#cd-body{display:flex;gap:0;min-height:calc(100vh - 56px);}
-
-/* ── Columns ── */
+.cd-nav-btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:5px 14px;border:1px solid #3a2818;background:transparent;color:#6b4c2a;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block;}
+.cd-nav-btn:hover{border-color:#c8a060;color:#c8a060;}
+#cd-body{display:flex;min-height:calc(100vh - 56px);}
 .cd-col{flex:1;padding:24px 28px;border-right:1px solid #1e1408;}
 .cd-col:last-child{border-right:none;}
-.cd-col-title{
-  font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:#7a5030;
-  margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1e1408;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.cd-col-title span{font-size:10px;color:#3a2818;letter-spacing:1px;}
-
-/* ── Dungeon cards ── */
-.cd-card{
-  border:1px solid #2a1808;background:#0c0906;padding:14px 16px;
-  margin-bottom:10px;transition:all .15s;
-}
-.cd-card:hover{border-color:#4a3020;background:#120e08;}
+.cd-col-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:#7a5030;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1e1408;display:flex;align-items:center;justify-content:space-between;}
+.cd-badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:2px 8px;border:1px solid #2a1808;color:#4a3020;}
+.cd-card{border:1px solid #2a1808;background:#0c0906;padding:14px 16px;margin-bottom:10px;transition:all .15s;cursor:pointer;}
+.cd-card:hover{border-color:#6a4c2a;background:#120e08;}
+.cd-card.selected{border-color:#c8a060;background:#1a1408;}
 .cd-card-name{font-family:'Cinzel',serif;font-size:13px;color:#c8a060;margin-bottom:4px;}
-.cd-card-meta{font-size:12px;color:#5a3c1a;margin-bottom:10px;}
-.cd-card-btns{display:flex;gap:8px;flex-wrap:wrap;}
-.cd-play-btn{
-  font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;
-  border:1px solid #285028;background:#0a0806;color:#60a860;cursor:pointer;transition:all .15s;
-}
+.cd-card-meta{font-size:12px;color:#5a3c1a;margin-bottom:8px;line-height:1.5;}
+.cd-card-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.cd-play-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;border:1px solid #285028;background:#0a0806;color:#60a860;cursor:pointer;transition:all .15s;}
 .cd-play-btn:hover{border-color:#60a860;background:#102010;}
-.cd-export-btn{
-  font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;
-  border:1px solid #2a1808;background:#0a0806;color:#5a3c1a;cursor:pointer;transition:all .15s;
-}
+.cd-export-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;border:1px solid #2a1808;background:#0a0806;color:#5a3c1a;cursor:pointer;transition:all .15s;}
 .cd-export-btn:hover{border-color:#7a5030;color:#c8a060;}
-.cd-coming-soon{
-  font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;
-  font-style:italic;padding:20px 0;line-height:1.8;
-}
-.cd-empty{font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;font-style:italic;padding:20px 0;}
-.cd-badge{
-  display:inline-block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;
-  padding:2px 8px;border:1px solid #2a1808;color:#4a3020;margin-left:8px;
-}
-.cd-export-note{
-  font-family:'Crimson Text',serif;font-size:11px;color:#3a2818;
-  font-style:italic;margin-top:6px;
-}
-
-/* ── Generator overlay ── */
-#gen-container{display:none;position:fixed;inset:0;z-index:100;background:#0a0806;}
+.cd-empty{font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;font-style:italic;padding:20px 0;line-height:1.8;}
+.cd-coming-soon{font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;font-style:italic;padding:20px 0;line-height:1.8;}
+.warn-tag{color:#c87030;font-size:11px;}
+/* Mission overlay */
+#mission-select-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;}
+#mission-select-overlay.active{display:flex;}
+#mission-modal{background:#1a1208;border:2px solid #6a4820;border-radius:4px;width:min(700px,96vw);max-height:90vh;overflow-y:auto;padding:28px 32px;color:#c8a060;font-family:'Cinzel',serif;box-shadow:0 8px 40px rgba(0,0,0,0.8);}
+.mm-title{font-size:15px;color:#e8c070;margin-bottom:4px;letter-spacing:2px;}
+.mm-dungeon-name{font-family:'Crimson Text',serif;font-size:14px;color:#7a6040;font-style:italic;margin-bottom:20px;border-bottom:1px solid #2a1808;padding-bottom:12px;}
+.mm-section{font-size:10px;letter-spacing:3px;color:#5a3c1a;margin:18px 0 10px;}
+.mm-missions{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:4px;}
+.mm-card{border:1px solid #2a1808;background:#0e0b07;padding:10px 12px;cursor:pointer;transition:all .15s;}
+.mm-card:hover{border-color:#6a4c2a;background:#160f08;}
+.mm-card.selected{border-color:#c8a060;background:#1e1610;}
+.mm-card-icon{font-size:18px;margin-bottom:4px;}
+.mm-card-name{font-size:11px;letter-spacing:1px;color:#c8a060;margin-bottom:3px;}
+.mm-card-goal{font-family:'Crimson Text',serif;font-size:12px;color:#6a5030;line-height:1.4;}
+.mm-card-limit{font-size:10px;color:#8a6030;margin-top:4px;}
+.mm-custom-section{border:1px solid #2a1808;background:#0a0806;padding:14px 16px;margin-bottom:4px;}
+.mm-custom-label{font-size:10px;letter-spacing:2px;color:#5a3c1a;margin-bottom:8px;}
+.mm-custom-name-input{width:100%;background:#060402;border:1px solid #3a2818;color:#d4b896;font-family:'Crimson Text',serif;font-size:14px;padding:7px 10px;margin-bottom:4px;}
+.mm-custom-name-input:focus{outline:none;border-color:#7a5030;}
+.mm-custom-hint{font-family:'Crimson Text',serif;font-size:11px;color:#3a2818;font-style:italic;}
+.mm-custom-select-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;border:1px solid #3a2818;background:#0a0806;color:#7a5030;cursor:pointer;transition:all .15s;margin-top:8px;}
+.mm-custom-select-btn:hover{border-color:#c8a060;color:#c8a060;}
+.mm-custom-select-btn.selected{border-color:#c8a060;color:#c8a060;background:#1a1408;}
+.mm-settings{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.mm-setting-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:6px 16px;border:1px solid #2a1808;background:#0e0b07;color:#6a5030;cursor:pointer;transition:all .15s;}
+.mm-setting-btn:hover:not(:disabled){border-color:#7a5030;color:#c8a060;}
+.mm-setting-btn.selected{border-color:#c8a060;background:#1a1408;color:#c8a060;}
+.mm-setting-btn:disabled{opacity:0.3;cursor:default;}
+.mm-footer{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #2a1808;align-items:center;}
+#mm-begin-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;padding:10px 28px;border:1px solid #285028;background:#0a0806;color:#60a860;cursor:pointer;transition:all .15s;}
+#mm-begin-btn:hover:not(:disabled){border-color:#60a860;background:#102010;}
+#mm-begin-btn:disabled{opacity:0.35;cursor:default;}
+#mm-cancel-btn{font-family:'Cinzel',serif;font-size:11px;padding:8px 18px;border:1px solid #2a1808;background:transparent;color:#4a3418;cursor:pointer;transition:all .15s;}
+#mm-cancel-btn:hover{border-color:#7a5030;color:#c8a060;}
+/* Generator overlay */
+#gen-container{display:none;position:fixed;inset:0;z-index:1000;background:#0a0806;}
 #gen-container.active{display:block;}
-#gen-back-btn{
-  position:fixed;top:14px;right:20px;z-index:200;
-  font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:5px 14px;
-  border:1px solid #3a2818;background:#0a0806;color:#6b4c2a;cursor:pointer;transition:all .15s;
-}
+#gen-back-btn{position:fixed;top:12px;right:16px;z-index:1100;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 12px;border:1px solid #3a2818;background:#0a0806;color:#6b4c2a;cursor:pointer;transition:all .15s;}
 #gen-back-btn:hover{border-color:#c8a060;color:#c8a060;}
 </style>
 </head>
 <body>
-
 <div id="cd-header">
   <h1>⚔ CUSTOM DUNGEONS</h1>
-  <a class="cd-home-btn" href="../index.html">⌂ HOME</a>
+  <a class="cd-nav-btn" href="../index.html">⌂ HOME</a>
 </div>
-
 <div id="cd-body">
-  <!-- Saved Dungeons -->
   <div class="cd-col">
-    <div class="cd-col-title">
-      SAVED DUNGEONS
-      <span>FROM DUNGEON BUILDER</span>
-    </div>
-    <div id="cd-dungeon-list">
-      <div class="cd-empty">No saved dungeons found.<br>Build one in the Dungeon Builder first.</div>
-    </div>
+    <div class="cd-col-title">SAVED DUNGEONS<span style="font-family:'Crimson Text',serif;font-size:11px;color:#3a2818;font-style:italic;">click to play</span></div>
+    <div id="cd-dungeon-list"></div>
   </div>
-
-  <!-- Campaigns -->
   <div class="cd-col">
-    <div class="cd-col-title">
-      CAMPAIGNS
-      <span class="cd-badge">COMING SOON</span>
+    <div class="cd-col-title">CAMPAIGNS<span class="cd-badge">COMING SOON</span></div>
+    <div class="cd-coming-soon">Chain multiple custom dungeons into a full campaign.<br><br>Heroes carry wounds, experience and loot between dungeons.<br><br>Campaign management, branching paths and story events — coming in a future update.</div>
+  </div>
+</div>
+
+<!-- Mission Select Overlay -->
+<div id="mission-select-overlay">
+  <div id="mission-modal">
+    <div class="mm-title">⚔ SELECT MISSION</div>
+    <div class="mm-dungeon-name" id="mm-dungeon-label">—</div>
+    <div class="mm-section">OFFICIAL MISSIONS</div>
+    <div class="mm-missions" id="mm-mission-list"></div>
+    <div class="mm-section">CUSTOM MISSION</div>
+    <div class="mm-custom-section">
+      <div class="mm-custom-label">FREE EXPLORE — no objectives, no turn limit</div>
+      <input type="text" class="mm-custom-name-input" id="mm-custom-name" placeholder="Session name (optional) e.g. The Lost Vault">
+      <div class="mm-custom-hint">Leave blank to use your dungeon name.</div>
+      <button class="mm-custom-select-btn" id="mm-custom-select-btn">★ SELECT CUSTOM MISSION</button>
     </div>
-    <div class="cd-coming-soon">
-      Chain multiple custom dungeons into a full campaign.<br><br>
-      Heroes carry wounds, experience and loot between dungeons.<br><br>
-      Campaign management, branching paths and story events — coming in a future update.
+    <div class="mm-section">SETTING — sets the encounter deck</div>
+    <div class="mm-settings" id="mm-settings">
+      <button class="mm-setting-btn" data-cat="dungeon">⚔ Dungeon</button>
+      <button class="mm-setting-btn" data-cat="civilised">🏰 Civilised</button>
+      <button class="mm-setting-btn" data-cat="outdoor">🌲 Outdoor</button>
+      <button class="mm-setting-btn" data-cat="random">🎲 Random</button>
+    </div>
+    <div class="mm-footer">
+      <button id="mm-begin-btn" disabled>BEGIN ▶</button>
+      <button id="mm-cancel-btn">◀ BACK</button>
     </div>
   </div>
 </div>
 
-<!-- Generator runs in this overlay when PLAY is clicked -->
+<!-- Generator runs here -->
 <div id="gen-container">
-  <button id="gen-back-btn" onclick="closeGenerator()">✕ BACK TO DUNGEONS</button>
+  <button id="gen-back-btn" onclick="closeGenerator()">✕ BACK</button>
 </div>
 
 <script src="../src/data/images.js"></script>
 <script src="../src/data/crops.js"></script>
 <script src="../src/data/tiles.js"></script>
 <script src="../src/data/elements.js"></script>
+<script src="../src/data/missions.js"></script>
 <script src="../src/scripts/shared.js"></script>
 <script>
+'use strict';
 preloadTileImages();
 
-/* ── Load saved dungeons from localStorage ── */
-function loadSavedDungeons(){
-  var list = document.getElementById('cd-dungeon-list');
-  var raw = localStorage.getItem('dun_builder_v2');
-  var layouts = [];
-  try{ if(raw) layouts = JSON.parse(raw); }catch(e){}
+var _selectedLayout=null, _selectedMission=null, _selectedSetting=null, _genLoaded=false;
 
+/* ── Dungeon list ── */
+function loadDungeonList(){
+  var list=document.getElementById('cd-dungeon-list');
+  var raw=localStorage.getItem('dun_builder_v2');
+  var layouts=[];
+  try{if(raw)layouts=JSON.parse(raw);}catch(e){}
   if(!layouts.length){
-    list.innerHTML = '<div class="cd-empty">No saved dungeons found.<br>Build one in the <a href="builder.html" style="color:#7a5030;">Dungeon Builder</a> first.</div>';
+    list.innerHTML='<div class="cd-empty">No saved dungeons found.<br>Build one in the <a href="builder.html" style="color:#7a5030;">Dungeon Builder</a> first.</div>';
     return;
   }
-
-  list.innerHTML = '';
-  layouts.forEach(function(layout){
-    var card = document.createElement('div');
-    card.className = 'cd-card';
-    var date = new Date(layout.modified||layout.created||Date.now());
-    var dateStr = date.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    var tileCount = (layout.tiles||[]).length;
-    var elCount   = (layout.elements||[]).length;
-    var connCount = (layout.connections||[]).length;
-    var hasStart  = (layout.tiles||[]).some(function(pl){
-      var t = TILE_DB.find(function(t){return t.id===pl.tileId;});
-      return t&&t.isStart;
-    });
-
-    card.innerHTML = '<div class="cd-card-name">'+layout.name+'</div>'
-      +'<div class="cd-card-meta">'
-        +tileCount+' tiles · '+connCount+' connections · '+elCount+' elements'
-        +(hasStart?'':' · <span style="color:#c87030;">⚠ no start tile</span>')
-        +' &nbsp;·&nbsp; '+dateStr
-      +'</div>'
-      +'<div class="cd-card-btns">'
-        +'<button class="cd-play-btn" data-id="'+layout.id+'">▶ PLAY</button>'
-        +'<button class="cd-export-btn" data-id="'+layout.id+'">↓ EXPORT JSON</button>'
-      +'</div>'
-      +'<div class="cd-export-note">Export saves the layout as a .json file you can share or back up.</div>';
-
-    card.querySelector('.cd-play-btn').addEventListener('click', function(){
-      playDungeon(layout);
-    });
-    card.querySelector('.cd-export-btn').addEventListener('click', function(){
-      exportDungeon(layout);
-    });
-
+  list.innerHTML='';
+  layouts.slice().reverse().forEach(function(layout){
+    var card=document.createElement('div'); card.className='cd-card';
+    var date=new Date(layout.modified||layout.created||Date.now());
+    var dateStr=date.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    var tCount=(layout.tiles||[]).length, eCount=(layout.elements||[]).length, cCount=(layout.connections||[]).length;
+    var hasStart=(layout.tiles||[]).some(function(pl){var t=TILE_DB.find(function(t){return t.id===pl.tileId;});return t&&t.isStart;});
+    card.innerHTML='<div class="cd-card-name">'+esc(layout.name)+'</div>'
+      +'<div class="cd-card-meta">'+tCount+' tiles · '+cCount+' connections · '+eCount+' elements'+(hasStart?'':' &nbsp;<span class="warn-tag">⚠ no start tile</span>')+'<br>'+dateStr+'</div>'
+      +'<div class="cd-card-btns"><button class="cd-play-btn">▶ SELECT &amp; PLAY</button><button class="cd-export-btn">↓ EXPORT JSON</button></div>';
+    card.querySelector('.cd-play-btn').addEventListener('click',function(e){e.stopPropagation();openMissionSelect(layout,card);});
+    card.querySelector('.cd-export-btn').addEventListener('click',function(e){e.stopPropagation();exportLayout(layout);});
+    card.addEventListener('click',function(){openMissionSelect(layout,card);});
     list.appendChild(card);
   });
 }
 
-/* ── Convert layout to generator format ── */
-function layoutToGenFormat(layout){
-  var genPlaced = (layout.tiles||[]).map(function(pl, idx){
-    var tile = TILE_DB.find(function(t){return t.id===pl.tileId;});
-    var sz = tile ? rotatedSize(pl, tile) : {w:1,h:1};
-    return {
-      id: idx,
-      tile: tile,
-      gx: pl.gx, gy: pl.gy,
-      w: sz.w, h: sz.h,
-      rot: pl.rot||0,
-      revealed: !!(tile&&tile.isStart),
-      entities: [],
-      isBoss: !!(tile&&tile.isBossRoom),
-      isObjective: !!(tile&&tile.isBossRoom)
-    };
-  });
-  var genConns = (layout.connections||[]).map(function(c){
-    var fi = layout.tiles.findIndex(function(p){return p.id===c.fromId;});
-    var ti = layout.tiles.findIndex(function(p){return p.id===c.toId;});
-    return {fromId:fi, toId:ti, side:c.side, slot:c.slot, doorType:c.doorType||'single-door'};
-  });
-  return {placed:genPlaced, connections:genConns};
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── Mission select ── */
+function openMissionSelect(layout, cardEl){
+  _selectedLayout=layout; _selectedMission=null; _selectedSetting=null;
+  document.querySelectorAll('.cd-card').forEach(function(c){c.classList.remove('selected');});
+  if(cardEl) cardEl.classList.add('selected');
+  document.getElementById('mm-dungeon-label').textContent=layout.name;
+  document.querySelectorAll('.mm-card').forEach(function(c){c.classList.remove('selected');});
+  document.getElementById('mm-custom-select-btn').classList.remove('selected');
+  document.getElementById('mm-custom-name').value='';
+  document.querySelectorAll('.mm-setting-btn').forEach(function(b){b.classList.remove('selected');b.disabled=false;});
+  updateBeginBtn();
+  document.getElementById('mission-select-overlay').classList.add('active');
 }
 
-function rotatedSize(pl, tile){
-  var rot=pl.rot||0;
-  var w=Array.isArray(tile.sz)?tile.sz[0]:tile.sz;
-  var h=Array.isArray(tile.sz)?tile.sz[1]:tile.sz;
-  return (rot===1||rot===3)?{w:h,h:w}:{w:w,h:h};
+function buildMissionCards(){
+  var container=document.getElementById('mm-mission-list');
+  container.innerHTML='';
+  (typeof MISSIONS!=='undefined'?MISSIONS:[]).forEach(function(m){
+    var card=document.createElement('div'); card.className='mm-card';
+    card.innerHTML='<div class="mm-card-icon">'+m.icon+'</div>'
+      +'<div class="mm-card-name">'+m.id+'. '+m.name+'</div>'
+      +'<div class="mm-card-goal">'+m.goal+'</div>'
+      +(m.turnLimit?'<div class="mm-card-limit">⏱ '+m.turnLimit+' turn limit</div>':'');
+    card.addEventListener('click',function(){
+      document.querySelectorAll('.mm-card').forEach(function(c){c.classList.remove('selected');});
+      document.getElementById('mm-custom-select-btn').classList.remove('selected');
+      card.classList.add('selected');
+      _selectedMission=m;
+      document.querySelectorAll('.mm-setting-btn').forEach(function(b){
+        var valid=b.dataset.cat==='random'||m.settings.indexOf(b.dataset.cat)>=0;
+        b.disabled=!valid;
+        if(!valid&&b.classList.contains('selected')){b.classList.remove('selected');_selectedSetting=null;}
+      });
+      updateBeginBtn();
+    });
+    container.appendChild(card);
+  });
 }
 
-/* ── Play a dungeon ── */
-var _genLoaded = false;
+function wireMissionOverlay(){
+  document.getElementById('mm-custom-select-btn').addEventListener('click',function(){
+    document.querySelectorAll('.mm-card').forEach(function(c){c.classList.remove('selected');});
+    this.classList.add('selected');
+    document.querySelectorAll('.mm-setting-btn').forEach(function(b){b.disabled=false;});
+    _selectedMission={id:'★',name:'Free Explore',goal:'Explore your dungeon with no objectives.',rules:[],turnLimit:null,settings:['dungeon','civilised','outdoor'],isCustom:true};
+    updateBeginBtn();
+  });
+  document.querySelectorAll('.mm-setting-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(btn.disabled) return;
+      document.querySelectorAll('.mm-setting-btn').forEach(function(b){b.classList.remove('selected');});
+      btn.classList.add('selected'); _selectedSetting=btn.dataset.cat; updateBeginBtn();
+    });
+  });
+  document.getElementById('mm-begin-btn').addEventListener('click',function(){
+    if(!_selectedMission||!_selectedSetting||!_selectedLayout) return;
+    document.getElementById('mission-select-overlay').classList.remove('active');
+    launchPlay();
+  });
+  document.getElementById('mm-cancel-btn').addEventListener('click',function(){
+    document.getElementById('mission-select-overlay').classList.remove('active');
+  });
+  document.getElementById('mm-custom-name').addEventListener('input',updateBeginBtn);
+}
 
-function playDungeon(layout){
-  var fmt = layoutToGenFormat(layout);
-  var container = document.getElementById('gen-container');
+function updateBeginBtn(){
+  var btn=document.getElementById('mm-begin-btn');
+  var ready=_selectedMission&&_selectedSetting;
+  btn.disabled=!ready;
+  if(ready){
+    var cname=document.getElementById('mm-custom-name').value.trim();
+    var label=_selectedMission.isCustom?(cname||(_selectedLayout&&_selectedLayout.name)||'Free Explore'):('Mission '+_selectedMission.id+': '+_selectedMission.name);
+    var sl={dungeon:'⚔ Dungeon',civilised:'🏰 Civilised',outdoor:'🌲 Outdoor',random:'🎲 Random'}[_selectedSetting]||_selectedSetting;
+    btn.textContent='BEGIN — '+label+' · '+sl+' ▶';
+  } else { btn.textContent='BEGIN ▶'; }
+}
 
+/* ── Convert layout ── */
+function rotSz(pl,tile){var rot=pl.rot||0,w=Array.isArray(tile.sz)?tile.sz[0]:tile.sz,h=Array.isArray(tile.sz)?tile.sz[1]:tile.sz;return(rot===1||rot===3)?{w:h,h:w}:{w:w,h:h};}
+
+function toGenFormat(layout){
+  var gp=(layout.tiles||[]).map(function(pl,idx){
+    var tile=TILE_DB.find(function(t){return t.id===pl.tileId;});
+    var sz=tile?rotSz(pl,tile):{w:1,h:1};
+    return{id:idx,tile:tile,gx:pl.gx,gy:pl.gy,w:sz.w,h:sz.h,rot:pl.rot||0,revealed:!!(tile&&tile.isStart),entities:[],isBoss:!!(tile&&tile.isBossRoom),isObjective:!!(tile&&tile.isBossRoom)};
+  });
+  if(gp.length&&!gp.some(function(p){return p.revealed;})) gp[0].revealed=true;
+  var gc=(layout.connections||[]).map(function(c){
+    var fi=layout.tiles.findIndex(function(p){return p.id===c.fromId;});
+    var ti=layout.tiles.findIndex(function(p){return p.id===c.toId;});
+    return{fromId:fi,toId:ti,side:c.side,slot:c.slot,doorType:c.doorType||'single-door'};
+  });
+  return{placed:gp,connections:gc};
+}
+
+/* ── Launch play ── */
+function launchPlay(){
+  var fmt=toGenFormat(_selectedLayout);
+  var cname=document.getElementById('mm-custom-name').value.trim();
+  var sessionName=_selectedMission.isCustom?(cname||_selectedLayout.name||'Free Explore'):('Mission '+_selectedMission.id+': '+_selectedMission.name);
+  window._pendingPlay={placed:fmt.placed,connections:fmt.connections,mission:_selectedMission,setting:_selectedSetting,sessionName:sessionName};
+  var container=document.getElementById('gen-container');
   if(!_genLoaded){
-    // First time — inject generator HTML and scripts
-    _genLoaded = true;
-
-    // Fetch and inject generator body HTML
-    var req = new XMLHttpRequest();
-    req.open('GET','../src/fragments/generator_body.html',false);
-    req.send();
-    container.innerHTML = '<button id="gen-back-btn" onclick="closeGenerator()">✕ BACK TO DUNGEONS</button>' + req.responseText;
-
-    // Load generator CSS
-    var link = document.createElement('link');
-    link.rel='stylesheet'; link.href='../src/styles/generator.css';
-    document.head.appendChild(link);
-
-    // Load generator script
-    var s = document.createElement('script');
-    s.src = '../src/scripts/generator.js';
-    s.onload = function(){
-      container.classList.add('active');
-      setTimeout(function(){
-        if(window.loadBuilderDungeon) window.loadBuilderDungeon(fmt.placed, fmt.connections);
-      }, 300);
-    };
+    _genLoaded=true;
+    var req=new XMLHttpRequest(); req.open('GET','../src/fragments/generator_body.html',false); req.send();
+    container.innerHTML='<button id="gen-back-btn" onclick="closeGenerator()">✕ BACK</button>'+req.responseText;
+    var link=document.createElement('link'); link.rel='stylesheet'; link.href='../src/styles/generator.css'; document.head.appendChild(link);
+    var s=document.createElement('script'); s.src='../src/scripts/generator.js';
+    s.onload=function(){ container.classList.add('active'); setTimeout(triggerPlay,300); };
     document.body.appendChild(s);
   } else {
-    container.classList.add('active');
-    if(window.loadBuilderDungeon){
-      window.loadBuilderDungeon(fmt.placed, fmt.connections);
-    }
+    container.classList.add('active'); setTimeout(triggerPlay,100);
   }
 }
 
-function closeGenerator(){
-  document.getElementById('gen-container').classList.remove('active');
+function triggerPlay(){
+  if(!window._pendingPlay||!window.loadBuilderDungeon) return;
+  var p=window._pendingPlay;
+  window.loadBuilderDungeon(p.placed,p.connections,p.mission,p.setting,p.sessionName);
+  window._pendingPlay=null;
 }
 
-/* ── Export dungeon as JSON ── */
-function exportDungeon(layout){
-  var json = JSON.stringify(layout, null, 2);
-  var blob = new Blob([json], {type:'application/json'});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = (layout.name||'dungeon').replace(/\s+/g,'_')+'.json';
-  a.click();
-}
+function closeGenerator(){ document.getElementById('gen-container').classList.remove('active'); }
+function exportLayout(layout){ var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(layout,null,2)],{type:'application/json'})); a.download=(layout.name||'dungeon').replace(/\s+/g,'_')+'.json'; a.click(); }
 
 /* ── Init ── */
-loadSavedDungeons();
+buildMissionCards();
+wireMissionOverlay();
+loadDungeonList();
 
-// Auto-play if arriving from builder with ?play=id
+// Auto-select if arriving from builder
 (function(){
-  var params = new URLSearchParams(window.location.search);
-  var playId = params.get('play');
-  if(playId){
-    var raw = localStorage.getItem('dun_builder_v2');
-    var layouts = [];
-    try{ if(raw) layouts = JSON.parse(raw); }catch(e){}
-    var layout = layouts.find(function(l){ return String(l.id)===String(playId); });
-    if(layout){
-      // Small delay to let page render first
-      setTimeout(function(){ playDungeon(layout); }, 200);
-    }
-  }
+  var params=new URLSearchParams(window.location.search);
+  var playId=params.get('play'); if(!playId) return;
+  var raw=localStorage.getItem('dun_builder_v2'); var layouts=[];
+  try{if(raw)layouts=JSON.parse(raw);}catch(e){}
+  var layout=layouts.find(function(l){return String(l.id)===String(playId);});
+  if(layout) setTimeout(function(){ openMissionSelect(layout,null); },200);
 })();
 </script>
 </body>

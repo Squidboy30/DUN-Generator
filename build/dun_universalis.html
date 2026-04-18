@@ -3444,150 +3444,88 @@ function addLog(msg, cls) {
 
 /* ═══════════════════════════════════════
    BUILDER PLAY MODE HOOK
-   Called by the dungeon builder's ▶ PLAY button
-   or by modules/custom.html
+   Called by modules/custom.html after mission selection
    ═══════════════════════════════════════ */
-window.loadBuilderDungeon = function(builderPlaced, builderConns) {
-  if(!builderPlaced||!builderPlaced.length){
-    alert('No tiles to play — build a dungeon first.');
-    return;
-  }
+window.loadBuilderDungeon = function(builderPlaced, builderConns, mission, settingCat, sessionName) {
+  if(!builderPlaced||!builderPlaced.length) return;
 
-  // Check for start tile
-  var hasStart = builderPlaced.some(function(p){ return p.tile&&p.tile.isStart; });
-  if(!hasStart){
-    if(!confirm('Warning: no Start Tile in this dungeon. The first tile placed will be used as the entry point. Continue?')){
-      return;
-    }
-    // Mark first tile as revealed
-    builderPlaced[0].revealed = true;
-  }
+  // Resolve setting (handle 'random')
+  var settings = mission&&mission.settings||['dungeon','civilised','outdoor'];
+  var resolvedSetting = settingCat==='random'
+    ? settings[Math.floor(Math.random()*settings.length)]
+    : (settingCat||'dungeon');
 
-  // Add "Custom Dungeon" option to mission overlay, then let player pick mission
-  var overlay  = document.getElementById('mission-overlay');
-  var list     = document.getElementById('mission-list');
-  var startBtn = document.getElementById('mission-start-btn');
-  var settingRow = document.getElementById('mission-setting-row');
-  if(!overlay){ return; }
+  // Apply setting to generator
+  var catSel=document.getElementById('sel-category');
+  if(catSel){catSel.value=resolvedSetting; activeCategory=resolvedSetting;}
+  activeTheme='any';
+  rebuildDecks();
 
-  // Store builder data for use after mission selection
-  overlay._builderPlaced = builderPlaced;
-  overlay._builderConns  = builderConns;
-  overlay._isBuilderMode = true;
+  // Reset generator state
+  levelNum++;
+  seed=Math.floor(Math.random()*99999)+1000; rng=mkRng(seed);
+  placed=[]; connections=[]; logLines=[]; selectedTile=null; canalExits=[]; placedElements=[];
+  occ=new Set();
 
-  // Add "Custom Dungeon" card to top of mission list if not already there
-  if(!document.getElementById('mission-card-custom')){
-    var customCard = document.createElement('div');
-    customCard.className = 'mission-card';
-    customCard.id = 'mission-card-custom';
-    customCard.innerHTML = '<div class="mc-header">'
-      +'<span class="mc-id">★</span>'
-      +'<span class="mc-name">Custom Dungeon</span>'
-      +'</div>'
-      +'<div class="mc-goal">Play your builder dungeon with full fog of war. No turn limit.</div>'
-      +'<div style="font-family:\'Crimson Text\',serif;font-size:12px;color:#6a5030;margin-top:6px;font-style:italic;">Pick a setting below to set the encounter deck.</div>';
-    customCard.addEventListener('click', function(){
-      document.querySelectorAll('.mission-card').forEach(function(c){ c.classList.remove('selected'); });
-      customCard.classList.add('selected');
-      overlay._selectedCustomMission = {
-        id:'★', name:'Custom Dungeon', goal:'Explore your dungeon',
-        rules:[], turnLimit:null, settings:['dungeon','civilised','outdoor'],
-        isCustom:true
-      };
-      settingRow.style.display = '';
-      // Update start button state
-      if(overlay._selectedSetting){
-        startBtn.disabled = false;
-        startBtn.textContent = 'BEGIN CUSTOM DUNGEON ▶';
-      }
-    });
-    list.insertBefore(customCard, list.firstChild);
-  }
-
-  // Patch the setting button listeners to also track for builder mode
-  document.querySelectorAll('.setting-btn').forEach(function(btn){
-    if(!btn._builderPatched){
-      btn._builderPatched = true;
-      btn.addEventListener('click', function(){
-        overlay._selectedSetting = btn.dataset.cat;
-        if(overlay._isBuilderMode && overlay._selectedCustomMission){
-          startBtn.disabled = false;
-          startBtn.textContent = 'BEGIN CUSTOM DUNGEON ▶';
-        }
-      });
-    }
+  // Load tiles
+  builderPlaced.forEach(function(bp){
+    var pl={id:bp.id,tile:bp.tile,gx:bp.gx,gy:bp.gy,w:bp.w,h:bp.h,rot:bp.rot||0,
+      revealed:bp.revealed||false,entities:[],isBoss:bp.isBoss||false,isObjective:bp.isObjective||false};
+    placed.push(pl); occAdd(pl);
   });
 
-  // Patch start button to handle builder mode
-  if(!startBtn._builderPatched){
-    startBtn._builderPatched = true;
-    var origClick = startBtn.onclick;
-    startBtn.addEventListener('click', function(){
-      if(!overlay._isBuilderMode) return; // let original handler run for normal missions
-      var mission = overlay._selectedCustomMission;
-      var setting = overlay._selectedSetting;
-      if(!mission || !setting) return;
+  // Load connections
+  connections=builderConns.map(function(c){
+    return{fromId:c.fromId,toId:c.toId,side:c.side,slot:c.slot,doorType:c.doorType||'single-door'};
+  });
 
-      // Apply setting
-      var catSel = document.getElementById('sel-category');
-      if(catSel){ catSel.value = setting; activeCategory = setting; }
-      activeTheme = 'any';
-      rebuildDecks();
-
-      // Update header
-      var headerP = document.querySelector('#header p');
-      if(headerP) headerP.textContent = 'CUSTOM DUNGEON · '+setting.toUpperCase();
-      var seedEl = document.getElementById('seed-val');
-      if(seedEl){ seed=Math.floor(Math.random()*99999)+1000; seedEl.textContent=seed; rng=mkRng(seed); }
-
-      // Update mission display
-      var mDisp = document.getElementById('mission-display');
-      if(mDisp) mDisp.style.display = 'flex';
-      var mName = document.getElementById('s-mission-name');
-      if(mName) mName.textContent = '★ Custom Dungeon';
-      var mGoal = document.getElementById('s-mission-goal');
-      if(mGoal) mGoal.textContent = 'Explore your dungeon';
-      var turnRow = document.getElementById('turn-limit-row');
-      if(turnRow) turnRow.style.display = 'none';
-      var endTurnBtn = document.getElementById('btn-end-turn');
-      if(endTurnBtn) endTurnBtn.style.display = 'none';
-
-      overlay.style.display = 'none';
-
-      // Load builder tiles
-      placed=[]; connections=[]; logLines=[]; selectedTile=null; canalExits=[]; placedElements=[];
-      occ = new Set();
-      levelNum++;
-
-      overlay._builderPlaced.forEach(function(bp){
-        var pl={
-          id:bp.id, tile:bp.tile, gx:bp.gx, gy:bp.gy,
-          w:bp.w, h:bp.h, rot:bp.rot||0,
-          revealed:bp.revealed||false,
-          entities:[], isBoss:bp.isBoss||false, isObjective:bp.isObjective||false
-        };
-        placed.push(pl); occAdd(pl);
-      });
-      connections = overlay._builderConns.map(function(c){
-        return {fromId:c.fromId,toId:c.toId,side:c.side,slot:c.slot,doorType:c.doorType||'single-door'};
-      });
-
-      // Clean up builder mode flags
-      overlay._isBuilderMode = false;
-      overlay._selectedCustomMission = null;
-
-      updateStats();
-      requestAnimationFrame(function(){ resizeCanvas(); fitDungeon(); draw(); });
-    }, true); // capture so it runs before the original
+  // Set active mission
+  if(mission){
+    activeMission={
+      id:mission.id, name:sessionName||mission.name,
+      goal:mission.goal||'Explore your dungeon.',
+      icon:mission.icon||'★',
+      turnsLeft:mission.turnLimit||null,
+      chosenSetting:resolvedSetting,
+      isCustom:mission.isCustom||false
+    };
   }
 
-  // Show the overlay — player picks mission (Custom or standard) + setting
-  overlay.style.display = 'flex';
+  // Hide mission overlay
+  var overlay=document.getElementById('mission-overlay');
+  if(overlay) overlay.style.display='none';
 
-  // Auto-select custom card
-  var customCard2 = document.getElementById('mission-card-custom');
-  if(customCard2) customCard2.click();
+  // Update header
+  var headerP=document.querySelector('#header p');
+  if(headerP) headerP.textContent=(sessionName||'Custom Dungeon').toUpperCase()+' · '+resolvedSetting.toUpperCase();
+  var seedEl=document.getElementById('seed-val');
+  if(seedEl) seedEl.textContent=seed;
+
+  // Update mission display
+  var mDisp=document.getElementById('mission-display');
+  if(mDisp) mDisp.style.display='flex';
+  var mName=document.getElementById('s-mission-name');
+  if(mName) mName.textContent=(mission&&mission.icon||'★')+' '+(sessionName||'Custom Dungeon');
+  var mGoal=document.getElementById('s-mission-goal');
+  if(mGoal) mGoal.textContent=(mission&&mission.goal)||'Explore your dungeon.';
+
+  // Turn limit
+  var turnRow=document.getElementById('turn-limit-row');
+  var turnEl=document.getElementById('s-turns');
+  var endTurnBtn=document.getElementById('btn-end-turn');
+  if(mission&&mission.turnLimit){
+    if(turnRow) turnRow.style.display='flex';
+    if(turnEl){turnEl.textContent=mission.turnLimit;turnEl.style.color='#e8b040';}
+    if(endTurnBtn) endTurnBtn.style.display='';
+  } else {
+    if(turnRow) turnRow.style.display='none';
+    if(endTurnBtn) endTurnBtn.style.display='none';
+  }
+
+  updateStats();
+  requestAnimationFrame(function(){resizeCanvas();fitDungeon();draw();});
 };
+
 
    /* ═══════════════════════════════════════
    BUTTON WIRING
