@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Custom Dungeons · Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0806;color:#d4b896;font-family:'Crimson Text',serif;min-height:100vh;}
+
+/* ── Header ── */
+#cd-header{
+  display:flex;align-items:center;gap:12px;padding:12px 20px;
+  border-bottom:2px solid #3a2818;
+  background:linear-gradient(90deg,#0e0b07,#1a1410,#0e0b07);
+  flex-wrap:wrap;
+}
+#cd-header h1{font-family:'Cinzel',serif;font-size:18px;color:#c8a060;letter-spacing:3px;flex:1;}
+.cd-home-btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:5px 14px;
+  border:1px solid #3a2818;background:transparent;color:#6b4c2a;cursor:pointer;transition:all .15s;text-decoration:none;}
+.cd-home-btn:hover{border-color:#c8a060;color:#c8a060;}
+
+/* ── Body ── */
+#cd-body{display:flex;gap:0;min-height:calc(100vh - 56px);}
+
+/* ── Columns ── */
+.cd-col{flex:1;padding:24px 28px;border-right:1px solid #1e1408;}
+.cd-col:last-child{border-right:none;}
+.cd-col-title{
+  font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:#7a5030;
+  margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1e1408;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cd-col-title span{font-size:10px;color:#3a2818;letter-spacing:1px;}
+
+/* ── Dungeon cards ── */
+.cd-card{
+  border:1px solid #2a1808;background:#0c0906;padding:14px 16px;
+  margin-bottom:10px;transition:all .15s;
+}
+.cd-card:hover{border-color:#4a3020;background:#120e08;}
+.cd-card-name{font-family:'Cinzel',serif;font-size:13px;color:#c8a060;margin-bottom:4px;}
+.cd-card-meta{font-size:12px;color:#5a3c1a;margin-bottom:10px;}
+.cd-card-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.cd-play-btn{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;
+  border:1px solid #285028;background:#0a0806;color:#60a860;cursor:pointer;transition:all .15s;
+}
+.cd-play-btn:hover{border-color:#60a860;background:#102010;}
+.cd-export-btn{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;
+  border:1px solid #2a1808;background:#0a0806;color:#5a3c1a;cursor:pointer;transition:all .15s;
+}
+.cd-export-btn:hover{border-color:#7a5030;color:#c8a060;}
+.cd-coming-soon{
+  font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;
+  font-style:italic;padding:20px 0;line-height:1.8;
+}
+.cd-empty{font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;font-style:italic;padding:20px 0;}
+.cd-badge{
+  display:inline-block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;
+  padding:2px 8px;border:1px solid #2a1808;color:#4a3020;margin-left:8px;
+}
+.cd-export-note{
+  font-family:'Crimson Text',serif;font-size:11px;color:#3a2818;
+  font-style:italic;margin-top:6px;
+}
+
+/* ── Generator overlay ── */
+#gen-container{display:none;position:fixed;inset:0;z-index:100;background:#0a0806;}
+#gen-container.active{display:block;}
+#gen-back-btn{
+  position:fixed;top:14px;right:20px;z-index:200;
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:5px 14px;
+  border:1px solid #3a2818;background:#0a0806;color:#6b4c2a;cursor:pointer;transition:all .15s;
+}
+#gen-back-btn:hover{border-color:#c8a060;color:#c8a060;}
+</style>
+</head>
+<body>
+
+<div id="cd-header">
+  <h1>⚔ CUSTOM DUNGEONS</h1>
+  <a class="cd-home-btn" href="../index.html">⌂ HOME</a>
+</div>
+
+<div id="cd-body">
+  <!-- Saved Dungeons -->
+  <div class="cd-col">
+    <div class="cd-col-title">
+      SAVED DUNGEONS
+      <span>FROM DUNGEON BUILDER</span>
+    </div>
+    <div id="cd-dungeon-list">
+      <div class="cd-empty">No saved dungeons found.<br>Build one in the Dungeon Builder first.</div>
+    </div>
+  </div>
+
+  <!-- Campaigns -->
+  <div class="cd-col">
+    <div class="cd-col-title">
+      CAMPAIGNS
+      <span class="cd-badge">COMING SOON</span>
+    </div>
+    <div class="cd-coming-soon">
+      Chain multiple custom dungeons into a full campaign.<br><br>
+      Heroes carry wounds, experience and loot between dungeons.<br><br>
+      Campaign management, branching paths and story events — coming in a future update.
+    </div>
+  </div>
+</div>
+
+<!-- Generator runs in this overlay when PLAY is clicked -->
+<div id="gen-container">
+  <button id="gen-back-btn" onclick="closeGenerator()">✕ BACK TO DUNGEONS</button>
+</div>
+
+<script src="../src/data/images.js"></script>
+<script src="../src/data/crops.js"></script>
+<script src="../src/data/tiles.js"></script>
+<script src="../src/data/elements.js"></script>
+<script src="../src/scripts/shared.js"></script>
+<script>
+preloadTileImages();
+
+/* ── Load saved dungeons from localStorage ── */
+function loadSavedDungeons(){
+  var list = document.getElementById('cd-dungeon-list');
+  var raw = localStorage.getItem('dun_builder_v2');
+  var layouts = [];
+  try{ if(raw) layouts = JSON.parse(raw); }catch(e){}
+
+  if(!layouts.length){
+    list.innerHTML = '<div class="cd-empty">No saved dungeons found.<br>Build one in the <a href="builder.html" style="color:#7a5030;">Dungeon Builder</a> first.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  layouts.forEach(function(layout){
+    var card = document.createElement('div');
+    card.className = 'cd-card';
+    var date = new Date(layout.modified||layout.created||Date.now());
+    var dateStr = date.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    var tileCount = (layout.tiles||[]).length;
+    var elCount   = (layout.elements||[]).length;
+    var connCount = (layout.connections||[]).length;
+    var hasStart  = (layout.tiles||[]).some(function(pl){
+      var t = TILE_DB.find(function(t){return t.id===pl.tileId;});
+      return t&&t.isStart;
+    });
+
+    card.innerHTML = '<div class="cd-card-name">'+layout.name+'</div>'
+      +'<div class="cd-card-meta">'
+        +tileCount+' tiles · '+connCount+' connections · '+elCount+' elements'
+        +(hasStart?'':' · <span style="color:#c87030;">⚠ no start tile</span>')
+        +' &nbsp;·&nbsp; '+dateStr
+      +'</div>'
+      +'<div class="cd-card-btns">'
+        +'<button class="cd-play-btn" data-id="'+layout.id+'">▶ PLAY</button>'
+        +'<button class="cd-export-btn" data-id="'+layout.id+'">↓ EXPORT JSON</button>'
+      +'</div>'
+      +'<div class="cd-export-note">Export saves the layout as a .json file you can share or back up.</div>';
+
+    card.querySelector('.cd-play-btn').addEventListener('click', function(){
+      playDungeon(layout);
+    });
+    card.querySelector('.cd-export-btn').addEventListener('click', function(){
+      exportDungeon(layout);
+    });
+
+    list.appendChild(card);
+  });
+}
+
+/* ── Convert layout to generator format ── */
+function layoutToGenFormat(layout){
+  var genPlaced = (layout.tiles||[]).map(function(pl, idx){
+    var tile = TILE_DB.find(function(t){return t.id===pl.tileId;});
+    var sz = tile ? rotatedSize(pl, tile) : {w:1,h:1};
+    return {
+      id: idx,
+      tile: tile,
+      gx: pl.gx, gy: pl.gy,
+      w: sz.w, h: sz.h,
+      rot: pl.rot||0,
+      revealed: !!(tile&&tile.isStart),
+      entities: [],
+      isBoss: !!(tile&&tile.isBossRoom),
+      isObjective: !!(tile&&tile.isBossRoom)
+    };
+  });
+  var genConns = (layout.connections||[]).map(function(c){
+    var fi = layout.tiles.findIndex(function(p){return p.id===c.fromId;});
+    var ti = layout.tiles.findIndex(function(p){return p.id===c.toId;});
+    return {fromId:fi, toId:ti, side:c.side, slot:c.slot, doorType:c.doorType||'single-door'};
+  });
+  return {placed:genPlaced, connections:genConns};
+}
+
+function rotatedSize(pl, tile){
+  var rot=pl.rot||0;
+  var w=Array.isArray(tile.sz)?tile.sz[0]:tile.sz;
+  var h=Array.isArray(tile.sz)?tile.sz[1]:tile.sz;
+  return (rot===1||rot===3)?{w:h,h:w}:{w:w,h:h};
+}
+
+/* ── Play a dungeon ── */
+var _genLoaded = false;
+
+function playDungeon(layout){
+  var fmt = layoutToGenFormat(layout);
+  var container = document.getElementById('gen-container');
+
+  if(!_genLoaded){
+    // First time — inject generator HTML and scripts
+    _genLoaded = true;
+
+    // Fetch and inject generator body HTML
+    var req = new XMLHttpRequest();
+    req.open('GET','../src/fragments/generator_body.html',false);
+    req.send();
+    container.innerHTML = '<button id="gen-back-btn" onclick="closeGenerator()">✕ BACK TO DUNGEONS</button>' + req.responseText;
+
+    // Load generator CSS
+    var link = document.createElement('link');
+    link.rel='stylesheet'; link.href='../src/styles/generator.css';
+    document.head.appendChild(link);
+
+    // Load generator script
+    var s = document.createElement('script');
+    s.src = '../src/scripts/generator.js';
+    s.onload = function(){
+      container.classList.add('active');
+      setTimeout(function(){
+        if(window.loadBuilderDungeon) window.loadBuilderDungeon(fmt.placed, fmt.connections);
+      }, 300);
+    };
+    document.body.appendChild(s);
+  } else {
+    container.classList.add('active');
+    if(window.loadBuilderDungeon){
+      window.loadBuilderDungeon(fmt.placed, fmt.connections);
+    }
+  }
+}
+
+function closeGenerator(){
+  document.getElementById('gen-container').classList.remove('active');
+}
+
+/* ── Export dungeon as JSON ── */
+function exportDungeon(layout){
+  var json = JSON.stringify(layout, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (layout.name||'dungeon').replace(/\s+/g,'_')+'.json';
+  a.click();
+}
+
+/* ── Init ── */
+loadSavedDungeons();
+
+// Auto-play if arriving from builder with ?play=id
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var playId = params.get('play');
+  if(playId){
+    var raw = localStorage.getItem('dun_builder_v2');
+    var layouts = [];
+    try{ if(raw) layouts = JSON.parse(raw); }catch(e){}
+    var layout = layouts.find(function(l){ return String(l.id)===String(playId); });
+    if(layout){
+      // Small delay to let page render first
+      setTimeout(function(){ playDungeon(layout); }, 200);
+    }
+  }
+})();
+</script>
+</body>
+</html>

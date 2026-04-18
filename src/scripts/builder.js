@@ -743,29 +743,11 @@ function exportPNG(){
    ════════════════════════════════ */
 function launchPlayMode(){
   if(!current||!current.tiles.length){ addBuildLog('Build something first','warn'); return; }
-  var genPlaced=current.tiles.map(function(pl,idx){
-    var tile=getTileDef(pl.tileId); var sz=rotatedSize(pl.tileId,pl.rot||0);
-    return { id:idx, gx:pl.gx, gy:pl.gy, w:sz.w, h:sz.h, tile:tile, rot:pl.rot||0,
-      revealed:!!(tile&&tile.isStart), isBoss:!!(tile&&tile.isBossRoom), isObjective:!!(tile&&tile.isBossRoom) };
-  });
-  var genConns=current.connections.map(function(c){
-    var fi=current.tiles.findIndex(function(p){return p.id===c.fromId;});
-    var ti=current.tiles.findIndex(function(p){return p.id===c.toId;});
-    return {fromId:fi,toId:ti,side:c.side,slot:c.slot,doorType:c.doorType||'single-door'};
-  });
-  window._builderPlayData={placed:genPlaced,connections:genConns,layout:current};
-  window.launchApp('generator');
-  setTimeout(function(){
-    if(window.loadBuilderDungeon){
-      window.loadBuilderDungeon(genPlaced,genConns);
-    } else {
-      // Generator not yet ready — retry once more
-      setTimeout(function(){
-        if(window.loadBuilderDungeon) window.loadBuilderDungeon(genPlaced,genConns);
-        else addBuildLog('▶ Generator not ready — try again','warn');
-      },500);
-    }
-  },400);
+  // Save current layout to localStorage as the "pending play" layout
+  saveCurrent();
+  localStorage.setItem('dun_play_pending', JSON.stringify(current.id));
+  // Navigate to custom dungeons page
+  window.location.href='../modules/custom.html?play='+encodeURIComponent(current.id);
 }
 
 /* ════════════════════════════════
