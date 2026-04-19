@@ -46,7 +46,9 @@ bld_js_deferred = bld_js.replace(
     'if(typeof window!=="undefined") window._builderInit=init;'
 )
 
-shared_block = imgs_js + '\n' + crops_js + '\n' + shared_js + '\n' + tiles_js + '\n' + elements_js
+missions_js  = read('src/data/missions.js')
+
+shared_block = imgs_js + '\n' + crops_js + '\n' + shared_js + '\n' + tiles_js + '\n' + elements_js + '\n' + missions_js
 
 builder_html = """<div id="app-builder">
   <div id="bld-header">
