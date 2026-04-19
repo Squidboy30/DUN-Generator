@@ -1,0 +1,336 @@
+<!-- ================================================================
+  DUNGEON UNIVERSALIS — UI READABILITY PATCH
+  Paste this entire block just before </body> in your main HTML file.
+  It overrides colours and font sizes across all three app sections
+  (Generator, Tile Inventory, Dungeon Builder) without touching the
+  original code.
+  ================================================================ -->
+<style id="readability-patch">
+
+/* ── 1. ROOT VARIABLE OVERRIDES ───────────────────────────────────────
+   These re-declare every colour/text variable the app uses.
+   Any component using var(--text-muted) etc. picks these up instantly. */
+
+:root {
+  /* Brighter muted text — was typically around #9a7a4a / #7a6040 */
+  --text-muted:        #c8a060;
+  --text-secondary:    #c8a060;
+  --color-text-muted:  #c8a060;
+
+  /* Crisp primary text */
+  --text-light:        #f5e8c0;
+  --text-primary:      #f5e8c0;
+  --color-text-light:  #f5e8c0;
+
+  /* Punchier gold */
+  --gold-light:        #e0b840;
+  --gold:              #e0b840;
+  --color-gold:        #e0b840;
+
+  /* More visible panel borders */
+  --panel-border:      #6a4a20;
+  --border-subtle:     #6a4a20;
+
+  /* Brighter border gold */
+  --border-gold:       #a07820;
+}
+
+/* ── 2. GLOBAL MINIMUM FONT SIZE ──────────────────────────────────────
+   Catch any inline font-size declarations below 12px and lift them.
+   We target the most common small-text patterns by element + context. */
+
+/* All text in the app panels */
+.app-panel *,
+.sidebar *,
+.panel *,
+.tab-content *,
+.generator-panel *,
+.inventory-panel *,
+.builder-panel *,
+.controls-panel *,
+.toolbar *,
+.settings-panel * {
+  min-font-size: 12px; /* not universally supported but harmless */
+}
+
+/* ── 3. LABEL / CAPTION CLASSES ───────────────────────────────────────
+   These are the classes most likely to carry tiny font-size values
+   across all three app sections. We override each explicitly. */
+
+/* Section header labels */
+.section-label,
+.panel-label,
+.group-label,
+.field-label,
+.form-label,
+.control-label,
+.sidebar-title,
+.panel-title,
+.tab-label,
+.label-text,
+.ui-label {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+  letter-spacing: 1.5px;
+}
+
+/* Card / list item names */
+.card-name,
+.item-name,
+.tile-name,
+.entry-name,
+.list-item-name,
+.mission-card-name,
+.result-name {
+  font-size: 13px !important;
+  color: var(--text-light) !important;
+}
+
+/* Card / list item secondary text */
+.card-meta,
+.item-meta,
+.tile-meta,
+.entry-meta,
+.list-item-meta,
+.mission-card-meta,
+.result-meta,
+.card-sub,
+.item-sub {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+/* Badges, pills, tags */
+.badge,
+.pill,
+.tag,
+.chip,
+.status-badge,
+.type-badge,
+.category-tag {
+  font-size: 10px !important;
+  color: var(--text-muted) !important;
+}
+
+/* Button text (non-primary) */
+button,
+.btn,
+.tool-btn,
+.action-btn,
+.icon-btn {
+  font-size: 11px !important;
+}
+
+/* Primary / prominent buttons keep slightly larger */
+.btn-primary,
+.primary-btn,
+.save-btn,
+.confirm-btn {
+  font-size: 12px !important;
+}
+
+/* ── 4. GENERATOR-SPECIFIC OVERRIDES ──────────────────────────────────
+   The Random Dungeon Generator typically has result readouts,
+   dice roll displays, and config option labels. */
+
+.generator-result,
+.roll-result,
+.dungeon-result,
+.result-value {
+  font-size: 14px !important;
+  color: var(--text-light) !important;
+}
+
+.generator-option label,
+.config-option label,
+.option-label {
+  font-size: 13px !important;
+  color: var(--text-light) !important;
+}
+
+.roll-label,
+.dice-label,
+.table-row-label {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+/* Encounter / loot tables */
+.table-entry,
+.encounter-entry,
+.loot-entry,
+.room-entry {
+  font-size: 13px !important;
+  color: var(--text-light) !important;
+}
+
+/* ── 5. TILE INVENTORY OVERRIDES ──────────────────────────────────────
+   The Tile Inventory has tile cards with names, counts, and category
+   labels that tend to be rendered at small sizes. */
+
+.tile-card .tile-title,
+.tile-card .tile-name,
+.inventory-item .item-title {
+  font-size: 13px !important;
+  color: var(--text-light) !important;
+}
+
+.tile-card .tile-count,
+.tile-card .tile-size,
+.tile-card .tile-type,
+.inventory-item .item-count,
+.inventory-item .item-type {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+.tile-category,
+.inventory-category,
+.category-header {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+  letter-spacing: 2px;
+}
+
+.tile-id,
+.item-id,
+.tile-ref {
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── 6. DUNGEON BUILDER OVERRIDES ─────────────────────────────────────
+   The Builder has element list entries, placement info, canvas labels
+   and toolbar buttons that all tend to be tiny. */
+
+.element-list-item,
+.placed-element,
+.element-entry {
+  font-size: 13px !important;
+  color: var(--text-light) !important;
+}
+
+.element-type,
+.element-label,
+.element-name {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+.canvas-info,
+.canvas-label,
+.coord-display,
+.zoom-display,
+.position-label {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+.builder-toolbar *,
+.canvas-toolbar * {
+  font-size: 11px !important;
+}
+
+.tile-picker-item .tile-picker-name {
+  font-size: 12px !important;
+  color: var(--text-light) !important;
+}
+
+/* Door type labels, connector labels */
+.door-label,
+.connector-label,
+.connection-type {
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── 7. SHARED STRUCTURAL ELEMENTS ───────────────────────────────────
+   Things used across all three sections. */
+
+/* Tab navigation */
+.tab-btn,
+.nav-tab,
+.app-tab {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+.tab-btn.active,
+.nav-tab.active,
+.app-tab.active {
+  color: var(--text-light) !important;
+}
+
+/* Sidebar / panel headers */
+.sidebar-header,
+.panel-header {
+  font-size: 12px !important;
+}
+
+/* Empty state messages */
+.empty-state,
+.empty-hint,
+.placeholder-text,
+.no-results {
+  font-size: 13px !important;
+  color: var(--text-muted) !important;
+}
+
+/* Tooltips / info text */
+.tooltip,
+.info-text,
+.hint-text,
+.help-text {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+/* Scrollbar visibility improvement */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #6a4a20;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a07820;
+}
+
+/* ── 8. HARDCODED SMALL FONT CATCH-ALL ────────────────────────────────
+   Any element explicitly set to a very small font in the original CSS
+   gets lifted. This uses attribute selectors — blunt but effective for
+   catching inline styles. */
+
+[style*="font-size: 8px"],
+[style*="font-size:8px"] {
+  font-size: 11px !important;
+}
+[style*="font-size: 9px"],
+[style*="font-size:9px"] {
+  font-size: 11px !important;
+}
+[style*="font-size: 10px"],
+[style*="font-size:10px"] {
+  font-size: 12px !important;
+}
+[style*="font-size: 11px"],
+[style*="font-size:11px"] {
+  font-size: 12px !important;
+}
+
+/* Catch very dark colour values used on dark backgrounds */
+[style*="color: #9a"],
+[style*="color:#9a"],
+[style*="color: #7a"],
+[style*="color:#7a"],
+[style*="color: #8a"],
+[style*="color:#8a"] {
+  color: var(--text-muted) !important;
+}
+
+</style>
+<!-- END READABILITY PATCH -->
