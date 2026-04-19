@@ -8,66 +8,66 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#0a0806;color:#d4b896;font-family:'Crimson Text',serif;min-height:100vh;}
-#cd-header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:2px solid #7a6040;flex-wrap:wrap;background:linear-gradient(90deg,#0e0b07,#1a1410,#0e0b07);}
+#cd-header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:2px solid #3a2818;flex-wrap:wrap;background:linear-gradient(90deg,#0e0b07,#1a1410,#0e0b07);}
 #cd-header h1{font-family:'Cinzel',serif;font-size:18px;color:#c8a060;letter-spacing:3px;flex:1;}
-.cd-nav-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:5px 14px;border:1px solid #7a6040;background:transparent;color:#c8a060;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block;}
+.cd-nav-btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:5px 14px;border:1px solid #3a2818;background:transparent;color:#6b4c2a;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block;}
 .cd-nav-btn:hover{border-color:#c8a060;color:#c8a060;}
 #cd-body{display:flex;min-height:calc(100vh - 56px);}
 .cd-col{flex:1;padding:24px 28px;border-right:1px solid #1e1408;}
 .cd-col:last-child{border-right:none;}
-.cd-col-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:#c8a060;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1e1408;display:flex;align-items:center;justify-content:space-between;}
-.cd-badge{font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:2px 8px;border:1px solid #2a1808;color:#9a7850;}
+.cd-col-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:#7a5030;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #1e1408;display:flex;align-items:center;justify-content:space-between;}
+.cd-badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:2px 8px;border:1px solid #2a1808;color:#4a3020;}
 .cd-card{border:1px solid #2a1808;background:#0c0906;padding:14px 16px;margin-bottom:10px;transition:all .15s;cursor:pointer;}
 .cd-card:hover{border-color:#6a4c2a;background:#120e08;}
 .cd-card.selected{border-color:#c8a060;background:#1a1408;}
 .cd-card-name{font-family:'Cinzel',serif;font-size:13px;color:#c8a060;margin-bottom:4px;}
-.cd-card-meta{font-size:12px;color:#b08848;margin-bottom:8px;line-height:1.5;}
+.cd-card-meta{font-size:12px;color:#5a3c1a;margin-bottom:8px;line-height:1.5;}
 .cd-card-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
-.cd-play-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:5px 14px;border:1px solid #285028;background:#0a0806;color:#60a860;cursor:pointer;transition:all .15s;}
+.cd-play-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;border:1px solid #285028;background:#0a0806;color:#60a860;cursor:pointer;transition:all .15s;}
 .cd-play-btn:hover{border-color:#60a860;background:#102010;}
-.cd-export-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:5px 14px;border:1px solid #2a1808;background:#0a0806;color:#b08848;cursor:pointer;transition:all .15s;}
-.cd-export-btn:hover{border-color:#c8a060;color:#c8a060;}
-.cd-empty{font-family:'Crimson Text',serif;font-size:13px;color:#7a6040;font-style:italic;padding:20px 0;line-height:1.8;}
-.cd-coming-soon{font-family:'Crimson Text',serif;font-size:13px;color:#7a6040;font-style:italic;padding:20px 0;line-height:1.8;}
-.warn-tag{color:#c87030;font-size:12px;}
+.cd-export-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;border:1px solid #2a1808;background:#0a0806;color:#5a3c1a;cursor:pointer;transition:all .15s;}
+.cd-export-btn:hover{border-color:#7a5030;color:#c8a060;}
+.cd-empty{font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;font-style:italic;padding:20px 0;line-height:1.8;}
+.cd-coming-soon{font-family:'Crimson Text',serif;font-size:13px;color:#3a2818;font-style:italic;padding:20px 0;line-height:1.8;}
+.warn-tag{color:#c87030;font-size:11px;}
 /* Mission overlay */
 #mission-select-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;}
 #mission-select-overlay.active{display:flex;}
-#mission-modal{background:#1a1208;border:2px solid #c8a060;border-radius:4px;width:min(700px,96vw);max-height:90vh;overflow-y:auto;padding:28px 32px;color:#c8a060;font-family:'Cinzel',serif;box-shadow:0 8px 40px rgba(0,0,0,0.8);}
+#mission-modal{background:#1a1208;border:2px solid #6a4820;border-radius:4px;width:min(700px,96vw);max-height:90vh;overflow-y:auto;padding:28px 32px;color:#c8a060;font-family:'Cinzel',serif;box-shadow:0 8px 40px rgba(0,0,0,0.8);}
 .mm-title{font-size:15px;color:#e8c070;margin-bottom:4px;letter-spacing:2px;}
 .mm-dungeon-name{font-family:'Crimson Text',serif;font-size:14px;color:#7a6040;font-style:italic;margin-bottom:20px;border-bottom:1px solid #2a1808;padding-bottom:12px;}
-.mm-section{font-size:12px;letter-spacing:3px;color:#b08848;margin:18px 0 10px;}
+.mm-section{font-size:10px;letter-spacing:3px;color:#5a3c1a;margin:18px 0 10px;}
 .mm-missions{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:4px;}
 .mm-card{border:1px solid #2a1808;background:#0e0b07;padding:10px 12px;cursor:pointer;transition:all .15s;}
 .mm-card:hover{border-color:#6a4c2a;background:#160f08;}
 .mm-card.selected{border-color:#c8a060;background:#1e1610;}
 .mm-card-icon{font-size:18px;margin-bottom:4px;}
-.mm-card-name{font-size:12px;letter-spacing:1px;color:#c8a060;margin-bottom:3px;}
-.mm-card-goal{font-family:'Crimson Text',serif;font-size:12px;color:#b09060;line-height:1.4;}
-.mm-card-limit{font-size:12px;color:#8a6030;margin-top:4px;}
+.mm-card-name{font-size:11px;letter-spacing:1px;color:#c8a060;margin-bottom:3px;}
+.mm-card-goal{font-family:'Crimson Text',serif;font-size:12px;color:#6a5030;line-height:1.4;}
+.mm-card-limit{font-size:10px;color:#8a6030;margin-top:4px;}
 .mm-custom-section{border:1px solid #2a1808;background:#0a0806;padding:14px 16px;margin-bottom:4px;}
-.mm-custom-label{font-size:12px;letter-spacing:2px;color:#b08848;margin-bottom:8px;}
-.mm-custom-name-input{width:100%;background:#060402;border:1px solid #7a6040;color:#d4b896;font-family:'Crimson Text',serif;font-size:14px;padding:7px 10px;margin-bottom:4px;}
-.mm-custom-name-input:focus{outline:none;border-color:#c8a060;}
-.mm-custom-hint{font-family:'Crimson Text',serif;font-size:12px;color:#7a6040;font-style:italic;}
-.mm-custom-select-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:5px 14px;border:1px solid #7a6040;background:#0a0806;color:#c8a060;cursor:pointer;transition:all .15s;margin-top:8px;}
+.mm-custom-label{font-size:10px;letter-spacing:2px;color:#5a3c1a;margin-bottom:8px;}
+.mm-custom-name-input{width:100%;background:#060402;border:1px solid #3a2818;color:#d4b896;font-family:'Crimson Text',serif;font-size:14px;padding:7px 10px;margin-bottom:4px;}
+.mm-custom-name-input:focus{outline:none;border-color:#7a5030;}
+.mm-custom-hint{font-family:'Crimson Text',serif;font-size:11px;color:#3a2818;font-style:italic;}
+.mm-custom-select-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 14px;border:1px solid #3a2818;background:#0a0806;color:#7a5030;cursor:pointer;transition:all .15s;margin-top:8px;}
 .mm-custom-select-btn:hover{border-color:#c8a060;color:#c8a060;}
 .mm-custom-select-btn.selected{border-color:#c8a060;color:#c8a060;background:#1a1408;}
 .mm-settings{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
-.mm-setting-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:6px 16px;border:1px solid #2a1808;background:#0e0b07;color:#b09060;cursor:pointer;transition:all .15s;}
-.mm-setting-btn:hover:not(:disabled){border-color:#c8a060;color:#c8a060;}
+.mm-setting-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:6px 16px;border:1px solid #2a1808;background:#0e0b07;color:#6a5030;cursor:pointer;transition:all .15s;}
+.mm-setting-btn:hover:not(:disabled){border-color:#7a5030;color:#c8a060;}
 .mm-setting-btn.selected{border-color:#c8a060;background:#1a1408;color:#c8a060;}
 .mm-setting-btn:disabled{opacity:0.3;cursor:default;}
 .mm-footer{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #2a1808;align-items:center;}
 #mm-begin-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;padding:10px 28px;border:1px solid #285028;background:#0a0806;color:#60a860;cursor:pointer;transition:all .15s;}
 #mm-begin-btn:hover:not(:disabled){border-color:#60a860;background:#102010;}
 #mm-begin-btn:disabled{opacity:0.35;cursor:default;}
-#mm-cancel-btn{font-family:'Cinzel',serif;font-size:12px;padding:8px 18px;border:1px solid #2a1808;background:transparent;color:#9a7850;cursor:pointer;transition:all .15s;}
-#mm-cancel-btn:hover{border-color:#c8a060;color:#c8a060;}
+#mm-cancel-btn{font-family:'Cinzel',serif;font-size:11px;padding:8px 18px;border:1px solid #2a1808;background:transparent;color:#4a3418;cursor:pointer;transition:all .15s;}
+#mm-cancel-btn:hover{border-color:#7a5030;color:#c8a060;}
 /* Generator overlay */
 #gen-container{display:none;position:fixed;inset:0;z-index:1000;background:#0a0806;}
 #gen-container.active{display:block;}
-#gen-back-btn{position:fixed;top:12px;right:16px;z-index:1100;font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:5px 12px;border:1px solid #7a6040;background:#0a0806;color:#c8a060;cursor:pointer;transition:all .15s;}
+#gen-back-btn{position:fixed;top:12px;right:16px;z-index:1100;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:5px 12px;border:1px solid #3a2818;background:#0a0806;color:#6b4c2a;cursor:pointer;transition:all .15s;}
 #gen-back-btn:hover{border-color:#c8a060;color:#c8a060;}
 </style>
 </head>
@@ -78,7 +78,7 @@ body{background:#0a0806;color:#d4b896;font-family:'Crimson Text',serif;min-heigh
 </div>
 <div id="cd-body">
   <div class="cd-col">
-    <div class="cd-col-title">SAVED DUNGEONS<span style="font-family:'Crimson Text',serif;font-size:12px;color:#7a6040;font-style:italic;">click to play</span></div>
+    <div class="cd-col-title">SAVED DUNGEONS<span style="font-family:'Crimson Text',serif;font-size:11px;color:#3a2818;font-style:italic;">click to play</span></div>
     <div id="cd-dungeon-list"></div>
   </div>
   <div class="cd-col">
@@ -139,7 +139,7 @@ function loadDungeonList(){
   var layouts=[];
   try{if(raw)layouts=JSON.parse(raw);}catch(e){}
   if(!layouts.length){
-    list.innerHTML='<div class="cd-empty">No saved dungeons found.<br>Build one in the <a href="builder.html" style="color:#c8a060;">Dungeon Builder</a> first.</div>';
+    list.innerHTML='<div class="cd-empty">No saved dungeons found.<br>Build one in the <a href="builder.html" style="color:#7a5030;">Dungeon Builder</a> first.</div>';
     return;
   }
   list.innerHTML='';

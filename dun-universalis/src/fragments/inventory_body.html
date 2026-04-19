@@ -1,0 +1,59 @@
+<div id="page">
+  <h1>⚔ DUNGEON UNIVERSALIS — TILE INVENTORY</h1>
+  <div class="subtitle">v4 · <span id="total-count">—</span> tiles · Grouped by setting and theme</div>
+  <div id="summary">
+    <div class="sum-item">Dungeon <span id="s-dungeon">—</span></div>
+    <div class="sum-item">Civilised <span id="s-civilised">—</span></div>
+    <div class="sum-item">Outdoor <span id="s-outdoor">—</span></div>
+    <div class="sum-item">Rooms <span id="s-rooms">—</span></div>
+    <div class="sum-item">Corridors <span id="s-corridors">—</span></div>
+    <div class="sum-item">Boss Rooms <span id="s-boss">—</span></div>
+    <div class="sum-item">With Image <span id="s-hasimg">—</span></div>
+  </div>
+  <div id="filters">
+    <button class="filter-btn active" data-filter="all">ALL</button>
+    <button class="filter-btn" data-filter="dungeon">⚔ DUNGEON</button>
+    <button class="filter-btn" data-filter="civilised">🏰 CIVILISED</button>
+    <button class="filter-btn" data-filter="outdoor">🌲 OUTDOOR</button>
+    <button class="filter-btn" data-filter="room">ROOMS</button>
+    <button class="filter-btn" data-filter="corridor">CORRIDORS</button>
+    <button class="filter-btn" data-filter="boss">BOSS</button>
+    <button class="filter-btn" data-filter="start">START</button>
+    <button class="filter-btn" data-filter="hasimg">HAS IMAGE</button>
+    <button class="filter-btn" data-filter="elements">★ ELEMENTS</button>
+    <button id="el-save-all-btn" style="font-family:'Cinzel',serif;font-size:12px;padding:5px 16px;border:1px solid #6a4820;background:#120e06;color:#c8a060;cursor:pointer;letter-spacing:1px;margin-left:auto;">SAVE ALL</button>
+
+    <input id="search" type="text" placeholder="Search name, ID, theme…">
+    <div id="count"></div>
+  </div>
+    <div id="tile-sections"></div>
+  <div id="elements-section">
+    
+  <div id="elements-special-hdr" class="el-section-hdr el-hdr-special">★ SPECIAL ELEMENTS <span id="el-special-count" style="font-weight:normal;opacity:.7"></span></div>
+    <table class="el-table" id="el-table-special">
+      <thead><tr>
+        <th style="width:160px">NAME</th>
+        <th style="width:60px">W</th>
+        <th style="width:60px">L</th>
+        <th style="width:110px">FLAGS</th>
+        <th style="width:160px">SETTINGS</th>
+        <th>RULES</th>
+        <th style="width:36px"></th>
+      </tr></thead>
+      <tbody id="el-tbody-special"></tbody>
+    </table>
+    <div id="elements-furniture-hdr" class="el-section-hdr el-hdr-furniture">🪑 FURNITURE <span id="el-furniture-count" style="font-weight:normal;opacity:.7"></span></div>
+    <table class="el-table" id="el-table-furniture">
+      <thead><tr>
+        <th style="width:160px">NAME</th>
+        <th style="width:60px">W</th>
+        <th style="width:60px">L</th>
+        <th style="width:110px">FLAGS</th>
+        <th style="width:160px">SETTINGS</th>
+        <th>RULES</th>
+        <th style="width:36px"></th>
+      </tr></thead>
+      <tbody id="el-tbody-furniture"></tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,149 @@
+<!-- ═══ MISSION SELECTION OVERLAY ═══ -->
+<div id="mission-overlay">
+  <div id="mission-modal">
+    <h2>⚔ DUNGEON UNIVERSALIS</h2>
+    <div class="mission-subtitle">RANDOM DUNGEON GENERATOR · SELECT MISSION</div>
+    <div id="mission-list"><!-- populated by JS --></div>
+    <div id="mission-setting-row">
+      <label>SETTING</label>
+      <div class="setting-btns">
+        <button class="setting-btn" data-cat="dungeon">⚔ Dungeon</button>
+        <button class="setting-btn" data-cat="civilised">🏰 Civilised</button>
+        <button class="setting-btn" data-cat="outdoor">🌲 Outdoor</button>
+        <button class="setting-btn" data-cat="random" id="btn-random-setting">🎲 Random</button>
+      </div>
+    </div>
+    <button id="mission-start-btn" disabled>BEGIN MISSION ▶</button>
+  </div>
+</div>
+<div id="app">
+  <div id="header">
+    <div id="logo">
+      <h1>⚔ DUNGEON UNIVERSALIS</h1>
+      <p>RANDOM DUNGEON GENERATOR · QUEST DECK SYSTEM</p>
+    </div>
+    <div id="controls">
+      <div class="ctrl-group">
+        <label class="ctrl-label">SETTING</label>
+        <select class="btn" id="sel-category">
+          <option value="dungeon">⚔ Dungeon</option>
+          <option value="civilised">🏰 Civilised</option>
+          <option value="outdoor">🌲 Outdoor</option>
+          <option value="all">✦ All</option>
+        </select>
+      </div>
+      <div class="ctrl-group" id="ctrl-theme">
+        <label class="ctrl-label">THEME</label>
+        <select class="btn" id="sel-theme">
+          <option value="any">✦ Any</option>
+          <option value="dungeon">⚔ Stone</option>
+          <option value="crypt">💀 Crypt</option>
+          <option value="cave">🪨 Cave</option>
+          <option value="sewer">💧 Sewer</option>
+          <option value="forest">🌿 Forest</option>
+          <option value="outdoor">☀ Wilderness</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label class="ctrl-label">LEVEL</label>
+        <select class="btn" id="sel-level">
+          <option value="1">1–2</option>
+          <option value="3">3–4</option>
+          <option value="5">5–6</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label class="ctrl-label">DECK</label>
+        <select class="btn" id="sel-option">
+          <option value="A">Option A (fixed)</option>
+          <option value="B">Option B (random)</option>
+        </select>
+      </div>
+      <button class="btn" id="btn-new">⚄ DRAW DECK</button>
+      <button class="btn" id="btn-mission-select" title="Change Mission">📜 MISSION</button>
+      <button class="btn success" id="btn-reveal">👁 REVEAL ALL</button>
+      <button class="btn danger" id="btn-fog">☁ RESET FOG</button>
+      <button class="btn" id="btn-roll">🎲 ROLL D6</button>
+      <button class="btn" id="btn-end-turn" style="display:none">⏱ END TURN</button>
+      <button class="btn" id="btn-zoom-in">＋</button>
+      <button class="btn" id="btn-zoom-out">－</button>
+      <button class="btn" id="btn-zoom-fit">⊡ FIT</button>
+      <button class="btn" id="btn-centre-hero">⊕ PARTY</button>
+      <button class="btn" id="btn-export-png" title="Export dungeon as PNG image">📷 EXPORT</button>
+    </div>
+  </div>
+
+  <div id="body">
+    <div id="map-wrap"><canvas id="map-canvas"></canvas><div id="zoom-label">ZOOM 100%</div></div>
+
+    <div id="sidebar">
+      <!-- Stats -->
+      <div class="panel">
+        <div class="panel-title">QUEST DECK</div>
+        <div class="stat-row" id="mission-display" style="color:#c8780a;font-size:13px;flex-direction:column;align-items:flex-start;gap:1px;display:none">
+          <span id="s-mission-name" style="color:#e8b040;font-weight:600"></span>
+          <span id="s-mission-goal" style="color:#7a5830"></span>
+        </div>
+        <div class="stat-row">LEVEL <span id="s-level">1–2</span></div>
+        <div class="stat-row" id="turn-limit-row" style="display:none">TURNS LEFT <span id="s-turns" style="color:#e05030;font-weight:600">45</span></div>
+        <div class="stat-row">OPTION <span id="s-option">A</span></div>
+        <div class="stat-row">SECTIONS <span id="s-tiles">0</span></div>
+        <div class="stat-row" id="s-elements-row" style="display:none">ELEMENTS <span id="s-elements">0</span></div>
+        <div class="stat-row">EXPLORED <span id="s-pct">0%</span></div>
+        <div class="stat-row">ENEMIES <span id="s-enemies">0</span></div>
+        <div class="stat-row">TREASURE <span id="s-treasure">0</span></div>
+        <div class="stat-row" id="deck-row" style="font-size:13px;color:#7a5030;margin-top:4px;flex-direction:column;align-items:flex-start;gap:2px">
+          <span id="deck-desc" style="line-height:1.5"></span>
+        </div>
+        <div id="seed-row">SEED: <span id="seed-val">—</span></div>
+      </div>
+
+      <!-- Selected tile info -->
+      <div class="panel" id="tile-info">
+        <div class="panel-title">SECTION INFO</div>
+        <div id="tile-name">—</div>
+        <div id="tile-type"></div>
+        <div id="tile-desc">Click a revealed section to inspect it. Click a door or corridor arrow to explore further.</div>
+        <div id="tile-roll"></div>
+      </div>
+
+      <!-- Dice -->
+      <div class="panel">
+        <div class="panel-title">DICE ROLLER</div>
+        <div id="dice-area">
+          <div class="dice-row">
+            <button class="btn dice-btn" data-d="6">1D6</button>
+            <button class="btn dice-btn" data-d="6" data-n="2">2D6</button>
+            <button class="btn dice-btn" data-d="6" data-n="3">3D6</button>
+          </div>
+          <div id="dice-result">—</div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="panel">
+        <div class="panel-title">LEGEND</div>
+        <div class="leg"><div class="leg-swatch" style="background:#7a5840;border-color:#3a2518"></div>⚔ DUNGEON</div>
+        <div class="leg"><div class="leg-swatch" style="background:#6a7858;border-color:#3a4828"></div>🏰 CIVILISED</div>
+        <div class="leg"><div class="leg-swatch" style="background:#4a6838;border-color:#2a4018"></div>🌲 OUTDOOR</div>
+        <div class="leg" style="margin-top:6px"><div class="leg-swatch" style="background:#4a3828"></div>WALL</div>
+        <div class="leg"><div class="leg-swatch" style="background:#7a5218;border-color:#ffc840"></div>DOOR (CLOSED)</div>
+        <div class="leg"><div class="leg-swatch" style="background:#3c2810"></div>DOOR (OPEN)</div>
+        <div class="leg"><div class="leg-swatch" style="background:#e8c864"></div>EXPLORE ARROW</div>
+        <div class="leg"><div class="leg-swatch" style="background:#2468b0"></div>PARTY</div>
+        <div class="leg"><div class="leg-swatch" style="background:#b83030"></div>ENEMY</div>
+        <div class="leg"><div class="leg-swatch" style="background:#b8820a"></div>TREASURE</div>
+        <div class="leg"><div class="leg-swatch" style="background:rgba(180,30,20,0.5);border:2px solid #e03020"></div>BOSS ROOM</div>
+        <div class="leg"><div class="leg-swatch" style="background:#30804080;border:1px solid #50cc50"></div>START TILE</div>
+        <div class="leg"><div class="leg-swatch" style="background:#0d0a07"></div>UNEXPLORED</div>
+      </div>
+
+      <!-- Log -->
+      <div class="panel" style="flex:1">
+        <div class="panel-title">ADVENTURE LOG</div>
+        <div id="log-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="tooltip"></div>
