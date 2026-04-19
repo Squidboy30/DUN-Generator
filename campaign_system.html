@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dungeon Universalis — Campaign Designer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap');
+
+:root {
+  --parchment: #f5e6c8;
+  --parchment-mid: #ecdaab;
+  --parchment-dark: #d4be88;
+  --ink: #2a1a0a;
+  --ink-faded: #5c3d1e;
+  --border-red: #8b1a1a;
+  --border-gold: #a07820;
+  --accent-red: #6b0f0f;
+  --bg-dark: #1a1008;
+  --bg-panel: #221508;
+  --panel-border: #6a4a20;
+  --gold-light: #e0b840;
+  --text-light: #f5e8c0;
+  --text-muted: #c8a060;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-dark);
+  font-family: 'IM Fell English', Georgia, serif;
+  color: var(--text-light);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── LAYOUT ─────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  background: var(--bg-panel);
+  border-bottom: 2px solid var(--border-gold);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 18px;
+  color: var(--gold-light);
+  letter-spacing: 2px;
+}
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
+.tab-btn.active { background: var(--border-gold); color: var(--bg-dark); border-color: var(--border-gold); }
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar {
+  width: 280px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.sidebar-list::-webkit-scrollbar { width: 4px; }
+.sidebar-list::-webkit-scrollbar-track { background: transparent; }
+.sidebar-list::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+.mission-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--panel-border);
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.mission-card:hover { border-color: var(--border-gold); background: rgba(139,105,20,0.12); }
+.mission-card.selected { border-color: var(--gold-light); background: rgba(139,105,20,0.18); }
+.mission-card.in-campaign { border-left: 3px solid var(--accent-red); }
+
+.mission-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 3px;
+}
+.mission-card-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.mission-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.badge-official {
+  background: rgba(139,105,20,0.3);
+  color: var(--gold-light);
+  border: 1px solid var(--border-gold);
+}
+.badge-custom {
+  background: rgba(139,26,26,0.3);
+  color: #e06060;
+  border: 1px solid var(--accent-red);
+}
+
+/* ─── MAIN AREA ───────────────────────────────────────────── */
+.main-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── CAMPAIGN CANVAS ─────────────────────────────────────── */
+.campaign-canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(139,105,20,0.04) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(139,105,20,0.07) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(139,105,20,0.07) 40px),
+    var(--bg-dark);
+}
+
+.campaign-canvas {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+}
+
+.campaign-node {
+  position: absolute;
+  width: 160px;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--panel-border);
+  cursor: grab;
+  user-select: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.campaign-node:hover { border-color: var(--border-gold); }
+.campaign-node.selected { border-color: var(--gold-light); box-shadow: 0 0 0 2px rgba(201,160,48,0.25); }
+.campaign-node.dragging { cursor: grabbing; z-index: 100; }
+.campaign-node.start-node { border-color: var(--accent-red); }
+
+.node-header {
+  background: rgba(139,105,20,0.15);
+  border-bottom: 1px solid var(--panel-border);
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.node-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.node-title {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-light);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node-body {
+  padding: 7px 8px;
+}
+
+.node-goal {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.node-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.node-setting {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.node-connect-btn {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.node-connect-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
+.node-connect-btn.connecting { border-color: var(--accent-red); color: #e06060; background: rgba(139,26,26,0.2); }
+
+/* SVG connections layer */
+.connections-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.campaign-node { z-index: 1; }
+
+.conn-line {
+  stroke: var(--border-gold);
+  stroke-width: 1.5;
+  fill: none;
+  marker-end: url(#arrowhead);
+  opacity: 0.7;
+}
+.conn-line.temp { stroke: #e06060; stroke-dasharray: 6 3; opacity: 0.8; }
+.conn-label-bg { fill: var(--bg-panel); }
+.conn-label-text { font-family: 'Cinzel', serif; font-size: 10px; fill: var(--text-muted); }
+
+/* ─── CANVAS TOOLBAR ──────────────────────────────────────── */
+.canvas-toolbar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  background: var(--bg-panel);
+  border: 1px solid var(--panel-border);
+  padding: 6px 10px;
+  z-index: 10;
+}
+
+.tool-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tool-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
+.tool-btn.danger:hover { border-color: var(--accent-red); color: #e06060; }
+
+/* ─── MISSION EDITOR PANEL ────────────────────────────────── */
+.editor-panel {
+  width: 360px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.editor-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editor-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.editor-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+.editor-scroll::-webkit-scrollbar { width: 4px; }
+.editor-scroll::-webkit-scrollbar-thumb { background: var(--panel-border); }
+
+/* ─── PARCHMENT FORM ELEMENTS ─────────────────────────────── */
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--panel-border);
+  color: var(--text-light);
+  font-family: 'IM Fell English', serif;
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--border-gold);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); font-style: italic; }
+.form-textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+.form-select option { background: var(--bg-panel); }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.setting-toggle {
+  display: flex;
+  gap: 6px;
+}
+.stoggle {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+.stoggle.on { background: var(--border-gold); color: var(--bg-dark); border-color: var(--border-gold); }
+
+/* Elements with number tokens */
+.element-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.token-num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid #ccc;
+}
+
+.element-entry input {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text-light);
+  font-family: 'IM Fell English', serif;
+  font-size: 12px;
+  padding: 4px 8px;
+  outline: none;
+}
+.element-entry input:focus { border-color: var(--border-gold); }
+.element-entry input::placeholder { color: var(--text-muted); font-style: italic; }
+
+.add-element-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px dashed var(--panel-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s;
+}
+.add-element-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
+
+.section-sep {
+  border: none;
+  border-top: 1px solid var(--panel-border);
+  margin: 16px 0;
+}
+
+.save-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 8px 0;
+  width: 100%;
+  background: var(--accent-red);
+  border: 1px solid #a02020;
+  color: var(--parchment);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 6px;
+}
+.save-btn:hover { background: #8b1a1a; }
+
+.official-view {
+  background: rgba(139,105,20,0.06);
+  border: 1px solid rgba(139,105,20,0.2);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.official-view .ov-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+.official-view .ov-val {
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.rules-list {
+  list-style: none;
+  padding: 0;
+}
+.rules-list li {
+  font-size: 12px;
+  color: var(--text-light);
+  font-style: italic;
+  padding: 3px 0 3px 12px;
+  border-left: 2px solid var(--panel-border);
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+/* ─── IMPORT/EXPORT BAR ───────────────────────────────────── */
+.ie-bar {
+  padding: 10px 16px;
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ie-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.15s;
+}
+.ie-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
+.ie-btn.primary { border-color: var(--border-gold); color: var(--gold-light); }
+
+/* ─── CAMPAIGN LIST TAB ───────────────────────────────────── */
+#tab-campaigns {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+#tab-campaigns.active { display: block; }
+
+.campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.campaign-item {
+  background: var(--bg-panel);
+  border: 1.5px solid var(--panel-border);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.campaign-item:hover { border-color: var(--border-gold); }
+
+.campaign-item-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--gold-light);
+  margin-bottom: 6px;
+}
+.campaign-item-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+.campaign-item-missions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.cim-pill {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+}
+
+.new-campaign-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  background: transparent;
+  border: 1px solid var(--border-gold);
+  color: var(--gold-light);
+  cursor: pointer;
+  display: block;
+  margin-bottom: 20px;
+  transition: background 0.15s;
+}
+.new-campaign-btn:hover { background: rgba(139,105,20,0.15); }
+
+/* ─── MODAL ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: var(--bg-panel);
+  border: 2px solid var(--border-gold);
+  padding: 24px 28px;
+  min-width: 340px;
+  max-width: 500px;
+}
+
+.modal-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 15px;
+  color: var(--gold-light);
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 7px 16px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.modal-btn.confirm { border-color: var(--border-gold); color: var(--gold-light); }
+.modal-btn.confirm:hover { background: rgba(139,105,20,0.2); }
+.modal-btn:hover { background: rgba(255,255,255,0.05); }
+
+/* ─── EMPTY STATE ─────────────────────────────────────────── */
+.empty-canvas {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.empty-canvas-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.empty-canvas-sub {
+  font-size: 11px;
+  color: rgba(154,122,74,0.5);
+  font-style: italic;
+}
+
+/* ─── CAMPAIGN NAME BAR ───────────────────────────────────── */
+.campaign-name-bar {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--panel-border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.campaign-name-input {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--gold-light);
+  outline: none;
+  padding: 2px 6px;
+  width: 220px;
+  letter-spacing: 1px;
+}
+.campaign-name-input::placeholder { color: var(--text-muted); }
+.campaign-name-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.conn-delete-zone {
+  cursor: pointer;
+  pointer-events: all;
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-title">Dungeon Universalis</div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('designer')">Campaign Designer</button>
+      <button class="tab-btn" onclick="switchTab('campaigns')">My Campaigns</button>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="tool-btn" onclick="exportCampaign()">Export</button>
+      <button class="tool-btn" onclick="triggerImport()">Import</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importCampaign(event)">
+    </div>
+  </div>
+
+  <!-- Designer Tab -->
+  <div id="tab-designer" style="display:flex;flex:1;overflow:hidden;">
+
+    <!-- Sidebar: mission list -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Missions</span>
+        <button class="tool-btn" style="padding:3px 8px;font-size:8px;" onclick="newMission()">+ New</button>
+      </div>
+      <div class="sidebar-list" id="mission-list"></div>
+    </div>
+
+    <!-- Main: campaign canvas -->
+    <div class="main-area">
+      <div class="campaign-name-bar">
+        <span class="campaign-name-label">Campaign:</span>
+        <input class="campaign-name-input" id="campaign-name" type="text" placeholder="Enter campaign name..." value="The Dark Descent">
+        <span style="font-size:10px;color:var(--text-muted);font-style:italic;margin-left:auto;">Drag missions from list · Click ⊕ to connect</span>
+      </div>
+
+      <div class="campaign-canvas-wrap" id="canvas-wrap">
+        <svg class="connections-svg" id="conn-svg">
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#8b6914" opacity="0.7"/>
+            </marker>
+          </defs>
+        </svg>
+        <div id="canvas-nodes"></div>
+        <div class="empty-canvas" id="empty-hint">
+          <div class="empty-canvas-title">Campaign Canvas</div>
+          <div class="empty-canvas-sub">Drag missions from the sidebar to begin building your campaign</div>
+        </div>
+      </div>
+
+      <div class="canvas-toolbar">
+        <button class="tool-btn" onclick="autoLayout()">Auto Layout</button>
+        <button class="tool-btn danger" onclick="removeSelected()">Remove Selected</button>
+        <button class="tool-btn" onclick="clearCanvas()">Clear All</button>
+        <button class="tool-btn primary" onclick="saveCampaign()">Save Campaign</button>
+      </div>
+    </div>
+
+    <!-- Right: editor panel -->
+    <div class="editor-panel" id="editor-panel">
+      <div class="editor-header">
+        <span class="editor-title" id="editor-panel-title">Select a Mission</span>
+        <button class="tool-btn" style="padding:3px 8px;font-size:8px;" id="delete-mission-btn" onclick="deleteMission()" style="display:none">Delete</button>
+      </div>
+      <div class="editor-scroll" id="editor-content">
+        <div style="text-align:center;padding:40px 0;color:var(--text-muted);font-style:italic;font-size:12px;">
+          Select a mission from the list to view or edit it
+        </div>
+      </div>
+      <div class="ie-bar" id="editor-footer" style="display:none;">
+        <button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Campaigns Tab -->
+  <div id="tab-campaigns">
+    <button class="new-campaign-btn" onclick="newCampaign()">+ New Campaign</button>
+    <div class="campaign-grid" id="campaigns-grid"></div>
+  </div>
+
+</div>
+
+<!-- New Campaign Modal -->
+<div class="modal-overlay" id="modal-new-campaign">
+  <div class="modal-box">
+    <div class="modal-title">New Campaign</div>
+    <div class="form-group">
+      <label class="form-label">Campaign Name</label>
+      <input class="form-input" id="nc-name" type="text" placeholder="Enter campaign name...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="nc-desc" placeholder="Brief description of the campaign..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal('modal-new-campaign')">Cancel</button>
+      <button class="modal-btn confirm" onclick="createCampaign()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+
+var OFFICIAL_MISSIONS = [
+  { id:'off_1', type:'official', name:'Defeat the Leader', icon:'⚔', goal:'Knock out the Quest Leader.', setup:'Place the Quest Leader in the Boss Room. Heroes enter from the Start Tile.', specialRules:'The Quest Leader activates every turn once revealed.', specialElements:[], furniture:[], otherElements:[], questEnd:'Heroes win when the Quest Leader is knocked out. Dark Player wins if all heroes fall.', rewards:'XP per hero level + 1d6 gold each', tiles:'Standard dungeon set', settings:['dungeon','civilised','outdoor'], turnLimit:null, narrative:'Deep within the fortress, a great evil holds dominion. The heroes must press through the dungeons below and confront the Leader in their own domain.', faction:'Any' },
+  { id:'off_2', type:'official', name:'Steal the Relic', icon:'💎', goal:'Steal the relic from the Leader and escape.', setup:'The Quest Leader holds the relic. Place them in the Boss Room.', specialRules:'To steal: adjacent hero rolls Skilled Hands vs Perception. On success, hero takes relic and must exit the Start Tile.', specialElements:[], furniture:[], otherElements:['Relic token x1'], questEnd:'Heroes win when relic-carrier exits. Dark Player wins if all heroes fall or turn limit expires.', rewards:'+1 Fame + relic item card', tiles:'Standard dungeon set', settings:['dungeon','civilised'], turnLimit:45, narrative:'Word has reached the heroes of a powerful artifact locked away in the vaults below. Retrieve it before the forces of darkness can use it against the realm.', faction:'Any' },
+  { id:'off_3', type:'official', name:'Rescue the Prisoner', icon:'⛓', goal:'Free the prisoner and escort them to the exit.', setup:'Place the prisoner token in a locked Cell. Keys are distributed randomly among monster leaders.', specialRules:'A hero adjacent to the prisoner may spend 1 action to escort them. The prisoner moves with the escort hero. If the escort hero is KO\'d, another hero may take over next activation.', specialElements:['Cell overtile x1','Key token x2'], furniture:['Cell x1'], otherElements:[], questEnd:'Heroes win when prisoner exits from the Start Tile. Dark wins if prisoner is killed or turn limit expires.', rewards:'+Ally card (the prisoner joins the warband)', tiles:'Dungeon with Cell room', settings:['dungeon','civilised'], turnLimit:40, narrative:'A captured ally languishes in the dungeons below. Every hour that passes brings them closer to death. The heroes must move quickly.', faction:'Any' },
+  { id:'off_4', type:'official', name:'Destroy the Artefact', icon:'💥', goal:'Reach the Artefact and destroy it before it empowers the enemy.', setup:'Place the Artefact token on a special altar in the deepest room. Monsters gain +1 Attack each time a hero is KO\'d until the artefact is destroyed.', specialRules:'Destroying the artefact requires 2 actions and a Strength roll (7+). Each failure spawns one additional monster.', specialElements:['Altar overtile x1','Artefact token x1'], furniture:['Special statue x1'], otherElements:[], questEnd:'Heroes win when artefact is destroyed. Dark wins if heroes are all KO\'d.', rewards:'+2 XP each + 1 random magic item', tiles:'Boss Room required', settings:['dungeon'], turnLimit:null, narrative:'The dark ritual approaches completion. If the artefact is not destroyed, an unstoppable force will be unleashed. Time is of the essence.', faction:'Cultists' },
+  { id:'off_5', type:'official', name:'Hold the Line', icon:'🛡', goal:'Survive for the required number of turns until reinforcements arrive.', setup:'Heroes start in a central room. Monsters spawn from all dungeon edges each turn.', specialRules:'Each turn, roll 1d6. On a 6, an additional monster group spawns. Monsters do not need to discover rooms; they freely enter revealed tiles.', specialElements:[], furniture:[], otherElements:[], questEnd:'Heroes win by surviving to Turn 20. Dark wins if all heroes are KO\'d before Turn 20.', rewards:'+Fame + 2d6 gold (town fund)', tiles:'Central chamber + 4 corridors', settings:['dungeon','outdoor'], turnLimit:20, narrative:'The forces of darkness press in from all sides. The heroes must stand firm until the cavalry arrives — if it arrives at all.', faction:'Any' },
+  { id:'off_6', type:'official', name:'Assassinate the Priest', icon:'🗡', goal:'Eliminate the Dark Priest before the ritual is completed.', setup:'Place the Dark Priest in the innermost room. Each turn the Priest is alive, roll 1d6; on a 5-6 the ritual advances one step. The ritual has 5 steps.', specialRules:'If the ritual completes, all heroes immediately suffer 3 wounds each. The Priest never retreats and always activates last.', specialElements:['Shrine overtile x1'], furniture:['Shrine x1','Sorcery table x1'], otherElements:['Ritual token x5'], questEnd:'Heroes win when the Priest is KO\'d. Dark wins if ritual completes or all heroes are KO\'d.', rewards:'+Priest\'s spell tome (Magic item)', tiles:'Inner sanctum room', settings:['dungeon','civilised'], turnLimit:null, narrative:'A dark priest performs a forbidden ritual that will tear open the veil between worlds. Heroes must push through the defenders and end the ceremony by any means necessary.', faction:'Cultists' },
+  { id:'off_7', type:'official', name:'Plunder the Vault', icon:'🏆', goal:'Collect as much treasure as possible and escape.', setup:'Scatter 6 chest tokens randomly across revealed rooms. Each chest contains 1d6+2 gold when opened (1 action, adjacent).', specialRules:'Heroes may carry unlimited gold but only one chest item each. Monsters are attracted to opened chests and will move toward them.', specialElements:[], furniture:[], otherElements:['Chest x6','Great treasure x1'], questEnd:'Heroes win if at least 3 chests are looted and all loot-carriers exit. Dark wins if fewer than 3 chests are looted before heroes retreat.', rewards:'All gold collected is kept. Bonus: 1 magic item per 3 chests looted.', tiles:'Treasury room + standard set', settings:['dungeon','civilised'], turnLimit:35, narrative:'Word of an unguarded vault has reached the heroes. Between them and limitless riches lie only locked doors and a great many guards.', faction:'Any' },
+  { id:'off_8', type:'official', name:'Explore the Unknown', icon:'🗺', goal:'Reveal all dungeon tiles and survive.', setup:'Use maximum tile set. Heroes start at the centre tile. All doors are closed.', specialRules:'Each newly revealed tile spawns enemies from the Encounter table. Heroes score 1 Exploration Point per tile fully revealed.', specialElements:[], furniture:[], otherElements:[], questEnd:'Heroes win when all tiles are revealed and at least one hero survives. Dark wins if all heroes are KO\'d.', rewards:'5 gold per Exploration Point + 1 XP per hero', tiles:'Full tile set (all tiles)', settings:['dungeon','outdoor'], turnLimit:null, narrative:'The dungeon holds secrets no living being has witnessed. Chart its depths, face whatever lurks within, and return with the tale to tell.', faction:'Mixed' },
+  { id:'off_9', type:'official', name:'Light the Beacons', icon:'🔥', goal:'Activate all three Beacon Braziers to seal the dungeon portal.', setup:'Place one Brazier token in each of three marked rooms. Each requires 1 action to ignite (Arcane roll 5+). Lighting a Brazier triggers a monster surge.', specialRules:'When each Brazier is lit, spawn 2 monsters at the nearest dungeon edge. Once all three are lit, the portal closes and no more monsters spawn.', specialElements:['Bonfire overtile x3'], furniture:[], otherElements:['Brazier token x3'], questEnd:'Heroes win when all three are lit and at least one hero exits. Dark wins if all heroes fall before completion.', rewards:'+1 to each hero\'s maximum Wounds permanently', tiles:'Three-room configuration', settings:['dungeon','outdoor'], turnLimit:30, narrative:'The portal must be sealed. Ancient braziers throughout the dungeon hold the key — but lighting them will draw the darkness down upon the heroes like a storm.', faction:'Demons' },
+  { id:'off_10', type:'official', name:'The Gauntlet', icon:'🏃', goal:'All heroes must reach the Exit before the turn limit.', setup:'Place the Exit token at the far end of a long dungeon. Monsters spawn behind the heroes each turn, pursuing relentlessly.', specialRules:'At the start of each Dark Player turn, spawn 1d3 monsters at the Start Tile. These monsters always move toward the nearest hero. Heroes cannot double back past a sealed door.', specialElements:[], furniture:[], otherElements:[], questEnd:'Heroes win when all surviving heroes exit. Dark wins if fewer than half the starting heroes exit.', rewards:'+1 Speed to all surviving heroes (permanent, campaign only)', tiles:'Long corridor layout', settings:['dungeon'], turnLimit:25, narrative:'The walls are closing in — metaphorically and literally. There is no fighting retreat; the heroes must run and trust each other not to fall behind.', faction:'Any' },
+  { id:'off_11', type:'official', name:'The Siege', icon:'🏰', goal:'Defend the stronghold entrance for the required turns.', setup:'Heroes are placed in a fortified room. Monsters attempt to break through barricaded doors. Each door has 5 Wound points.', specialRules:'Doors may be repaired (1 action, Craftsmanship roll 4+). If both doors fall, 3 additional monsters spawn per turn until the dungeon is cleared.', specialElements:[], furniture:['Double door x2'], otherElements:['Barricade x2'], questEnd:'Heroes win if both doors survive to Turn 15, or if all monsters are eliminated. Dark wins if all heroes fall.', rewards:'+1d6 gold per intact door + renown bonus', tiles:'Fortified room + approach corridors', settings:['dungeon','civilised'], turnLimit:15, narrative:'They are coming. The heroes hold the only defensible position. If the barricades fall, nothing stands between the darkness and those who shelter beyond.', faction:'Any' },
+  { id:'off_12', type:'official', name:'The Final Reckoning', icon:'💀', goal:'Defeat the Boss and all Champions before the dungeon collapses.', setup:'Place the Boss in the Boss Room with 2 Champions (elite monsters). The dungeon timer starts at Turn 1. At Turn 20, the dungeon collapses.', specialRules:'Champions each have a unique special ability (draw 1 Champion card per Champion). The Boss is immune to Fear effects.', specialElements:['Throne x1'], furniture:['Throne x1','Bonfire x1'], otherElements:[], questEnd:'Heroes win if Boss and both Champions are defeated before Turn 20. Dark wins if dungeon collapses, or all heroes fall.', rewards:'Campaign End: Legendary item + max XP award for all heroes', tiles:'Full boss set', settings:['dungeon'], turnLimit:20, narrative:'This is what it has all been leading to. Every quest, every scar, every fallen companion — it all ends here, in the dark, against the ultimate darkness.', faction:'Any' }
+];
+
+var customMissions = [];
+var campaigns = [];
+var activeCampaign = {
+  id: 'camp_' + Date.now(),
+  name: 'The Dark Descent',
+  description: '',
+  nodes: [],
+  connections: []
+};
+
+var selectedMission = null;
+var selectedNodeId = null;
+var connectingFrom = null;
+var nodeDrag = null;
+var tempLine = null;
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+function init() {
+  loadLocal();
+  renderSidebar();
+  renderCampaigns();
+}
+
+function loadLocal() {
+  try {
+    var cm = localStorage.getItem('dun_custom_missions');
+    if (cm) customMissions = JSON.parse(cm);
+    var camps = localStorage.getItem('dun_campaigns');
+    if (camps) campaigns = JSON.parse(camps);
+    var ac = localStorage.getItem('dun_active_campaign');
+    if (ac) {
+      activeCampaign = JSON.parse(ac);
+      document.getElementById('campaign-name').value = activeCampaign.name || '';
+    }
+  } catch(e) {}
+}
+
+function saveLocal() {
+  localStorage.setItem('dun_custom_missions', JSON.stringify(customMissions));
+  localStorage.setItem('dun_campaigns', JSON.stringify(campaigns));
+  activeCampaign.name = document.getElementById('campaign-name').value;
+  localStorage.setItem('dun_active_campaign', JSON.stringify(activeCampaign));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b,i) {
+    b.classList.toggle('active', (i===0 && tab==='designer') || (i===1 && tab==='campaigns'));
+  });
+  document.getElementById('tab-designer').style.display = tab === 'designer' ? 'flex' : 'none';
+  var tc = document.getElementById('tab-campaigns');
+  tc.classList.toggle('active', tab === 'campaigns');
+  if (tab === 'campaigns') renderCampaigns();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════════
+
+function renderSidebar() {
+  var list = document.getElementById('mission-list');
+  var allMissions = OFFICIAL_MISSIONS.concat(customMissions);
+  var nodeIds = activeCampaign.nodes.map(function(n){ return n.missionId; });
+
+  list.innerHTML = allMissions.map(function(m) {
+    var inCamp = nodeIds.indexOf(m.id) !== -1;
+    return '<div class="mission-card' + (inCamp?' in-campaign':'') + (selectedMission&&selectedMission.id===m.id?' selected':'') + '" onclick="selectMission(\''+m.id+'\')" draggable="true" ondragstart="dragStart(event,\''+m.id+'\')">' +
+      '<div class="mission-card-name">' + (m.icon||'◆') + ' ' + m.name + '</div>' +
+      '<div class="mission-card-meta">' + (m.goal||'').substring(0,50) + '...</div>' +
+      '<span class="mission-badge ' + (m.type==='official'?'badge-official':'badge-custom') + '">' + (m.type==='official'?'Official':'Custom') + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function selectMission(id) {
+  var all = OFFICIAL_MISSIONS.concat(customMissions);
+  selectedMission = all.find(function(m){ return m.id === id; }) || null;
+  renderSidebar();
+  renderEditor();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DRAG & DROP TO CANVAS
+// ═══════════════════════════════════════════════════════════════
+
+function dragStart(e, missionId) {
+  e.dataTransfer.setData('missionId', missionId);
+}
+
+(function(){
+  window.addEventListener('load', function() {
+    var wrap = document.getElementById('canvas-wrap');
+    wrap.addEventListener('dragover', function(e){ e.preventDefault(); });
+    wrap.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var id = e.dataTransfer.getData('missionId');
+      if (!id) return;
+      var rect = wrap.getBoundingClientRect();
+      var x = e.clientX - rect.left - 80;
+      var y = e.clientY - rect.top - 40;
+      addNodeToCanvas(id, x, y);
+    });
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// CANVAS NODES
+// ═══════════════════════════════════════════════════════════════
+
+function addNodeToCanvas(missionId, x, y) {
+  var existing = activeCampaign.nodes.find(function(n){ return n.missionId === missionId; });
+  if (existing) return; // already on canvas
+
+  var nodeId = 'node_' + Date.now();
+  activeCampaign.nodes.push({ id: nodeId, missionId: missionId, x: x||60, y: y||60 });
+  renderNodes();
+  saveLocal();
+  renderSidebar();
+}
+
+function addToCanvas() {
+  if (!selectedMission) return;
+  var offset = activeCampaign.nodes.length * 30;
+  addNodeToCanvas(selectedMission.id, 60 + offset, 60 + offset);
+}
+
+function renderNodes() {
+  var container = document.getElementById('canvas-nodes');
+  var hint = document.getElementById('empty-hint');
+  var allM = OFFICIAL_MISSIONS.concat(customMissions);
+
+  if (activeCampaign.nodes.length === 0) {
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+  }
+
+  container.innerHTML = '';
+  activeCampaign.nodes.forEach(function(node, idx) {
+    var m = allM.find(function(x){ return x.id === node.missionId; });
+    if (!m) return;
+    var isStart = idx === 0;
+
+    var div = document.createElement('div');
+    div.className = 'campaign-node' + (node.id === selectedNodeId ? ' selected' : '') + (isStart ? ' start-node' : '');
+    div.id = 'canvas-node-' + node.id;
+    div.style.left = node.x + 'px';
+    div.style.top = node.y + 'px';
+
+    div.innerHTML =
+      '<div class="node-header">' +
+        '<div class="node-num">' + (idx+1) + '</div>' +
+        '<div class="node-title">' + (m.icon||'◆') + ' ' + m.name + '</div>' +
+      '</div>' +
+      '<div class="node-body">' +
+        '<div class="node-goal">' + (m.goal||'').substring(0,60) + '</div>' +
+        '<div class="node-footer">' +
+          '<span class="node-setting">' + (m.settings||[]).join(' · ') + '</span>' +
+          '<button class="node-connect-btn' + (connectingFrom === node.id ? ' connecting' : '') + '" onclick="startConnect(event,\''+node.id+'\')" title="Connect to another mission">⊕</button>' +
+        '</div>' +
+      '</div>';
+
+    // drag
+    div.addEventListener('mousedown', function(e) {
+      if (e.target.classList.contains('node-connect-btn')) return;
+      selectedNodeId = node.id;
+      selectMission(node.missionId);
+      nodeDrag = { nodeId: node.id, startX: e.clientX, startY: e.clientY, origX: node.x, origY: node.y };
+      div.classList.add('dragging');
+    });
+
+    div.addEventListener('click', function(e) {
+      if (connectingFrom && connectingFrom !== node.id) {
+        finishConnect(node.id);
+      }
+    });
+
+    container.appendChild(div);
+  });
+
+  renderConnections();
+}
+
+document.addEventListener('mousemove', function(e) {
+  if (!nodeDrag) return;
+  var dx = e.clientX - nodeDrag.startX;
+  var dy = e.clientY - nodeDrag.startY;
+  var node = activeCampaign.nodes.find(function(n){ return n.id === nodeDrag.nodeId; });
+  if (!node) return;
+  node.x = Math.max(0, nodeDrag.origX + dx);
+  node.y = Math.max(0, nodeDrag.origY + dy);
+  var el = document.getElementById('canvas-node-' + nodeDrag.nodeId);
+  if (el) { el.style.left = node.x + 'px'; el.style.top = node.y + 'px'; }
+  renderConnections();
+});
+
+document.addEventListener('mouseup', function() {
+  if (nodeDrag) { nodeDrag = null; saveLocal(); }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// CONNECTIONS
+// ═══════════════════════════════════════════════════════════════
+
+function startConnect(e, nodeId) {
+  e.stopPropagation();
+  if (connectingFrom === nodeId) {
+    connectingFrom = null;
+  } else {
+    connectingFrom = nodeId;
+  }
+  renderNodes();
+}
+
+function finishConnect(toNodeId) {
+  if (!connectingFrom || connectingFrom === toNodeId) { connectingFrom = null; renderNodes(); return; }
+  var exists = activeCampaign.connections.find(function(c){
+    return (c.from === connectingFrom && c.to === toNodeId) || (c.from === toNodeId && c.to === connectingFrom);
+  });
+  if (!exists) {
+    activeCampaign.connections.push({ from: connectingFrom, to: toNodeId, label: '' });
+  }
+  connectingFrom = null;
+  renderNodes();
+  saveLocal();
+}
+
+function renderConnections() {
+  var svg = document.getElementById('conn-svg');
+  var existing = svg.querySelectorAll('.conn-group');
+  existing.forEach(function(el){ el.remove(); });
+
+  activeCampaign.connections.forEach(function(conn) {
+    var fromNode = activeCampaign.nodes.find(function(n){ return n.id === conn.from; });
+    var toNode = activeCampaign.nodes.find(function(n){ return n.id === conn.to; });
+    if (!fromNode || !toNode) return;
+
+    var x1 = fromNode.x + 160, y1 = fromNode.y + 40;
+    var x2 = toNode.x, y2 = toNode.y + 40;
+    // curve
+    var mx = (x1 + x2) / 2;
+    var d = 'M ' + x1 + ' ' + y1 + ' C ' + mx + ' ' + y1 + ', ' + mx + ' ' + y2 + ', ' + x2 + ' ' + y2;
+
+    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.className.baseVal = 'conn-group';
+
+    var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'conn-line');
+    g.appendChild(path);
+
+    // delete hit area
+    var midX = (x1 + x2) / 2, midY = (fromNode.y + toNode.y) / 2 + 40;
+    var delBtn = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    delBtn.setAttribute('cx', midX); delBtn.setAttribute('cy', midY);
+    delBtn.setAttribute('r', '7');
+    delBtn.setAttribute('fill', '#3a1a1a');
+    delBtn.setAttribute('stroke', '#8b1a1a');
+    delBtn.setAttribute('stroke-width', '1');
+    delBtn.style.cursor = 'pointer';
+    delBtn.style.pointerEvents = 'all';
+    delBtn.addEventListener('click', function() {
+      activeCampaign.connections = activeCampaign.connections.filter(function(c){ return !(c.from===conn.from && c.to===conn.to); });
+      renderNodes();
+      saveLocal();
+    });
+    var delX = document.createElementNS('http://www.w3.org/2000/svg','text');
+    delX.setAttribute('x', midX); delX.setAttribute('y', midY + 4);
+    delX.setAttribute('text-anchor','middle');
+    delX.setAttribute('fill','#e06060');
+    delX.setAttribute('font-size','9');
+    delX.style.pointerEvents = 'none';
+    delX.textContent = '×';
+    g.appendChild(delBtn);
+    g.appendChild(delX);
+    svg.appendChild(g);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CANVAS ACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+function removeSelected() {
+  if (!selectedNodeId) return;
+  activeCampaign.nodes = activeCampaign.nodes.filter(function(n){ return n.id !== selectedNodeId; });
+  activeCampaign.connections = activeCampaign.connections.filter(function(c){ return c.from !== selectedNodeId && c.to !== selectedNodeId; });
+  selectedNodeId = null;
+  renderNodes();
+  renderSidebar();
+  saveLocal();
+}
+
+function clearCanvas() {
+  if (!confirm('Remove all missions from this campaign canvas?')) return;
+  activeCampaign.nodes = [];
+  activeCampaign.connections = [];
+  selectedNodeId = null;
+  renderNodes();
+  renderSidebar();
+  saveLocal();
+}
+
+function autoLayout() {
+  var n = activeCampaign.nodes.length;
+  if (n === 0) return;
+  var wrap = document.getElementById('canvas-wrap');
+  var W = wrap.clientWidth, H = wrap.clientHeight;
+  var cols = Math.ceil(Math.sqrt(n * 1.6));
+  var rows = Math.ceil(n / cols);
+  var cellW = (W - 80) / cols, cellH = (H - 80) / rows;
+  activeCampaign.nodes.forEach(function(node, i) {
+    var col = i % cols, row = Math.floor(i / cols);
+    node.x = 40 + col * cellW;
+    node.y = 40 + row * cellH;
+  });
+  renderNodes();
+  saveLocal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EDITOR PANEL
+// ═══════════════════════════════════════════════════════════════
+
+function renderEditor() {
+  var m = selectedMission;
+  var titleEl = document.getElementById('editor-panel-title');
+  var content = document.getElementById('editor-content');
+  var footer = document.getElementById('editor-footer');
+  var deleteBtn = document.getElementById('delete-mission-btn');
+
+  if (!m) {
+    titleEl.textContent = 'Select a Mission';
+    content.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-style:italic;font-size:12px;">Select a mission from the list to view or edit it</div>';
+    footer.style.display = 'none';
+    return;
+  }
+
+  footer.style.display = 'flex';
+  var alreadyOnCanvas = activeCampaign.nodes.find(function(n){ return n.missionId === m.id; });
+  footer.innerHTML = alreadyOnCanvas
+    ? '<span style="font-size:10px;color:var(--text-muted);font-style:italic;padding:6px;">✓ On canvas</span>'
+    : '<button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>';
+
+  if (m.type === 'official') {
+    titleEl.textContent = m.name;
+    deleteBtn.style.display = 'none';
+    content.innerHTML = renderOfficialView(m);
+  } else {
+    titleEl.textContent = 'Edit Mission';
+    deleteBtn.style.display = 'block';
+    content.innerHTML = renderCustomEditor(m);
+  }
+}
+
+function renderOfficialView(m) {
+  var s = '';
+  s += '<div class="official-view"><span class="ov-label">Narrative</span><div class="ov-val">' + (m.narrative||'—') + '</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Goal</span><div class="ov-val">' + (m.goal||'—') + '</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Faction</span><div class="ov-val">' + (m.faction||'Any') + '</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Settings</span><div class="ov-val">' + (m.settings||[]).join(', ') + '</div></div>';
+  if (m.turnLimit) s += '<div class="official-view"><span class="ov-label">Turn Limit</span><div class="ov-val">' + m.turnLimit + ' turns</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Set-Up</span><div class="ov-val">' + (m.setup||'—') + '</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Special Rules</span><div class="ov-val">' + (m.specialRules||'—') + '</div></div>';
+  if (m.specialElements && m.specialElements.length) {
+    s += '<div class="official-view"><span class="ov-label">Special Elements</span>';
+    m.specialElements.forEach(function(el,i){ s += '<div class="ov-val" style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><span style="width:20px;height:20px;border-radius:50%;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0;">'+(i+1)+'</span>'+el+'</div>'; });
+    s += '</div>';
+  }
+  if (m.furniture && m.furniture.length) s += '<div class="official-view"><span class="ov-label">Furniture</span><div class="ov-val">' + m.furniture.join(', ') + '</div></div>';
+  if (m.otherElements && m.otherElements.length) s += '<div class="official-view"><span class="ov-label">Other Elements</span><div class="ov-val">' + m.otherElements.join(', ') + '</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Quest End</span><div class="ov-val">' + (m.questEnd||'—') + '</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Rewards</span><div class="ov-val" style="color:var(--gold-light);">' + (m.rewards||'—') + '</div></div>';
+  s += '<div class="official-view"><span class="ov-label">Tiles</span><div class="ov-val">' + (m.tiles||'—') + '</div></div>';
+  return s;
+}
+
+function renderCustomEditor(m) {
+  var elements = m.specialElements || [];
+  var elHtml = elements.map(function(el, i) {
+    return '<div class="element-entry">' +
+      '<div class="token-num">'+(i+1)+'</div>' +
+      '<input type="text" value="'+el+'" onchange="updateElement(\''+m.id+'\','+i+',this.value)" placeholder="Element description...">' +
+    '</div>';
+  }).join('');
+  elHtml += '<button class="add-element-btn" onclick="addElement(\''+m.id+'\')">+ Add Element</button>';
+
+  var settings = m.settings || [];
+
+  return '<div class="form-group"><label class="form-label">Mission Name</label>' +
+    '<input class="form-input" value="'+m.name+'" onchange="updateField(\''+m.id+'\',\'name\',this.value)"></div>' +
+    '<div class="form-group"><label class="form-label">Narrative</label>' +
+    '<textarea class="form-textarea" onchange="updateField(\''+m.id+'\',\'narrative\',this.value)">'+m.narrative+'</textarea></div>' +
+    '<div class="form-row"><div class="form-group"><label class="form-label">Goal</label>' +
+    '<input class="form-input" value="'+(m.goal||'')+'" onchange="updateField(\''+m.id+'\',\'goal\',this.value)"></div>' +
+    '<div class="form-group"><label class="form-label">Faction</label>' +
+    '<input class="form-input" value="'+(m.faction||'')+'" onchange="updateField(\''+m.id+'\',\'faction\',this.value)" placeholder="e.g. Undead"></div></div>' +
+    '<div class="form-row"><div class="form-group"><label class="form-label">Turn Limit</label>' +
+    '<input class="form-input" value="'+(m.turnLimit||'')+'" onchange="updateField(\''+m.id+'\',\'turnLimit\',this.value)" placeholder="None"></div>' +
+    '<div class="form-group"><label class="form-label">Setting</label>' +
+    '<div class="setting-toggle">' +
+      ['dungeon','civilised','outdoor'].map(function(s){
+        return '<button class="stoggle '+(settings.indexOf(s)!==-1?'on':'')+'" onclick="toggleSetting(\''+m.id+'\',\''+s+'\',this)">'+s.charAt(0).toUpperCase()+s.slice(1)+'</button>';
+      }).join('') +
+    '</div></div></div>' +
+    '<div class="form-group"><label class="form-label">Set-Up</label>' +
+    '<textarea class="form-textarea" onchange="updateField(\''+m.id+'\',\'setup\',this.value)">'+m.setup+'</textarea></div>' +
+    '<div class="form-group"><label class="form-label">Special Rules</label>' +
+    '<textarea class="form-textarea" onchange="updateField(\''+m.id+'\',\'specialRules\',this.value)">'+m.specialRules+'</textarea></div>' +
+    '<hr class="section-sep">' +
+    '<div class="form-group"><label class="form-label">Special Elements <span style="font-size:9px;color:var(--text-muted);letter-spacing:0;font-family:IM Fell English;text-transform:none;font-style:italic;">(numbered tokens match dungeon builder)</span></label>' +
+    elHtml + '</div>' +
+    '<div class="form-group"><label class="form-label">Furniture</label>' +
+    '<input class="form-input" value="'+(m.furniture||[]).join(', ')+'" onchange="updateFieldCSV(\''+m.id+'\',\'furniture\',this.value)" placeholder="e.g. Throne, Forge..."></div>' +
+    '<div class="form-group"><label class="form-label">Other Elements</label>' +
+    '<input class="form-input" value="'+(m.otherElements||[]).join(', ')+'" onchange="updateFieldCSV(\''+m.id+'\',\'otherElements\',this.value)" placeholder="e.g. Chest x3, Trap x2..."></div>' +
+    '<hr class="section-sep">' +
+    '<div class="form-group"><label class="form-label">Quest End</label>' +
+    '<textarea class="form-textarea" onchange="updateField(\''+m.id+'\',\'questEnd\',this.value)">'+m.questEnd+'</textarea></div>' +
+    '<div class="form-group"><label class="form-label">Rewards</label>' +
+    '<textarea class="form-textarea" style="min-height:44px" onchange="updateField(\''+m.id+'\',\'rewards\',this.value)">'+m.rewards+'</textarea></div>' +
+    '<div class="form-group"><label class="form-label">Tiles</label>' +
+    '<input class="form-input" value="'+(m.tiles||'')+'" onchange="updateField(\''+m.id+'\',\'tiles\',this.value)" placeholder="e.g. 1A, 2B, Boss Room..."></div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MISSION EDITING
+// ═══════════════════════════════════════════════════════════════
+
+function newMission() {
+  var m = {
+    id: 'cust_' + Date.now(),
+    type: 'custom',
+    name: 'New Mission',
+    icon: '◆',
+    goal: '',
+    narrative: '',
+    faction: '',
+    setup: '',
+    specialRules: '',
+    specialElements: [],
+    furniture: [],
+    otherElements: [],
+    questEnd: '',
+    rewards: '',
+    tiles: '',
+    settings: ['dungeon'],
+    turnLimit: null
+  };
+  customMissions.push(m);
+  saveLocal();
+  selectMission(m.id);
+  renderSidebar();
+}
+
+function deleteMission() {
+  if (!selectedMission || selectedMission.type === 'official') return;
+  if (!confirm('Delete this mission?')) return;
+  customMissions = customMissions.filter(function(m){ return m.id !== selectedMission.id; });
+  activeCampaign.nodes = activeCampaign.nodes.filter(function(n){ return n.missionId !== selectedMission.id; });
+  selectedMission = null;
+  saveLocal();
+  renderSidebar();
+  renderNodes();
+  renderEditor();
+}
+
+function updateField(id, field, value) {
+  var m = customMissions.find(function(x){ return x.id === id; });
+  if (!m) return;
+  m[field] = value;
+  if (selectedMission && selectedMission.id === id) selectedMission[field] = value;
+  saveLocal();
+  renderSidebar();
+  renderNodes();
+}
+
+function updateFieldCSV(id, field, value) {
+  updateField(id, field, value.split(',').map(function(s){ return s.trim(); }).filter(Boolean));
+}
+
+function updateElement(id, idx, value) {
+  var m = customMissions.find(function(x){ return x.id === id; });
+  if (!m) return;
+  m.specialElements[idx] = value;
+  if (selectedMission && selectedMission.id === id) selectedMission.specialElements[idx] = value;
+  saveLocal();
+}
+
+function addElement(id) {
+  var m = customMissions.find(function(x){ return x.id === id; });
+  if (!m) return;
+  m.specialElements.push('');
+  if (selectedMission && selectedMission.id === id) selectedMission.specialElements = m.specialElements;
+  saveLocal();
+  renderEditor();
+}
+
+function toggleSetting(id, setting, btn) {
+  var m = customMissions.find(function(x){ return x.id === id; });
+  if (!m) return;
+  var idx = m.settings.indexOf(setting);
+  if (idx === -1) { m.settings.push(setting); btn.classList.add('on'); }
+  else { m.settings.splice(idx,1); btn.classList.remove('on'); }
+  if (selectedMission && selectedMission.id === id) selectedMission.settings = m.settings;
+  saveLocal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CAMPAIGN SAVE / LOAD
+// ═══════════════════════════════════════════════════════════════
+
+function saveCampaign() {
+  activeCampaign.name = document.getElementById('campaign-name').value;
+  var existing = campaigns.findIndex(function(c){ return c.id === activeCampaign.id; });
+  if (existing !== -1) { campaigns[existing] = JSON.parse(JSON.stringify(activeCampaign)); }
+  else { campaigns.push(JSON.parse(JSON.stringify(activeCampaign))); }
+  saveLocal();
+  alert('Campaign "' + activeCampaign.name + '" saved.');
+}
+
+function newCampaign() {
+  document.getElementById('nc-name').value = '';
+  document.getElementById('nc-desc').value = '';
+  document.getElementById('modal-new-campaign').classList.add('open');
+}
+
+function createCampaign() {
+  var name = document.getElementById('nc-name').value.trim() || 'Unnamed Campaign';
+  var desc = document.getElementById('nc-desc').value.trim();
+  activeCampaign = { id: 'camp_' + Date.now(), name: name, description: desc, nodes: [], connections: [] };
+  document.getElementById('campaign-name').value = name;
+  saveLocal();
+  closeModal('modal-new-campaign');
+  switchTab('designer');
+  renderNodes();
+  renderSidebar();
+}
+
+function renderCampaigns() {
+  var grid = document.getElementById('campaigns-grid');
+  if (!campaigns.length) {
+    grid.innerHTML = '<div style="color:var(--text-muted);font-style:italic;font-size:12px;">No saved campaigns yet. Build one in the Campaign Designer and save it.</div>';
+    return;
+  }
+  var allM = OFFICIAL_MISSIONS.concat(customMissions);
+  grid.innerHTML = campaigns.map(function(c) {
+    var missionNames = (c.nodes||[]).map(function(n){
+      var m = allM.find(function(x){ return x.id === n.missionId; });
+      return m ? m.name : '?';
+    });
+    return '<div class="campaign-item" onclick="loadCampaign(\''+c.id+'\')">' +
+      '<div class="campaign-item-name">' + c.name + '</div>' +
+      '<div class="campaign-item-meta">' + (c.description||'Custom campaign') + '</div>' +
+      '<div class="campaign-item-missions">' +
+        missionNames.map(function(n){ return '<span class="cim-pill">'+n+'</span>'; }).join('') +
+      '</div></div>';
+  }).join('');
+}
+
+function loadCampaign(id) {
+  var c = campaigns.find(function(x){ return x.id === id; });
+  if (!c) return;
+  activeCampaign = JSON.parse(JSON.stringify(c));
+  document.getElementById('campaign-name').value = activeCampaign.name;
+  saveLocal();
+  switchTab('designer');
+  renderNodes();
+  renderSidebar();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════════════════════════════
+
+function exportCampaign() {
+  var payload = {
+    campaign: activeCampaign,
+    customMissions: customMissions.filter(function(m){
+      return activeCampaign.nodes.some(function(n){ return n.missionId === m.id; });
+    })
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (activeCampaign.name || 'campaign').replace(/\s+/g,'_') + '.json';
+  a.click();
+}
+
+function triggerImport() {
+  document.getElementById('import-file').click();
+}
+
+function importCampaign(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      var data = JSON.parse(ev.target.result);
+      if (data.campaign) {
+        // merge custom missions
+        (data.customMissions || []).forEach(function(m) {
+          if (!customMissions.find(function(x){ return x.id === m.id; })) {
+            m.type = 'custom';
+            customMissions.push(m);
+          }
+        });
+        activeCampaign = data.campaign;
+        document.getElementById('campaign-name').value = activeCampaign.name;
+        saveLocal();
+        renderSidebar();
+        renderNodes();
+        alert('Campaign "' + activeCampaign.name + '" imported.');
+      }
+    } catch(err) { alert('Invalid campaign file.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════════════
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════════════
+
+init();
+renderNodes();
+</script>
+</body>
+</html>
