@@ -728,6 +728,149 @@ body {
   cursor: pointer;
   pointer-events: all;
 }
+
+/* ─── CONNECTION OUTCOME COLOURS ──────────────────────────── */
+.conn-line.victory { stroke: #a07820; }
+.conn-line.defeat  { stroke: #8b1a1a; }
+.conn-line.custom  { stroke: #4a5a6e; }
+
+/* ─── NODE DUNGEON TYPE BADGE ─────────────────────────────── */
+.node-dungeon-type {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+.ndt-random   { background: rgba(26,60,26,0.6);  color: #6abe6a; border: 1px solid #2d6e2d; }
+.ndt-planned  { background: rgba(26,46,80,0.6);  color: #6a9abe; border: 1px solid #2d4e8e; }
+.ndt-scripted { background: rgba(60,26,80,0.6);  color: #a06abe; border: 1px solid #6e2d8e; }
+
+/* ─── NODE BRIEF BUTTON ───────────────────────────────────── */
+.node-brief-btn {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.node-brief-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
+
+/* ─── MISSION BRIEF MODAL ─────────────────────────────────── */
+#modal-brief .modal-box {
+  min-width: 480px;
+  max-width: 680px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+.brief-header {
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--panel-border);
+  background: rgba(139,105,20,0.1);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.brief-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.brief-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 16px;
+  color: var(--gold-light);
+  margin-bottom: 4px;
+}
+.brief-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.brief-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+.brief-scroll::-webkit-scrollbar { width: 4px; }
+.brief-scroll::-webkit-scrollbar-thumb { background: var(--panel-border); }
+.brief-narrative {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.7;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--border-gold);
+  background: rgba(139,105,20,0.05);
+}
+.brief-section {
+  margin-bottom: 14px;
+}
+.brief-section-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 5px;
+}
+.brief-section-body {
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+.brief-section-body.highlight { color: var(--gold-light); }
+.brief-divider {
+  border: none;
+  border-top: 1px solid var(--panel-border);
+  margin: 16px 0;
+}
+.brief-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ─── CONNECTION LABEL MODAL ──────────────────────────────── */
+.outcome-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.outcome-btn {
+  flex: 1;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 0;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.outcome-btn:hover { background: rgba(255,255,255,0.05); }
+.outcome-btn.selected-victory { border-color: #a07820; color: #e0b840; background: rgba(160,120,32,0.15); }
+.outcome-btn.selected-defeat  { border-color: #8b1a1a; color: #e06060; background: rgba(139,26,26,0.15); }
+.outcome-btn.selected-custom  { border-color: #4a5a6e; color: #8aaabe; background: rgba(74,90,110,0.15); }
 </style>
 </head>
 <body>
@@ -815,6 +958,44 @@ body {
     <div class="campaign-grid" id="campaigns-grid"></div>
   </div>
 
+</div>
+
+<!-- Connection Outcome Modal -->
+<div class="modal-overlay" id="modal-connection">
+  <div class="modal-box">
+    <div class="modal-title">Link Outcome</div>
+    <div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:14px;">What result from the previous mission leads here?</div>
+    <div class="outcome-btn-row">
+      <button class="outcome-btn" id="ob-victory" onclick="selectOutcome('victory')">⚔ Victory</button>
+      <button class="outcome-btn" id="ob-defeat"  onclick="selectOutcome('defeat')">💀 Defeat</button>
+      <button class="outcome-btn" id="ob-custom"  onclick="selectOutcome('custom')">◆ Custom</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Label <span style="font-size:9px;font-style:italic;text-transform:none;letter-spacing:0;">(optional — shown on the arrow)</span></label>
+      <input class="form-input" id="conn-label-input" type="text" placeholder="e.g. Boss escaped · Relic retrieved...">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="cancelConnection()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmConnection()">Add Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mission Brief Modal -->
+<div class="modal-overlay" id="modal-brief" onclick="closeBriefOnBackdrop(event)">
+  <div class="modal-box">
+    <div class="brief-header">
+      <div class="brief-icon" id="brief-icon">◆</div>
+      <div>
+        <div class="brief-title" id="brief-title">Mission Name</div>
+        <div class="brief-subtitle" id="brief-subtitle">Quest Brief</div>
+      </div>
+    </div>
+    <div class="brief-scroll" id="brief-scroll"></div>
+    <div class="brief-footer">
+      <button class="modal-btn confirm" onclick="closeModal('modal-brief')">Close</button>
+    </div>
+  </div>
 </div>
 
 <!-- New Campaign Modal -->
@@ -976,7 +1157,7 @@ function addNodeToCanvas(missionId, x, y) {
   if (existing) return; // already on canvas
 
   var nodeId = 'node_' + Date.now();
-  activeCampaign.nodes.push({ id: nodeId, missionId: missionId, x: x||60, y: y||60 });
+  activeCampaign.nodes.push({ id: nodeId, missionId: missionId, x: x||60, y: y||60, dungeonType: 'random' });
   renderNodes();
   saveLocal();
   renderSidebar();
@@ -1011,22 +1192,29 @@ function renderNodes() {
     div.style.left = node.x + 'px';
     div.style.top = node.y + 'px';
 
+    var dtLabel = {random:'Random', planned:'Pre-planned', scripted:'Scripted'}[node.dungeonType||'random'] || 'Random';
+    var dtClass = 'ndt-' + (node.dungeonType||'random');
     div.innerHTML =
       '<div class="node-header">' +
         '<div class="node-num">' + (idx+1) + '</div>' +
         '<div class="node-title">' + (m.icon||'◆') + ' ' + m.name + '</div>' +
       '</div>' +
       '<div class="node-body">' +
-        '<div class="node-goal">' + (m.goal||'').substring(0,60) + '</div>' +
+        '<div style="margin-bottom:5px;"><span class="node-dungeon-type ' + dtClass + '">' + dtLabel + '</span></div>' +
+        '<div class="node-goal">' + (m.goal||'').substring(0,55) + '</div>' +
         '<div class="node-footer">' +
           '<span class="node-setting">' + (m.settings||[]).join(' · ') + '</span>' +
-          '<button class="node-connect-btn' + (connectingFrom === node.id ? ' connecting' : '') + '" onclick="startConnect(event,\''+node.id+'\')" title="Connect to another mission">⊕</button>' +
+          '<div style="display:flex;gap:4px;">' +
+            '<button class="node-brief-btn" onclick="openBrief(event,\''+node.missionId+'\')" title="View mission brief">📖</button>' +
+            '<button class="node-connect-btn' + (connectingFrom === node.id ? ' connecting' : '') + '" onclick="startConnect(event,\''+node.id+'\')" title="Connect to another mission">⊕</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
 
     // drag
     div.addEventListener('mousedown', function(e) {
       if (e.target.classList.contains('node-connect-btn')) return;
+      if (e.target.classList.contains('node-brief-btn')) return;
       selectedNodeId = node.id;
       selectMission(node.missionId);
       nodeDrag = { nodeId: node.id, startX: e.clientX, startY: e.clientY, origX: node.x, origY: node.y };
@@ -1076,17 +1264,60 @@ function startConnect(e, nodeId) {
   renderNodes();
 }
 
+// Pending connection data while modal is open
+var pendingConn = null;
+
 function finishConnect(toNodeId) {
   if (!connectingFrom || connectingFrom === toNodeId) { connectingFrom = null; renderNodes(); return; }
   var exists = activeCampaign.connections.find(function(c){
-    return (c.from === connectingFrom && c.to === toNodeId) || (c.from === toNodeId && c.to === connectingFrom);
+    return (c.from === connectingFrom && c.to === toNodeId);
   });
-  if (!exists) {
-    activeCampaign.connections.push({ from: connectingFrom, to: toNodeId, label: '' });
-  }
+  if (exists) { connectingFrom = null; renderNodes(); return; }
+
+  pendingConn = { from: connectingFrom, to: toNodeId, outcome: 'victory', label: '', editing: null };
   connectingFrom = null;
   renderNodes();
+  openConnectionModal(pendingConn);
+}
+
+function openConnectionModal(conn) {
+  pendingConn = conn;
+  document.getElementById('conn-label-input').value = conn.label || '';
+  ['victory','defeat','custom'].forEach(function(o){
+    document.getElementById('ob-'+o).className = 'outcome-btn' + (conn.outcome === o ? ' selected-'+o : '');
+  });
+  document.getElementById('modal-connection').classList.add('open');
+}
+
+function selectOutcome(outcome) {
+  if (!pendingConn) return;
+  pendingConn.outcome = outcome;
+  ['victory','defeat','custom'].forEach(function(o){
+    document.getElementById('ob-'+o).className = 'outcome-btn' + (outcome === o ? ' selected-'+o : '');
+  });
+}
+
+function confirmConnection() {
+  if (!pendingConn) return;
+  pendingConn.label = document.getElementById('conn-label-input').value.trim();
+  if (pendingConn.editing) {
+    // editing existing connection
+    var c = activeCampaign.connections.find(function(x){ return x.from === pendingConn.from && x.to === pendingConn.to; });
+    if (c) { c.outcome = pendingConn.outcome; c.label = pendingConn.label; }
+  } else {
+    activeCampaign.connections.push({ from: pendingConn.from, to: pendingConn.to, outcome: pendingConn.outcome, label: pendingConn.label });
+  }
+  pendingConn = null;
+  closeModal('modal-connection');
+  renderNodes();
   saveLocal();
+}
+
+function cancelConnection() {
+  pendingConn = null;
+  connectingFrom = null;
+  closeModal('modal-connection');
+  renderNodes();
 }
 
 function renderConnections() {
@@ -1094,49 +1325,123 @@ function renderConnections() {
   var existing = svg.querySelectorAll('.conn-group');
   existing.forEach(function(el){ el.remove(); });
 
+  // outcome colour config
+  var outcomeColor = { victory: '#a07820', defeat: '#8b1a1a', custom: '#4a5a6e' };
+  var outcomeArrow = { victory: 'arrowhead-victory', defeat: 'arrowhead-defeat', custom: 'arrowhead-custom' };
+
+  // ensure per-outcome arrowhead markers exist in defs
+  var defs = svg.querySelector('defs');
+  ['victory','defeat','custom'].forEach(function(o){
+    if (!defs.querySelector('#arrowhead-'+o)) {
+      var m = document.createElementNS('http://www.w3.org/2000/svg','marker');
+      m.setAttribute('id','arrowhead-'+o);
+      m.setAttribute('markerWidth','8'); m.setAttribute('markerHeight','6');
+      m.setAttribute('refX','7'); m.setAttribute('refY','3');
+      m.setAttribute('orient','auto');
+      var poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      poly.setAttribute('points','0 0, 8 3, 0 6');
+      poly.setAttribute('fill', outcomeColor[o]);
+      poly.setAttribute('opacity','0.8');
+      m.appendChild(poly);
+      defs.appendChild(m);
+    }
+  });
+
   activeCampaign.connections.forEach(function(conn) {
     var fromNode = activeCampaign.nodes.find(function(n){ return n.id === conn.from; });
-    var toNode = activeCampaign.nodes.find(function(n){ return n.id === conn.to; });
+    var toNode   = activeCampaign.nodes.find(function(n){ return n.id === conn.to; });
     if (!fromNode || !toNode) return;
 
+    var outcome = conn.outcome || 'victory';
+    var color = outcomeColor[outcome];
+
     var x1 = fromNode.x + 160, y1 = fromNode.y + 40;
-    var x2 = toNode.x, y2 = toNode.y + 40;
-    // curve
+    var x2 = toNode.x,         y2 = toNode.y + 40;
     var mx = (x1 + x2) / 2;
-    var d = 'M ' + x1 + ' ' + y1 + ' C ' + mx + ' ' + y1 + ', ' + mx + ' ' + y2 + ', ' + x2 + ' ' + y2;
+    var d = 'M '+x1+' '+y1+' C '+mx+' '+y1+', '+mx+' '+y2+', '+x2+' '+y2;
 
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.className.baseVal = 'conn-group';
 
     var path = document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d', d);
-    path.setAttribute('class', 'conn-line');
+    path.setAttribute('class', 'conn-line ' + outcome);
+    path.setAttribute('stroke', color);
+    path.setAttribute('marker-end', 'url(#arrowhead-'+outcome+')');
     g.appendChild(path);
 
-    // delete hit area
-    var midX = (x1 + x2) / 2, midY = (fromNode.y + toNode.y) / 2 + 40;
+    // label on connection
+    if (conn.label) {
+      var labelY = (y1 + y2) / 2 - 8;
+      var bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      bg.setAttribute('x', mx - 40); bg.setAttribute('y', labelY - 9);
+      bg.setAttribute('width', 80); bg.setAttribute('height', 14);
+      bg.setAttribute('fill', 'var(--bg-panel)'); bg.setAttribute('rx', 2);
+      bg.style.pointerEvents = 'none';
+      var lt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      lt.setAttribute('x', mx); lt.setAttribute('y', labelY + 2);
+      lt.setAttribute('text-anchor','middle');
+      lt.setAttribute('fill', color);
+      lt.setAttribute('font-size','9');
+      lt.setAttribute('font-family','Cinzel,serif');
+      lt.style.pointerEvents = 'none';
+      lt.textContent = conn.label.length > 14 ? conn.label.substring(0,13)+'…' : conn.label;
+      g.appendChild(bg);
+      g.appendChild(lt);
+    }
+
+    // midpoint edit/delete circle
+    var midX = mx, midY = (y1 + y2) / 2;
+    var editBtn = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    editBtn.setAttribute('cx', midX); editBtn.setAttribute('cy', midY);
+    editBtn.setAttribute('r', '8');
+    editBtn.setAttribute('fill', 'var(--bg-panel)');
+    editBtn.setAttribute('stroke', color);
+    editBtn.setAttribute('stroke-width', '1');
+    editBtn.style.cursor = 'pointer';
+    editBtn.style.pointerEvents = 'all';
+    editBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openConnectionModal({ from: conn.from, to: conn.to, outcome: conn.outcome||'victory', label: conn.label||'', editing: true });
+    });
+
+    // edit pencil icon
+    var editIcon = document.createElementNS('http://www.w3.org/2000/svg','text');
+    editIcon.setAttribute('x', midX); editIcon.setAttribute('y', midY + 4);
+    editIcon.setAttribute('text-anchor','middle');
+    editIcon.setAttribute('fill', color);
+    editIcon.setAttribute('font-size','9');
+    editIcon.style.pointerEvents = 'none';
+    editIcon.textContent = '✎';
+    g.appendChild(editBtn);
+    g.appendChild(editIcon);
+
+    // delete button (small, offset above)
+    var delX2 = midX + 12, delY2 = midY - 8;
     var delBtn = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    delBtn.setAttribute('cx', midX); delBtn.setAttribute('cy', midY);
-    delBtn.setAttribute('r', '7');
+    delBtn.setAttribute('cx', delX2); delBtn.setAttribute('cy', delY2);
+    delBtn.setAttribute('r', '5');
     delBtn.setAttribute('fill', '#3a1a1a');
     delBtn.setAttribute('stroke', '#8b1a1a');
     delBtn.setAttribute('stroke-width', '1');
     delBtn.style.cursor = 'pointer';
     delBtn.style.pointerEvents = 'all';
-    delBtn.addEventListener('click', function() {
+    delBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
       activeCampaign.connections = activeCampaign.connections.filter(function(c){ return !(c.from===conn.from && c.to===conn.to); });
       renderNodes();
       saveLocal();
     });
-    var delX = document.createElementNS('http://www.w3.org/2000/svg','text');
-    delX.setAttribute('x', midX); delX.setAttribute('y', midY + 4);
-    delX.setAttribute('text-anchor','middle');
-    delX.setAttribute('fill','#e06060');
-    delX.setAttribute('font-size','9');
-    delX.style.pointerEvents = 'none';
-    delX.textContent = '×';
+    var delTxt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    delTxt.setAttribute('x', delX2); delTxt.setAttribute('y', delY2 + 3);
+    delTxt.setAttribute('text-anchor','middle');
+    delTxt.setAttribute('fill','#e06060');
+    delTxt.setAttribute('font-size','7');
+    delTxt.style.pointerEvents = 'none';
+    delTxt.textContent = '×';
     g.appendChild(delBtn);
-    g.appendChild(delX);
+    g.appendChild(delTxt);
+
     svg.appendChild(g);
   });
 }
@@ -1153,6 +1458,15 @@ function removeSelected() {
   renderNodes();
   renderSidebar();
   saveLocal();
+}
+
+function setDungeonType(nodeId, type) {
+  var node = activeCampaign.nodes.find(function(n){ return n.id === nodeId; });
+  if (!node) return;
+  node.dungeonType = type;
+  saveLocal();
+  renderNodes();
+  renderEditor();
 }
 
 function clearCanvas() {
@@ -1201,10 +1515,25 @@ function renderEditor() {
   }
 
   footer.style.display = 'flex';
-  var alreadyOnCanvas = activeCampaign.nodes.find(function(n){ return n.missionId === m.id; });
-  footer.innerHTML = alreadyOnCanvas
-    ? '<span style="font-size:10px;color:var(--text-muted);font-style:italic;padding:6px;">✓ On canvas</span>'
-    : '<button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>';
+  var canvasNode = activeCampaign.nodes.find(function(n){ return n.missionId === m.id; });
+  var alreadyOnCanvas = !!canvasNode;
+
+  if (alreadyOnCanvas) {
+    var dt = canvasNode.dungeonType || 'random';
+    footer.innerHTML =
+      '<div style="width:100%;">' +
+        '<div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Dungeon Type</div>' +
+        '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
+          ['random','planned','scripted'].map(function(t){
+            var labels = {random:'Random Gen', planned:'Pre-planned', scripted:'Scripted'};
+            return '<button class="outcome-btn'+(dt===t?' selected-custom':'')+'" style="font-size:9px;" onclick="setDungeonType(\''+canvasNode.id+'\',\''+t+'\')">'+labels[t]+'</button>';
+          }).join('') +
+        '</div>' +
+        '<span style="font-size:9px;color:var(--text-muted);font-style:italic;">✓ On canvas</span>' +
+      '</div>';
+  } else {
+    footer.innerHTML = '<button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>';
+  }
 
   if (m.type === 'official') {
     titleEl.textContent = m.name;
@@ -1489,6 +1818,53 @@ function importCampaign(e) {
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MISSION BRIEF
+// ═══════════════════════════════════════════════════════════════
+
+function openBrief(e, missionId) {
+  e.stopPropagation();
+  var all = OFFICIAL_MISSIONS.concat(customMissions);
+  var m = all.find(function(x){ return x.id === missionId; });
+  if (!m) return;
+
+  document.getElementById('brief-icon').textContent = m.icon || '◆';
+  document.getElementById('brief-title').textContent = m.name;
+  document.getElementById('brief-subtitle').textContent = (m.settings||[]).join(' · ') + (m.turnLimit ? ' · ' + m.turnLimit + ' Turns' : '');
+
+  var s = '';
+  if (m.narrative) s += '<div class="brief-narrative">' + m.narrative + '</div>';
+
+  s += section('Goal', m.goal);
+  if (m.faction) s += section('Faction', m.faction);
+  if (m.setup) { s += '<hr class="brief-divider">'; s += section('Set-Up', m.setup); }
+  if (m.specialRules) s += section('Special Rules', m.specialRules);
+
+  if (m.specialElements && m.specialElements.length) {
+    var elStr = m.specialElements.map(function(el,i){ return '<span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="width:18px;height:18px;border-radius:50%;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0;">'+(i+1)+'</span>'+el+'</span><br>'; }).join('');
+    s += '<div class="brief-section"><span class="brief-section-label">Special Elements</span><div class="brief-section-body">' + elStr + '</div></div>';
+  }
+  if (m.furniture && m.furniture.length) s += section('Furniture', m.furniture.join(', '));
+  if (m.otherElements && m.otherElements.length) s += section('Other Elements', m.otherElements.join(', '));
+
+  s += '<hr class="brief-divider">';
+  s += section('Quest End', m.questEnd);
+  if (m.rewards) s += '<div class="brief-section"><span class="brief-section-label">Rewards</span><div class="brief-section-body highlight">' + m.rewards + '</div></div>';
+  if (m.tiles) s += section('Tiles', m.tiles);
+
+  document.getElementById('brief-scroll').innerHTML = s;
+  document.getElementById('modal-brief').classList.add('open');
+}
+
+function section(label, body) {
+  if (!body) return '';
+  return '<div class="brief-section"><span class="brief-section-label">'+label+'</span><div class="brief-section-body">'+body+'</div></div>';
+}
+
+function closeBriefOnBackdrop(e) {
+  if (e.target === document.getElementById('modal-brief')) closeModal('modal-brief');
 }
 
 // ═══════════════════════════════════════════════════════════════
