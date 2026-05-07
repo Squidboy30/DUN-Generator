@@ -745,20 +745,52 @@ body {
 .conn-line.defeat  { stroke: #8b1a1a; }
 .conn-line.custom  { stroke: #4a5a6e; }
 
-/* ─── NODE DUNGEON TYPE BADGE ─────────────────────────────── */
-.node-dungeon-type {
+/* ─── NODE DUNGEON TYPE ROW ───────────────────────────────── */
+.node-dt-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 5px;
+  padding: 4px 0;
+  border-top: 1px solid rgba(106,74,32,0.3);
+  border-bottom: 1px solid rgba(106,74,32,0.3);
+}
+.node-dt-btn {
+  width: 20px; height: 20px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+.node-dt-btn:hover { border-color: var(--border-gold); }
+.node-dt-btn.active { border-color: var(--gold-light); background: rgba(139,105,20,0.25); }
+.node-dt-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-left: 2px;
+}
+.node-launch-btn {
   font-family: 'Cinzel', serif;
   font-size: 9px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 1px 6px;
-  border-radius: 2px;
-  margin-bottom: 4px;
-  display: inline-block;
+  color: var(--gold-light);
+  border: 1px solid var(--border-gold);
+  padding: 2px 7px;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
 }
-.ndt-random   { background: rgba(26,60,26,0.6);  color: #6abe6a; border: 1px solid #2d6e2d; }
-.ndt-planned  { background: rgba(26,46,80,0.6);  color: #6a9abe; border: 1px solid #2d4e8e; }
-.ndt-scripted { background: rgba(60,26,80,0.6);  color: #a06abe; border: 1px solid #6e2d8e; }
+.node-launch-btn:hover { background: rgba(139,105,20,0.2); }
 
 /* ─── NODE BRIEF BUTTON ───────────────────────────────────── */
 .node-brief-btn {
@@ -1203,21 +1235,29 @@ function renderNodes() {
     div.style.left = node.x + 'px';
     div.style.top = node.y + 'px';
 
+    var dt = node.dungeonType || 'random';
+    var dtLabels = {random:'🎲 Random', planned:'🗺 Pre-planned', scripted:'📜 Scripted'};
+    var launchUrl = dt === 'random' ? 'modules/generator.html' : 'modules/builder.html';
+    var launchLabel = dt === 'random' ? 'Open Generator' : 'Open Builder';
+
     var connectBtnClass = 'node-connect-btn' + (connectingFrom === node.id ? ' connecting' : '') + (connectingFrom && connectingFrom !== node.id ? ' connectable' : '');
     var connectBtnLabel = (connectingFrom && connectingFrom !== node.id) ? '→' : '⊕';
 
-    var dtLabel = {random:'Random', planned:'Pre-planned', scripted:'Scripted'}[node.dungeonType||'random'] || 'Random';
-    var dtClass = 'ndt-' + (node.dungeonType||'random');
     div.innerHTML =
       '<div class="node-header">' +
         '<div class="node-num">' + (idx+1) + '</div>' +
         '<div class="node-title">' + (m.icon||'◆') + ' ' + m.name + '</div>' +
       '</div>' +
       '<div class="node-body">' +
-        '<div style="margin-bottom:5px;"><span class="node-dungeon-type ' + dtClass + '">' + dtLabel + '</span></div>' +
         '<div class="node-goal">' + (m.goal||'').substring(0,55) + '</div>' +
+        '<div class="node-dt-row">' +
+          ['random','planned','scripted'].map(function(t){
+            return '<button class="node-dt-btn'+(dt===t?' active':'')+'" onclick="setDungeonType(event,\''+node.id+'\',\''+t+'\')" title="'+({random:'Randomly generated dungeon',planned:'Pre-planned dungeon (Builder)',scripted:'Scripted — no dungeon'}[t])+'">'+({random:'🎲',planned:'🗺',scripted:'📜'}[t])+'</button>';
+          }).join('') +
+          '<span class="node-dt-label">' + dtLabels[dt] + '</span>' +
+        '</div>' +
         '<div class="node-footer">' +
-          '<span class="node-setting">' + (m.settings||[]).join(' · ') + '</span>' +
+          (dt !== 'scripted' ? '<a class="node-launch-btn" href="'+launchUrl+'" target="_blank" onclick="event.stopPropagation()">'+launchLabel+' ↗</a>' : '<span class="node-setting">' + (m.settings||[]).join(' · ') + '</span>') +
           '<div style="display:flex;gap:4px;">' +
             '<button class="node-brief-btn" onclick="openBrief(event,\''+node.missionId+'\')" title="View mission brief">📖</button>' +
             '<button class="' + connectBtnClass + '" onclick="handleConnectBtn(event,\''+node.id+'\')" title="Connect to another mission">' + connectBtnLabel + '</button>' +
@@ -1229,6 +1269,8 @@ function renderNodes() {
     div.addEventListener('mousedown', function(e) {
       if (e.target.classList.contains('node-connect-btn')) return;
       if (e.target.classList.contains('node-brief-btn')) return;
+      if (e.target.classList.contains('node-dt-btn')) return;
+      if (e.target.classList.contains('node-launch-btn')) return;
       selectedNodeId = node.id;
       selectMission(node.missionId);
       nodeDrag = { nodeId: node.id, startX: e.clientX, startY: e.clientY, origX: node.x, origY: node.y };
@@ -1474,7 +1516,8 @@ function removeSelected() {
   saveLocal();
 }
 
-function setDungeonType(nodeId, type) {
+function setDungeonType(e, nodeId, type) {
+  e.stopPropagation();
   var node = activeCampaign.nodes.find(function(n){ return n.id === nodeId; });
   if (!node) return;
   node.dungeonType = type;
@@ -1530,26 +1573,9 @@ function renderEditor() {
 
   footer.style.display = 'flex';
   var canvasNode = activeCampaign.nodes.find(function(n){ return n.missionId === m.id; });
-  var alreadyOnCanvas = !!canvasNode;
-
-  if (alreadyOnCanvas) {
-    var dt = canvasNode.dungeonType || 'random';
-    var dtSelectedClass = { random: 'selected-dt-random', planned: 'selected-dt-planned', scripted: 'selected-dt-scripted' };
-    var labels = {random:'Random Gen', planned:'Pre-planned', scripted:'Scripted'};
-    footer.innerHTML =
-      '<div style="width:100%;">' +
-        '<div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Dungeon Type</div>' +
-        '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-          ['random','planned','scripted'].map(function(t){
-            var sel = dt === t ? ' ' + dtSelectedClass[t] : '';
-            return '<button class="outcome-btn' + sel + '" style="font-size:9px;" onclick="setDungeonType(\''+canvasNode.id+'\',\''+t+'\')">'+labels[t]+'</button>';
-          }).join('') +
-        '</div>' +
-        '<span style="font-size:9px;color:var(--text-muted);font-style:italic;">✓ On canvas</span>' +
-      '</div>';
-  } else {
-    footer.innerHTML = '<button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>';
-  }
+  footer.innerHTML = canvasNode
+    ? '<span style="font-size:10px;color:var(--text-muted);font-style:italic;padding:6px;">✓ On canvas</span>'
+    : '<button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>';
 
   if (m.type === 'official') {
     titleEl.textContent = m.name;
