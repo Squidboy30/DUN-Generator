@@ -280,6 +280,17 @@ body {
 }
 .node-connect-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
 .node-connect-btn.connecting { border-color: var(--accent-red); color: #e06060; background: rgba(139,26,26,0.2); }
+.node-connect-btn.connectable { border-color: #6abe6a; color: #6abe6a; background: rgba(26,60,26,0.2); animation: pulse-connectable 1s infinite; }
+
+@keyframes pulse-connectable {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(106,190,106,0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(106,190,106,0); }
+}
+
+/* ─── DUNGEON TYPE SELECTED STATES ───────────────────────── */
+.selected-dt-random   { border-color: #2d6e2d !important; color: #6abe6a !important; background: rgba(26,60,26,0.3) !important; }
+.selected-dt-planned  { border-color: #2d4e8e !important; color: #6a9abe !important; background: rgba(26,46,80,0.3) !important; }
+.selected-dt-scripted { border-color: #6e2d8e !important; color: #a06abe !important; background: rgba(60,26,80,0.3) !important; }
 
 /* SVG connections layer */
 .connections-svg {
@@ -1192,6 +1203,9 @@ function renderNodes() {
     div.style.left = node.x + 'px';
     div.style.top = node.y + 'px';
 
+    var connectBtnClass = 'node-connect-btn' + (connectingFrom === node.id ? ' connecting' : '') + (connectingFrom && connectingFrom !== node.id ? ' connectable' : '');
+    var connectBtnLabel = (connectingFrom && connectingFrom !== node.id) ? '→' : '⊕';
+
     var dtLabel = {random:'Random', planned:'Pre-planned', scripted:'Scripted'}[node.dungeonType||'random'] || 'Random';
     var dtClass = 'ndt-' + (node.dungeonType||'random');
     div.innerHTML =
@@ -1206,7 +1220,7 @@ function renderNodes() {
           '<span class="node-setting">' + (m.settings||[]).join(' · ') + '</span>' +
           '<div style="display:flex;gap:4px;">' +
             '<button class="node-brief-btn" onclick="openBrief(event,\''+node.missionId+'\')" title="View mission brief">📖</button>' +
-            '<button class="node-connect-btn' + (connectingFrom === node.id ? ' connecting' : '') + '" onclick="startConnect(event,\''+node.id+'\')" title="Connect to another mission">⊕</button>' +
+            '<button class="' + connectBtnClass + '" onclick="handleConnectBtn(event,\''+node.id+'\')" title="Connect to another mission">' + connectBtnLabel + '</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1219,12 +1233,6 @@ function renderNodes() {
       selectMission(node.missionId);
       nodeDrag = { nodeId: node.id, startX: e.clientX, startY: e.clientY, origX: node.x, origY: node.y };
       div.classList.add('dragging');
-    });
-
-    div.addEventListener('click', function(e) {
-      if (connectingFrom && connectingFrom !== node.id) {
-        finishConnect(node.id);
-      }
     });
 
     container.appendChild(div);
@@ -1254,14 +1262,20 @@ document.addEventListener('mouseup', function() {
 // CONNECTIONS
 // ═══════════════════════════════════════════════════════════════
 
-function startConnect(e, nodeId) {
+function handleConnectBtn(e, nodeId) {
   e.stopPropagation();
-  if (connectingFrom === nodeId) {
-    connectingFrom = null;
-  } else {
+  if (!connectingFrom) {
+    // Start a connection from this node
     connectingFrom = nodeId;
+    renderNodes();
+  } else if (connectingFrom === nodeId) {
+    // Cancel connecting from this node
+    connectingFrom = null;
+    renderNodes();
+  } else {
+    // Finish — connect from connectingFrom to this node
+    finishConnect(nodeId);
   }
-  renderNodes();
 }
 
 // Pending connection data while modal is open
@@ -1520,13 +1534,15 @@ function renderEditor() {
 
   if (alreadyOnCanvas) {
     var dt = canvasNode.dungeonType || 'random';
+    var dtSelectedClass = { random: 'selected-dt-random', planned: 'selected-dt-planned', scripted: 'selected-dt-scripted' };
+    var labels = {random:'Random Gen', planned:'Pre-planned', scripted:'Scripted'};
     footer.innerHTML =
       '<div style="width:100%;">' +
         '<div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Dungeon Type</div>' +
         '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
           ['random','planned','scripted'].map(function(t){
-            var labels = {random:'Random Gen', planned:'Pre-planned', scripted:'Scripted'};
-            return '<button class="outcome-btn'+(dt===t?' selected-custom':'')+'" style="font-size:9px;" onclick="setDungeonType(\''+canvasNode.id+'\',\''+t+'\')">'+labels[t]+'</button>';
+            var sel = dt === t ? ' ' + dtSelectedClass[t] : '';
+            return '<button class="outcome-btn' + sel + '" style="font-size:9px;" onclick="setDungeonType(\''+canvasNode.id+'\',\''+t+'\')">'+labels[t]+'</button>';
           }).join('') +
         '</div>' +
         '<span style="font-size:9px;color:var(--text-muted);font-style:italic;">✓ On canvas</span>' +
