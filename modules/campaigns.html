@@ -891,7 +891,195 @@ body {
   justify-content: flex-end;
 }
 
-/* ─── CONNECTION LABEL MODAL ──────────────────────────────── */
+/* ─── WORLD MAP ───────────────────────────────────────────── */
+.map-tab-view {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  display: none;
+}
+.map-tab-view.active { display: flex; flex-direction: column; }
+
+.map-container {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  cursor: crosshair;
+}
+.map-bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+  pointer-events: none;
+  transition: filter 0.6s ease, opacity 0.6s ease;
+}
+/* Background state — dimmed behind designer */
+.map-bg-layer {
+  position: absolute;
+  inset: 0;
+  background-image: url('arasca-map.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.15) brightness(0.25);
+  opacity: 1;
+  transition: filter 0.8s ease, opacity 0.8s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.map-bg-layer.foregrounded {
+  filter: saturate(1) brightness(0.9);
+}
+
+/* Map pins SVG overlay */
+.map-pins-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.map-pins-svg.interactive { pointer-events: all; cursor: crosshair; }
+
+/* Pin placement mode banner */
+.pin-mode-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: rgba(139,105,20,0.9);
+  color: var(--bg-dark);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+  display: none;
+}
+.pin-mode-bar.active { display: flex; }
+
+/* Map toolbar */
+.map-toolbar {
+  background: var(--bg-panel);
+  border-top: 1px solid var(--panel-border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.map-legend {
+  margin-left: auto;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.map-legend-item { display: flex; align-items: center; gap: 4px; }
+
+/* Map background toggle on designer canvas */
+.canvas-map-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('arasca-map.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.12) brightness(0.18);
+  opacity: 0;
+  transition: opacity 0.6s ease, filter 0.6s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.canvas-map-bg.visible { opacity: 1; }
+.campaign-canvas-wrap { position: relative; }
+#canvas-nodes { position: relative; z-index: 2; }
+.connections-svg { position: absolute; z-index: 1; }
+
+/* Map toggle button in toolbar */
+.map-toggle-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.map-toggle-btn.on { border-color: var(--border-gold); color: var(--gold-light); background: rgba(139,105,20,0.15); }
+
+/* Pin on map */
+.map-pin {
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.map-pin:hover { transform: scale(1.2); }
+.map-pin-circle {
+  fill: var(--border-gold);
+  stroke: var(--bg-dark);
+  stroke-width: 1.5;
+}
+.map-pin-num {
+  fill: var(--bg-dark);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.map-pin-label {
+  fill: var(--gold-light);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  text-anchor: middle;
+  pointer-events: none;
+  text-shadow: 0 1px 2px #000;
+}
+.map-pin-shadow {
+  fill: rgba(0,0,0,0.4);
+  rx: 4;
+}
+
+/* Region assignment in editor */
+.region-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.region-input {
+  flex: 1;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--panel-border);
+  color: var(--text-light);
+  font-family: 'IM Fell English', serif;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+.region-pin-btn {
+  font-size: 14px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  padding: 3px 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.region-pin-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
+.region-pin-btn.active { border-color: #6abe6a; color: #6abe6a; background: rgba(26,60,26,0.2); }
+</style>
 .outcome-btn-row {
   display: flex;
   gap: 8px;
@@ -926,6 +1114,7 @@ body {
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('designer')">Campaign Designer</button>
       <button class="tab-btn" onclick="switchTab('campaigns')">My Campaigns</button>
+      <button class="tab-btn" id="tab-btn-map" onclick="switchTab('map')">🗺 World Map</button>
     </div>
     <div style="display:flex;gap:6px">
       <button class="tool-btn" onclick="exportCampaign()">Export</button>
@@ -955,6 +1144,7 @@ body {
       </div>
 
       <div class="campaign-canvas-wrap" id="canvas-wrap">
+        <div class="canvas-map-bg" id="canvas-map-bg"></div>
         <svg class="connections-svg" id="conn-svg">
           <defs>
             <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
@@ -973,6 +1163,7 @@ body {
         <button class="tool-btn" onclick="autoLayout()">Auto Layout</button>
         <button class="tool-btn danger" onclick="removeSelected()">Remove Selected</button>
         <button class="tool-btn" onclick="clearCanvas()">Clear All</button>
+        <button class="map-toggle-btn" id="map-bg-toggle" onclick="toggleMapBackground()">🗺 Map Off</button>
         <button class="tool-btn primary" onclick="saveCampaign()">Save Campaign</button>
       </div>
     </div>
@@ -999,6 +1190,28 @@ body {
   <div id="tab-campaigns">
     <button class="new-campaign-btn" onclick="newCampaign()">+ New Campaign</button>
     <div class="campaign-grid" id="campaigns-grid"></div>
+  </div>
+
+  <!-- World Map Tab -->
+  <div id="tab-map" class="map-tab-view">
+    <div class="map-container" id="map-container">
+      <div class="map-bg-layer" id="map-bg-layer"></div>
+      <svg class="map-pins-svg" id="map-pins-svg"></svg>
+      <div class="pin-mode-bar" id="pin-mode-bar">
+        <span id="pin-mode-label">📍 Click on the map to place pin for: <b id="pin-mode-mission"></b></span>
+        <button class="tool-btn" onclick="cancelPinMode()" style="background:rgba(0,0,0,0.3);color:#fff;border-color:rgba(255,255,255,0.3);">Cancel</button>
+      </div>
+    </div>
+    <div class="map-toolbar">
+      <button class="tool-btn" onclick="switchTab('designer')">← Back to Designer</button>
+      <div class="map-legend">
+        <span class="map-legend-item">
+          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#a07820" stroke="#1a1008" stroke-width="1.5"/><text x="7" y="7" text-anchor="middle" dominant-baseline="central" fill="#1a1008" font-size="8" font-family="Cinzel,serif" font-weight="700">1</text></svg>
+          Mission pin
+        </span>
+        <span>Click a pin to select · Click empty map to place pin for selected mission</span>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1132,13 +1345,170 @@ function saveLocal() {
 // ═══════════════════════════════════════════════════════════════
 
 function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(function(b,i) {
-    b.classList.toggle('active', (i===0 && tab==='designer') || (i===1 && tab==='campaigns'));
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+    b.classList.toggle('active',
+      (i===0 && tab==='designer') ||
+      (i===1 && tab==='campaigns') ||
+      (i===2 && tab==='map')
+    );
   });
   document.getElementById('tab-designer').style.display = tab === 'designer' ? 'flex' : 'none';
   var tc = document.getElementById('tab-campaigns');
   tc.classList.toggle('active', tab === 'campaigns');
+  var tm = document.getElementById('tab-map');
+  tm.classList.toggle('active', tab === 'map');
   if (tab === 'campaigns') renderCampaigns();
+  if (tab === 'map') {
+    document.getElementById('map-bg-layer').classList.add('foregrounded');
+    renderMapPins();
+  } else {
+    document.getElementById('map-bg-layer').classList.remove('foregrounded');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WORLD MAP
+// ═══════════════════════════════════════════════════════════════
+
+var pinModeNodeId = null;
+var mapBgVisible = false;
+
+function toggleMapBackground() {
+  mapBgVisible = !mapBgVisible;
+  document.getElementById('canvas-map-bg').classList.toggle('visible', mapBgVisible);
+  var btn = document.getElementById('map-bg-toggle');
+  btn.textContent = mapBgVisible ? '🗺 Map On' : '🗺 Map Off';
+  btn.classList.toggle('on', mapBgVisible);
+}
+
+function togglePinMode(nodeId) {
+  if (pinModeNodeId === nodeId) {
+    cancelPinMode();
+    return;
+  }
+  pinModeNodeId = nodeId;
+  // Switch to map tab and enter placement mode
+  switchTab('map');
+  var allM = OFFICIAL_MISSIONS.concat(customMissions);
+  var node = activeCampaign.nodes.find(function(n){ return n.id === nodeId; });
+  var m = node ? allM.find(function(x){ return x.id === node.missionId; }) : null;
+  document.getElementById('pin-mode-mission').textContent = m ? m.name : 'Mission';
+  document.getElementById('pin-mode-bar').classList.add('active');
+  document.getElementById('map-pins-svg').classList.add('interactive');
+  renderEditor();
+}
+
+function cancelPinMode() {
+  pinModeNodeId = null;
+  document.getElementById('pin-mode-bar').classList.remove('active');
+  document.getElementById('map-pins-svg').classList.remove('interactive');
+  renderEditor();
+}
+
+function saveRegion(nodeId, value) {
+  var node = activeCampaign.nodes.find(function(n){ return n.id === nodeId; });
+  if (!node) return;
+  node.region = value;
+  saveLocal();
+  renderMapPins();
+}
+
+function renderMapPins() {
+  var svg = document.getElementById('map-pins-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  var allM = OFFICIAL_MISSIONS.concat(customMissions);
+  var containerEl = document.getElementById('map-container');
+  var W = containerEl ? containerEl.clientWidth : 800;
+  var H = containerEl ? containerEl.clientHeight : 400;
+
+  activeCampaign.nodes.forEach(function(node, idx) {
+    if (!node.mapPin) return;
+    var m = allM.find(function(x){ return x.id === node.missionId; });
+    if (!m) return;
+
+    // mapPin stores normalised 0-1 coords
+    var px = node.mapPin.x * W;
+    var py = node.mapPin.y * H;
+    var num = idx + 1;
+    var isSelected = selectedMission && selectedMission.id === node.missionId;
+
+    var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'map-pin');
+    g.setAttribute('transform', 'translate(' + px + ',' + py + ')');
+
+    // Shadow
+    var shadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+    shadow.setAttribute('cx', '0'); shadow.setAttribute('cy', '14');
+    shadow.setAttribute('rx', '7'); shadow.setAttribute('ry', '3');
+    shadow.setAttribute('fill', 'rgba(0,0,0,0.4)');
+    g.appendChild(shadow);
+
+    // Pin circle
+    var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0');
+    circle.setAttribute('r', isSelected ? '12' : '10');
+    circle.setAttribute('fill', isSelected ? '#e0b840' : '#a07820');
+    circle.setAttribute('stroke', '#0a0806');
+    circle.setAttribute('stroke-width', '1.5');
+    circle.setAttribute('class', 'map-pin-circle');
+    g.appendChild(circle);
+
+    // Number
+    var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', '0'); text.setAttribute('y', '0');
+    text.setAttribute('class', 'map-pin-num');
+    text.setAttribute('font-size', num > 9 ? '7' : '9');
+    text.textContent = num;
+    g.appendChild(text);
+
+    // Region label
+    var label = node.region || m.name;
+    var labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    var labelW = Math.min(label.length * 5.5 + 8, 100);
+    labelBg.setAttribute('x', -labelW/2); labelBg.setAttribute('y', '-26');
+    labelBg.setAttribute('width', labelW); labelBg.setAttribute('height', '13');
+    labelBg.setAttribute('fill', 'rgba(10,8,6,0.75)');
+    labelBg.setAttribute('rx', '2');
+    g.appendChild(labelBg);
+
+    var labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelText.setAttribute('x', '0'); labelText.setAttribute('y', '-16');
+    labelText.setAttribute('class', 'map-pin-label');
+    labelText.setAttribute('font-size', '9');
+    labelText.textContent = label.length > 18 ? label.substring(0,17)+'…' : label;
+    g.appendChild(labelText);
+
+    // Click handler — select the mission
+    g.addEventListener('click', function(e) {
+      if (pinModeNodeId) return; // in placement mode, don't select
+      e.stopPropagation();
+      selectMission(node.missionId);
+      switchTab('designer');
+    });
+
+    svg.appendChild(g);
+  });
+
+  // Click on map background to place pin
+  svg.onclick = function(e) {
+    if (!pinModeNodeId) return;
+    if (e.target !== svg && e.target.tagName !== 'rect' && !e.target.classList.contains('map-bg-layer')) {
+      // clicked a pin, not background — ignore
+      if (e.target.closest && e.target.closest('.map-pin')) return;
+    }
+    var rect = svg.getBoundingClientRect();
+    var nx = (e.clientX - rect.left) / rect.width;
+    var ny = (e.clientY - rect.top) / rect.height;
+    var node = activeCampaign.nodes.find(function(n){ return n.id === pinModeNodeId; });
+    if (!node) return;
+    node.mapPin = { x: nx, y: ny };
+    saveLocal();
+    cancelPinMode();
+    renderMapPins();
+    renderEditor();
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1577,6 +1947,29 @@ function renderEditor() {
     ? '<span style="font-size:10px;color:var(--text-muted);font-style:italic;padding:6px;">✓ On canvas</span>'
     : '<button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>';
 
+  // Region/map pin section — appended below footer
+  var regionSection = document.getElementById('editor-region-section');
+  if (!regionSection) {
+    regionSection = document.createElement('div');
+    regionSection.id = 'editor-region-section';
+    regionSection.style.cssText = 'padding:10px 14px;border-top:1px solid var(--panel-border);background:rgba(0,0,0,0.2);flex-shrink:0;';
+    document.getElementById('editor-panel').appendChild(regionSection);
+  }
+  var pinNode = canvasNode;
+  var regionVal = pinNode ? (pinNode.region || '') : '';
+  var hasPinVal = pinNode && pinNode.mapPin;
+  var pinBtnClass = 'region-pin-btn' + (pinModeNodeId === (pinNode&&pinNode.id) ? ' active' : '');
+  regionSection.innerHTML =
+    '<div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Map Region</div>' +
+    (pinNode ?
+      '<div class="region-row">' +
+        '<input class="region-input" id="region-input" type="text" placeholder="e.g. Kingdom of Arasalia" value="' + regionVal.replace(/"/g,'&quot;') + '" onchange="saveRegion(\''+pinNode.id+'\',this.value)">' +
+        '<button class="' + pinBtnClass + '" onclick="togglePinMode(\'' + pinNode.id + '\')" title="Place pin on world map">' + (hasPinVal ? '📍 Repin' : '📍 Pin') + '</button>' +
+      '</div>' +
+      (hasPinVal ? '<div style="font-size:9px;color:#6abe6a;margin-top:4px;font-style:italic;">✓ Pinned on map · <a href="#" onclick="switchTab(\'map\');return false;" style="color:var(--gold-light);">View map →</a></div>' : '<div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-style:italic;">Not yet placed on map</div>') :
+      '<div style="font-size:9px;color:var(--text-muted);font-style:italic;">Add mission to canvas first</div>'
+    );
+
   if (m.type === 'official') {
     titleEl.textContent = m.name;
     deleteBtn.style.display = 'none';
@@ -1915,6 +2308,9 @@ function closeBriefOnBackdrop(e) {
 
 init();
 renderNodes();
+window.addEventListener('resize', function() {
+  renderMapPins();
+});
 </script>
 </body>
 </html>
