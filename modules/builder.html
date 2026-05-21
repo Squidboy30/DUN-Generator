@@ -14,6 +14,7 @@
     <input type="text" id="bld-dungeon-name" placeholder="Dungeon name..." spellcheck="false">
     <span id="bld-tile-count"></span>
     <button class="bld-btn" id="bld-btn-new">+ NEW</button>
+    <button class="bld-btn" id="bld-btn-ai" onclick="openAIBuilder()" style="background:rgba(139,105,20,0.3);border-color:#a07820;color:#e0b840;">✦ AI GENERATE</button>
     <button class="bld-btn" id="bld-btn-save">&#128190; SAVE</button>
     <button class="bld-btn play" id="bld-btn-play">&#9654; PLAY</button>
     <button class="bld-btn" id="bld-btn-export">EXPORT PNG</button>
@@ -35,8 +36,289 @@
   </div>
   <div id="bld-log"></div>
 </div>
+<!-- AI Dungeon Generator Modal -->
+<div id="ai-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#1a1208;border:1px solid #a07820;width:520px;max-height:90vh;overflow-y:auto;font-family:Cinzel,serif;">
+    <div style="padding:16px 20px 12px;border-bottom:1px solid #5a3e18;background:rgba(139,105,20,0.1);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:14px;color:#e0b840;letter-spacing:2px;">✦ AI DUNGEON GENERATOR</div>
+      <button onclick="closeAIBuilder()" style="background:transparent;border:none;color:#b09060;font-size:18px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="padding:18px 20px;">
+      <div style="font-size:11px;color:#b09060;font-style:italic;margin-bottom:16px;line-height:1.6;font-family:'Crimson Text',serif;">
+        Generates a hand-crafted dungeon layout with multiple routes, branching paths and narrative rooms — inspired by Advanced HeroQuest, Warhammer Quest and classic dungeon design.
+      </div>
+
+      <!-- Theme -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:7px;">Theme</div>
+        <div id="ai-theme-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;"></div>
+      </div>
+
+      <!-- Size + Complexity -->
+      <div style="display:flex;gap:12px;margin-bottom:14px;">
+        <div style="flex:1;">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:7px;">Size</div>
+          <div style="display:flex;gap:4px;" id="ai-size-row">
+            <button class="ai-opt active" data-field="size" data-val="small" onclick="setAIOpt(this)">Small<br><span style="font-size:8px;opacity:.6;">6–8 tiles</span></button>
+            <button class="ai-opt" data-field="size" data-val="medium" onclick="setAIOpt(this)">Medium<br><span style="font-size:8px;opacity:.6;">10–14 tiles</span></button>
+            <button class="ai-opt" data-field="size" data-val="large" onclick="setAIOpt(this)">Large<br><span style="font-size:8px;opacity:.6;">16–20 tiles</span></button>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:7px;">Routes</div>
+          <div style="display:flex;gap:4px;">
+            <button class="ai-opt active" data-field="routes" data-val="linear" onclick="setAIOpt(this)">Linear<br><span style="font-size:8px;opacity:.6;">one path</span></button>
+            <button class="ai-opt" data-field="routes" data-val="branching" onclick="setAIOpt(this)">Branching<br><span style="font-size:8px;opacity:.6;">2–3 routes</span></button>
+            <button class="ai-opt" data-field="routes" data-val="open" onclick="setAIOpt(this)">Open<br><span style="font-size:8px;opacity:.6;">free explore</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:6px;">Description <span style="font-size:8px;font-style:italic;text-transform:none;letter-spacing:0;color:#706050;">(optional)</span></div>
+        <textarea id="ai-desc" placeholder="e.g. Chaos temple with a central ritual chamber, flooded lower level, guards on the upper tier..." style="width:100%;height:64px;background:rgba(0,0,0,0.4);border:1px solid #5a3e18;color:#f0e4c0;font-family:'Crimson Text',serif;font-size:13px;padding:8px;resize:none;outline:none;"></textarea>
+      </div>
+
+      <!-- Status -->
+      <div id="ai-status" style="display:none;padding:10px 12px;background:rgba(0,0,0,0.4);border:1px solid #5a3e18;font-size:10px;color:#e0b840;letter-spacing:1px;margin-bottom:12px;text-align:center;"></div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="closeAIBuilder()" style="font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border:1px solid #5a3e18;background:transparent;color:#b09060;cursor:pointer;">Cancel</button>
+        <button id="ai-go-btn" onclick="runAIBuilder()" style="font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;border:1px solid #a07820;background:rgba(139,105,20,0.2);color:#e0b840;cursor:pointer;">✦ Generate Dungeon</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.ai-opt {
+  flex:1; font-family:Cinzel,serif; font-size:9px; letter-spacing:1px;
+  text-transform:uppercase; padding:7px 4px; border:1px solid #5a3e18;
+  background:transparent; color:#b09060; cursor:pointer; transition:all .15s; line-height:1.4;
+}
+.ai-opt:hover { border-color:#a07820; color:#e0b840; }
+.ai-opt.active { border-color:#e0b840; color:#e0b840; background:rgba(139,105,20,0.2); }
+.ai-theme-btn {
+  font-family:Cinzel,serif; font-size:9px; letter-spacing:1px; text-transform:uppercase;
+  padding:8px 6px; border:1px solid #5a3e18; background:transparent; color:#b09060;
+  cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px;
+}
+.ai-theme-btn:hover { border-color:#a07820; color:#e0b840; }
+.ai-theme-btn.active { border-color:#e0b840; color:#e0b840; background:rgba(139,105,20,0.2); }
+</style>
+
+<script>
+// ── AI BUILDER STATE ─────────────────────────────────────────
+var aiBuilderState = { theme: 'dungeon', size: 'medium', routes: 'branching' };
+
+var AI_BUILDER_THEMES = [
+  { id:'dungeon',    icon:'🏰', label:'Dungeon' },
+  { id:'crypt',      icon:'💀', label:'Crypt' },
+  { id:'cave',       icon:'⛏', label:'Cave' },
+  { id:'sewer',      icon:'🐀', label:'Sewer' },
+  { id:'civilised',  icon:'🏛', label:'Civilised' },
+  { id:'outdoor',    icon:'🌲', label:'Outdoor' },
+];
+
+// Tile pools by theme — real tile IDs from TILE_DB
+var THEME_TILES = {
+  dungeon:   { start:'24af', corridors:['21ae','3ae','4ae','29ae','33ae','34ae'], rooms:['2ac','5ac','6bc3','8ac','12ac','15ac','14ac','36ac','36bc'], boss:['01aa','02aa','44aa','43ba'] },
+  crypt:     { start:'24af', corridors:['22ae','37ag','82ae'], rooms:['6ac','7ac','5bc','78ac','79ac','88ac','89ac'], boss:['69bc'] },
+  cave:      { start:'24af', corridors:['60ae','54ae','59ae','46be'], rooms:['47ac','48ac','49ac','50ac','55ac','56ac'], boss:['44ba'] },
+  sewer:     { start:'24bf', corridors:['21be','22be','23be'], rooms:['18bc','17bc','17ac3','61bc','62bc','63bc','64bc'], boss:['01aa'] },
+  civilised: { start:'civstart', corridors:['90be','51be','84ae','85ae','45ae','46ae'], rooms:['14bc','78bc','79bc','80ac','80bc','81ac','81bc','86ac'], boss:['31ba','68ba'] },
+  outdoor:   { start:'24af', corridors:['90ae','91ae','92ae','93ae','82be'], rooms:['15bc','26ab','28ab','25ab'], boss:['01ba','02ba','32aa','32ba'] },
+};
+
+function openAIBuilder() {
+  // Build theme grid
+  var grid = document.getElementById('ai-theme-grid');
+  grid.innerHTML = AI_BUILDER_THEMES.map(function(t) {
+    return '<button class="ai-theme-btn'+(aiBuilderState.theme===t.id?' active':'')+'" data-id="'+t.id+'" onclick="selectAITheme(\''+t.id+'\')">'+
+      '<span style="font-size:14px;">'+t.icon+'</span>'+t.label+'</button>';
+  }).join('');
+  document.getElementById('ai-status').style.display='none';
+  document.getElementById('ai-go-btn').disabled=false;
+  document.getElementById('ai-go-btn').textContent='✦ Generate Dungeon';
+  document.getElementById('ai-desc').value='';
+  document.getElementById('ai-modal').style.display='flex';
+}
+
+function closeAIBuilder() {
+  document.getElementById('ai-modal').style.display='none';
+}
+
+function selectAITheme(id) {
+  aiBuilderState.theme = id;
+  document.querySelectorAll('.ai-theme-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.id===id);
+  });
+}
+
+function setAIOpt(btn) {
+  var field = btn.dataset.field;
+  var val   = btn.dataset.val;
+  aiBuilderState[field] = val;
+  btn.parentElement.querySelectorAll('.ai-opt').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function setAIStatus(msg) {
+  var el = document.getElementById('ai-status');
+  el.style.display='block'; el.textContent=msg;
+}
+
+async function runAIBuilder() {
+  var btn = document.getElementById('ai-go-btn');
+  btn.disabled=true; btn.textContent='⟳ Generating…';
+
+  var theme  = aiBuilderState.theme;
+  var size   = aiBuilderState.size;
+  var routes = aiBuilderState.routes;
+  var desc   = document.getElementById('ai-desc').value.trim();
+
+  var tileCounts = { small:'6 to 8', medium:'10 to 14', large:'16 to 20' };
+  var routeDescs = {
+    linear:   'a single main path from start to boss — tight and tense, like early AHQ quests',
+    branching:'2 or 3 distinct routes to the boss with optional side rooms — classic HeroQuest wing structure',
+    open:     'an open interconnected web of rooms — like a Diablo level or Warhammer Quest dungeon floor'
+  };
+
+  var systemPrompt = `You are a dungeon layout designer for the board game Dungeon Universalis, inspired by Advanced HeroQuest, Warhammer Quest, and classic grid-based dungeon crawlers.
+
+You design dungeons on a grid where 1 unit = 1 DUN square (20px). The grid is 100 wide × 80 tall.
+Corridors are typically 6×2 squares. Standard rooms are 6×6. Boss rooms are 8×10.
+Start tile is 4×2 and goes at the left side.
+
+DUNGEON DESIGN PRINCIPLES (follow these closely):
+1. Multiple routes: at least 2 ways to reach the boss room
+2. Chokepoints: narrow corridors that create tension and tactical decisions  
+3. Loops: some corridors should connect back to earlier rooms (AHQ "shortcut" mechanic)
+4. Room variety: mix guard rooms, treasure rooms, trap rooms, connecting corridors
+5. Spatial logic: rooms connect via corridors, corridors link room exits
+6. The boss room is always the furthest from the start and has only 1–2 entrances
+7. Dead ends: 1–2 dead-end side rooms reward exploration
+
+CLASSIC EXAMPLES TO DRAW FROM:
+- AHQ: linear main path with 2 side wings, each wing has 2–3 rooms, boss at end
+- Warhammer Quest: open floor plan, multiple door choices each turn
+- Diablo 1 catacombs: 3×3 grid of rooms with connecting corridors and loops
+- Heroquest: central corridor spine with rooms branching off each side
+
+OUTPUT: Respond ONLY with a valid JSON object — no markdown, no explanation:
+{
+  "name": "Dungeon name",
+  "description": "One sentence flavour",
+  "tiles": [
+    { "type": "start",    "gx": 2,  "gy": 18, "rot": 0 },
+    { "type": "corridor", "gx": 6,  "gy": 18, "rot": 0 },
+    { "type": "room",     "gx": 12, "gy": 15, "rot": 0 },
+    { "type": "boss",     "gx": 50, "gy": 14, "rot": 0 }
+  ]
+}
+
+Tile types: "start" (4×2, place once at left), "corridor" (6×2), "room" (6×6), "boss" (8×10)
+Rotation: 0=normal, 1=90°CW, 2=180°, 3=270°
+A rotated corridor (rot 1 or 3) becomes 2×6 (vertical).
+Ensure tiles DO NOT overlap. Leave 0–1 squares between connected tiles for door placement.
+The start tile should be at gx=2, gy around 18-22 (vertical centre of grid).
+Tiles spread EAST (increasing gx) and branch NORTH/SOUTH.`;
+
+  var userPrompt = 'Generate a '+size+' '+theme+' dungeon ('+tileCounts[size]+' tiles total) with '+routeDescs[routes]+'.'+
+    (desc ? ' Additional notes: '+desc : '')+
+    ' Make it feel like a real dungeon from Advanced HeroQuest or Warhammer Quest — atmospheric, dangerous, with clear tactical interest.';
+
+  try {
+    setAIStatus('⟳ Consulting the dungeon architect…');
+
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system: systemPrompt,
+        messages:[{role:'user', content:userPrompt}]
+      })
+    });
+    var data = await resp.json();
+    var text = data.content && data.content[0] && data.content[0].text;
+    if (!text) throw new Error('No response');
+    text = text.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    var gen = JSON.parse(text);
+
+    setAIStatus('⟳ Placing tiles…');
+    applyAIDungeon(gen, theme);
+
+  } catch(err) {
+    setAIStatus('✗ Failed: '+err.message);
+    btn.disabled=false; btn.textContent='✦ Generate Dungeon';
+  }
+}
+
+function applyAIDungeon(gen, theme) {
+  // Pick tile IDs from pool
+  var pool = THEME_TILES[theme] || THEME_TILES.dungeon;
+  var corridorIdx = 0, roomIdx = 0;
+
+  function pickTile(type) {
+    if (type==='start') return pool.start;
+    if (type==='boss')  return pool.boss[Math.floor(Math.random()*pool.boss.length)];
+    if (type==='corridor') {
+      var t = pool.corridors[corridorIdx % pool.corridors.length]; corridorIdx++; return t;
+    }
+    // room
+    var t = pool.rooms[roomIdx % pool.rooms.length]; roomIdx++; return t;
+  }
+
+  // Create a new layout
+  if (typeof newDungeon === 'function') newDungeon();
+
+  // Short delay to ensure newDungeon runs
+  setTimeout(function() {
+    if (!current) return;
+    current.name = gen.name || 'AI Dungeon';
+    current.tiles = [];
+
+    var placed = 0;
+    (gen.tiles||[]).forEach(function(t) {
+      var tileId = pickTile(t.type);
+      if (!tileId) return;
+      // Validate the tile exists in TILE_DB
+      var def = (typeof TILE_DB !== 'undefined') ? TILE_DB.find(function(td){return td.id===tileId;}) : null;
+      if (!def && typeof TILE_DB !== 'undefined') {
+        // Fallback to first available of that type
+        if (t.type==='corridor') tileId = pool.corridors[0];
+        else if (t.type==='room') tileId = pool.rooms[0];
+        else if (t.type==='boss') tileId = pool.boss[0];
+        else tileId = pool.start;
+      }
+      current.tiles.push({
+        id: placed+1,
+        tileId: tileId,
+        gx: t.gx||0,
+        gy: t.gy||0,
+        rot: t.rot||0
+      });
+      placed++;
+    });
+
+    if (typeof nextPlacedId !== 'undefined') nextPlacedId = placed+1;
+    if (typeof buildConnections==='function') buildConnections();
+    current.modified = Date.now();
+    if (typeof saveLayouts==='function') saveLayouts();
+    if (typeof refreshSavedList==='function') refreshSavedList();
+    if (typeof updateDungeonHeader==='function') updateDungeonHeader();
+    if (typeof centreView==='function') centreView();
+    if (typeof draw==='function') draw();
+
+    if (typeof addBuildLog==='function') addBuildLog('✦ AI dungeon generated: '+current.name+' ('+placed+' tiles)','ok');
+    closeAIBuilder();
+  }, 50);
+}
+</script>
 </body>
-<script src="../src/data/images.js"></script>
 <script src="../src/data/crops.js"></script>
 <script src="../src/data/tiles.js"></script>
 <script src="../src/data/elements.js"></script>
