@@ -1,437 +1,415 @@
 /* ═══════════════════════════════════════════════════════════════
-   DUNGEON GENERATOR — Procedural dungeon layout engine
-   Produces multi-floor dungeons with multiple routes,
-   inspired by Advanced HeroQuest, Warhammer Quest, Diablo.
+   DUNGEON GENERATOR v2 — Procedural dungeon layout engine
+   Inspired by Advanced HeroQuest, Warhammer Quest, Diablo.
+   No external dependencies. Works entirely offline.
    ═══════════════════════════════════════════════════════════════ */
 
 (function(global){
 'use strict';
 
-/* ── RNG (seeded) ──────────────────────────────────────────── */
+/* ── RNG (seeded Mulberry32) ─────────────────────────────────── */
 function mkRng(seed) {
-  var s = seed || Date.now();
+  var s = (seed >>> 0) || 1;
   return function() {
-    s = (s * 1664525 + 1013904223) & 0xffffffff;
-    return (s >>> 0) / 0xffffffff;
+    s += 0x6D2B79F5;
+    var t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function rndInt(rng, min, max) { return min + Math.floor(rng() * (max - min + 1)); }
-function rndPick(rng, arr)     { return arr[Math.floor(rng() * arr.length)]; }
-function shuffle(rng, arr) {
-  var a = arr.slice();
-  for (var i = a.length - 1; i > 0; i--) {
-    var j = Math.floor(rng() * (i + 1));
-    var t = a[i]; a[i] = a[j]; a[j] = t;
-  }
+function ri(rng,min,max){ return min+Math.floor(rng()*(max-min+1)); }
+function pick(rng,arr){ return arr[Math.floor(rng()*arr.length)]; }
+function shuffle(rng,arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(rng()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
   return a;
 }
 
-/* ── TILE POOLS ──────────────────────────────────────────────
-   Organised by theme. Each theme has:
-   start, corridors[], rooms[], largeRooms[], boss[], stairs[]
-──────────────────────────────────────────────────────────────*/
+/* ── TILE POOLS ──────────────────────────────────────────────── */
 var POOLS = {
-  dungeon: {
-    start:      '24af',
-    corridors:  ['21ae','3ae','4ae','29ae','33ae','34ae','3be','4be'],
-    rooms:      ['2ac','5ac','6bc3','8ac','12ac','12bc','12ae','15ac','14ac','36ac','36bc','7bc','19ad'],
-    largeRooms: ['01aa','02aa'],
-    boss:       ['44aa','43ba','68ba','01aa'],
-    stairs:     ['06bc','68aa'],
-  },
-  crypt: {
-    start:      '24af',
-    corridors:  ['22ae','37ag','82ae'],
-    rooms:      ['6ac','7ac','5bc','78ac','79ac','88ac','89ac'],
-    largeRooms: ['69bc'],
-    boss:       ['69bc'],
-    stairs:     ['06bc'],
-  },
-  cave: {
-    start:      '24af',
-    corridors:  ['60ae','54ae','59ae','46be','10ag','10bg'],
-    rooms:      ['47ac','48ac','49ac','50ac','55ac','56ac','57ac','58ac'],
-    largeRooms: ['44ba'],
-    boss:       ['44ba'],
-    stairs:     ['06bc'],
-  },
-  sewer: {
-    start:      '24bf',
-    corridors:  ['21be','22be','23be'],
-    rooms:      ['18bc','17bc','17ac3','61bc','62bc','63bc','64bc'],
-    largeRooms: ['18bc'],
-    boss:       ['01aa'],
-    stairs:     ['06bc'],
-  },
-  civilised: {
-    start:      'civstart',
-    corridors:  ['90be','51be','84ae','85ae','45ae','46ae','51bc'],
-    rooms:      ['14bc','78bc','79bc','80ac','80bc','81ac','81bc','86ac','87ac','87bc'],
-    largeRooms: ['31ba'],
-    boss:       ['31ba','68ba'],
-    stairs:     ['06bc'],
-  },
-  outdoor: {
-    start:      '24af',
-    corridors:  ['90ae','91ae','92ae','93ae','82be','29be','30ae'],
-    rooms:      ['15bc','26ab','28ab','25ab','25bb','72ab'],
-    largeRooms: ['01ba','02ba'],
-    boss:       ['01ba','02ba','32aa','32ba'],
-    stairs:     ['68aa'],
-  },
+  dungeon:  { start:'24af', corridors:['21ae','3ae','4ae','29ae','33ae','34ae','3be','4be'], rooms:['2ac','5ac','6bc3','8ac','12ac','12bc','15ac','14ac','36ac','36bc'], boss:['44aa','43ba','01aa'], stairs:'06bc' },
+  crypt:    { start:'24af', corridors:['22ae','82ae','21ae'], rooms:['6ac','7ac','5bc','78ac','79ac','88ac','89ac'], boss:['69bc'], stairs:'06bc' },
+  cave:     { start:'24af', corridors:['60ae','54ae','59ae','46be'], rooms:['47ac','48ac','49ac','50ac','55ac','56ac'], boss:['44ba'], stairs:'06bc' },
+  sewer:    { start:'24bf', corridors:['21be','22be','23be','21ae'], rooms:['18bc','17bc','61bc','62bc','63bc'], boss:['01aa'], stairs:'06bc' },
+  civilised:{ start:'civstart', corridors:['90be','84ae','85ae','45ae','46ae'], rooms:['14bc','78bc','79bc','80ac','86ac','87ac'], boss:['31ba'], stairs:'06bc' },
+  outdoor:  { start:'24af', corridors:['90ae','91ae','92ae','93ae'], rooms:['15bc','26ab','28ab','25ab'], boss:['01ba','02ba'], stairs:'68aa' },
 };
 
-/* ── TILE SIZE LOOKUP ────────────────────────────────────────*/
-function tileSize(tileId) {
-  if (!global.TILE_DB) return {w:6,h:6};
-  var t = global.TILE_DB.find(function(x){return x.id===tileId;});
-  if (!t) return {w:6,h:6};
-  var sz = Array.isArray(t.sz) ? t.sz : [t.sz,t.sz];
-  return {w:sz[0], h:sz[1]};
-}
-function rotSize(tileId, rot) {
-  var s = tileSize(tileId);
-  return (rot===1||rot===3) ? {w:s.h, h:s.w} : {w:s.w, h:s.h};
-}
+/* ── TILE SIZES ──────────────────────────────────────────────── */
+// Hard-coded so we don't depend on TILE_DB at generation time
+var TILE_SIZES = {
+  // start tiles
+  '24af':[4,2], '24bf':[4,2], 'civstart':[4,2], '42as':[3,3],
+  // standard corridors 6×2
+  '21ae':[6,2],'22ae':[6,2],'3ae':[6,2],'4ae':[6,2],'29ae':[6,2],'33ae':[6,2],'34ae':[6,2],
+  '3be':[6,2],'4be':[6,2],'82ae':[6,2],'46be':[6,2],'60ae':[6,2],'54ae':[6,2],'59ae':[6,2],
+  '21be':[6,2],'22be':[6,2],'23be':[6,2],'90ae':[6,2],'91ae':[6,2],'92ae':[6,2],'93ae':[6,2],
+  '90be':[6,2],'84ae':[6,2],'85ae':[6,2],'45ae':[6,2],'46ae':[6,2],
+  // narrow corridors 1×6
+  '37ag':[1,6],'10ag':[1,6],'10bg':[1,6],'11ag':[1,6],
+  // standard rooms 6×6
+  '2ac':[6,6],'5ac':[6,6],'6bc3':[6,6],'8ac':[6,6],'12ac':[6,6],'12bc':[6,6],'12ae':[6,6],
+  '15ac':[6,6],'14ac':[6,6],'36ac':[6,6],'36bc':[6,6],'7bc':[6,6],'19ad':[6,4],
+  '6ac':[6,6],'7ac':[6,6],'5bc':[6,6],'78ac':[6,6],'79ac':[6,6],'88ac':[6,6],'89ac':[6,6],
+  '47ac':[6,6],'48ac':[6,6],'49ac':[6,6],'50ac':[6,6],'55ac':[6,6],'56ac':[6,6],
+  '18bc':[6,6],'17bc':[6,6],'61bc':[6,6],'62bc':[6,6],'63bc':[6,6],
+  '14bc':[6,6],'78bc':[6,6],'79bc':[6,6],'80ac':[6,6],'86ac':[6,6],'87ac':[6,6],
+  '15bc':[6,6],
+  // large rooms 4×10
+  '26ab':[4,10],'28ab':[4,10],'25ab':[4,10],
+  // boss rooms 8×10
+  '01aa':[8,10],'02aa':[8,10],'44aa':[8,10],'43ba':[8,10],'68ba':[8,10],
+  '44ba':[8,10],'69bc':[8,10],'31ba':[8,10],'01ba':[8,10],'02ba':[8,10],
+  // stair rooms
+  '06bc':[6,6],'68aa':[8,10],
+};
+function tsz(id){ var s=TILE_SIZES[id]; return s?{w:s[0],h:s[1]}:{w:6,h:6}; }
+function rsz(id,rot){ var s=tsz(id); return (rot===1||rot===3)?{w:s.h,h:s.w}:{w:s.w,h:s.h}; }
 
-/* ── OCCUPANCY MAP ──────────────────────────────────────────*/
-function buildOcc(tiles) {
-  var occ = {};
-  tiles.forEach(function(t) {
-    var s = rotSize(t.tileId, t.rot||0);
-    for (var dy=0; dy<s.h; dy++) for (var dx=0; dx<s.w; dx++)
-      occ[(t.gx+dx)+','+(t.gy+dy)] = true;
+/* ── OCCUPANCY ───────────────────────────────────────────────── */
+function buildOcc(tiles){
+  var o={};
+  tiles.forEach(function(t){
+    var s=rsz(t.tileId,t.rot||0);
+    for(var dy=0;dy<s.h;dy++) for(var dx=0;dx<s.w;dx++) o[(t.gx+dx)+','+(t.gy+dy)]=true;
   });
-  return occ;
+  return o;
 }
-function canPlace(tiles, tileId, gx, gy, rot) {
-  var occ = buildOcc(tiles);
-  var s = rotSize(tileId, rot||0);
-  if (gx < 0 || gy < 0 || gx+s.w > 100 || gy+s.h > 80) return false;
-  for (var dy=0; dy<s.h; dy++) for (var dx=0; dx<s.w; dx++)
-    if (occ[(gx+dx)+','+(gy+dy)]) return false;
+function canPlace(tiles,tileId,gx,gy,rot){
+  if(gx<0||gy<0) return false;
+  var s=rsz(tileId,rot||0);
+  if(gx+s.w>98||gy+s.h>78) return false;
+  var o=buildOcc(tiles);
+  for(var dy=0;dy<s.h;dy++) for(var dx=0;dx<s.w;dx++) if(o[(gx+dx)+','+(gy+dy)]) return false;
   return true;
 }
+function tryPlace(tiles,tileId,gx,gy,rot){
+  // Try exact position, then nudge up to ±4 squares
+  for(var d=0;d<=4;d++){
+    var offsets=d===0?[[0,0]]:[[d,0],[-d,0],[0,d],[0,-d],[d,d],[-d,-d],[d,-d],[-d,d]];
+    for(var i=0;i<offsets.length;i++){
+      var nx=gx+offsets[i][0], ny=gy+offsets[i][1];
+      if(canPlace(tiles,tileId,nx,ny,rot)) return {gx:nx,gy:ny};
+    }
+  }
+  return null;
+}
 
 /* ══════════════════════════════════════════════════════════════
-   LAYOUT ARCHETYPES
-   Each archetype is a room-graph description:
-   - rooms: array of {role, pos: {x,y} in abstract units, size}
-   - corridors: array of {from, to} indices
-   roles: 'start' | 'guard' | 'treasure' | 'ambush' | 'ritual' |
-          'junction' | 'dead-end' | 'stairs' | 'boss'
-══════════════════════════════════════════════════════════════*/
-
+   ROOM ARCHETYPES
+   Abstract grid of nodes (rooms) + edges (corridors).
+   Positions are in abstract units, converted to grid coords later.
+══════════════════════════════════════════════════════════════ */
 var ARCHETYPES = {
 
-  // AHQ classic: spine + 2 wings, boss at end
-  spine: function(rng, size) {
-    var rooms = [
-      {role:'start',    x:0,  y:2},
-      {role:'guard',    x:2,  y:2},
-      {role:'junction', x:4,  y:2},
-      {role:'treasure', x:4,  y:0},
-      {role:'ambush',   x:4,  y:4},
-      {role:'junction', x:6,  y:2},
-      {role:'dead-end', x:6,  y:0},
-      {role:'ritual',   x:6,  y:4},
-      {role:'boss',     x:8,  y:2},
-    ];
-    var corridors = [[0,1],[1,2],[2,3],[2,4],[2,5],[5,6],[5,7],[5,8]];
-    if (size === 'large') {
-      rooms.push({role:'guard',    x:3, y:0});
-      rooms.push({role:'treasure', x:7, y:0});
-      corridors.push([rooms.length-2, 3]);
-      corridors.push([rooms.length-1, 6]);
-    }
-    return {rooms:rooms, corridors:corridors};
+  // AHQ Spine: main corridor with side wings
+  spine: function(rng, sz) {
+    var n = sz==='small'?5 : sz==='medium'?7 : 9;
+    var rooms=[
+      {role:'start',  ax:0, ay:2},
+      {role:'guard',  ax:1, ay:2},
+      {role:'branch', ax:2, ay:2},
+      {role:'room',   ax:2, ay:0},
+      {role:'room',   ax:2, ay:4},
+      {role:'branch', ax:3, ay:2},
+      {role:'room',   ax:3, ay:0},
+      {role:'room',   ax:3, ay:4},
+      {role:'boss',   ax:4, ay:2},
+    ].slice(0,n);
+    var edges=[[0,1],[1,2],[2,3],[2,4],[2,5],[5,6],[5,7],[5,8]];
+    // Shortcut loop from early branch to late branch
+    edges.push([1,5]);
+    return {rooms:rooms,edges:edges};
   },
 
-  // Diablo catacombs: 3-wide grid with loops
-  catacombs: function(rng, size) {
-    var cols = size==='small' ? 2 : size==='medium' ? 3 : 4;
-    var rows = 3;
-    var rooms = [];
-    var corridors = [];
-    // Build grid of rooms
-    for (var c=0; c<cols; c++) for (var r=0; r<rows; r++) {
-      var role = 'guard';
-      if (c===0 && r===1) role='start';
-      else if (c===cols-1 && r===1) role='boss';
-      else if (c===0) role='dead-end';
-      else if (c===cols-1) role='treasure';
-      else role = rndPick(rng, ['guard','ambush','treasure','ritual','dead-end']);
-      rooms.push({role:role, x:c*2, y:r*2});
+  // Diablo Catacombs: grid with loops
+  catacombs: function(rng, sz) {
+    var cols=sz==='small'?2:sz==='medium'?3:4;
+    var rows=3;
+    var rooms=[];
+    var edges=[];
+    for(var c=0;c<cols;c++) for(var r=0;r<rows;r++){
+      var role='room';
+      if(c===0&&r===1) role='start';
+      else if(c===cols-1&&r===1) role='boss';
+      else if(c===0) role='dead-end';
+      else if(c===cols-1&&r!==1) role='treasure';
+      rooms.push({role:role, ax:c*2, ay:r*2});
     }
-    // Horizontal corridors
-    for (var c2=0; c2<cols-1; c2++) for (var r2=0; r2<rows; r2++) {
-      if (rng() > 0.2) corridors.push([c2*rows+r2, (c2+1)*rows+r2]);
+    // Horizontal connections — most rows
+    for(var c2=0;c2<cols-1;c2++) for(var r2=0;r2<rows;r2++){
+      if(rng()<0.85) edges.push([c2*rows+r2,(c2+1)*rows+r2]);
     }
-    // Vertical corridors (loops)
-    for (var c3=0; c3<cols; c3++) for (var r3=0; r3<rows-1; r3++) {
-      if (rng() > 0.3) corridors.push([c3*rows+r3, c3*rows+r3+1]);
+    // Vertical connections — create loops
+    for(var c3=0;c3<cols;c3++) for(var r3=0;r3<rows-1;r3++){
+      if(rng()<0.6) edges.push([c3*rows+r3,c3*rows+r3+1]);
     }
-    // Ensure start connected
-    if (!corridors.find(function(c){return c[0]===1||c[1]===1;}))
-      corridors.push([1,4]);
-    return {rooms:rooms, corridors:corridors};
+    // Guarantee start + boss are connected
+    var startIdx=1; // row1 of col0
+    var bossIdx=(cols-1)*rows+1;
+    if(!edges.find(function(e){return e[0]===startIdx||e[1]===startIdx;}))
+      edges.push([startIdx,startIdx+rows]);
+    return {rooms:rooms,edges:edges};
   },
 
-  // Warhammer Quest: open hub with radiating branches
-  hub: function(rng, size) {
-    var rooms = [
-      {role:'start',    x:0, y:3},
-      {role:'junction', x:2, y:3},   // central hub
-      {role:'guard',    x:2, y:1},
-      {role:'treasure', x:2, y:5},
-      {role:'ambush',   x:4, y:1},
-      {role:'ritual',   x:4, y:5},
-      {role:'junction', x:4, y:3},
-      {role:'dead-end', x:6, y:1},
-      {role:'dead-end', x:6, y:5},
-      {role:'boss',     x:6, y:3},
+  // Warhammer Quest Hub: central junction, radiating wings
+  hub: function(rng, sz) {
+    var rooms=[
+      {role:'start',   ax:0, ay:3},
+      {role:'hub',     ax:2, ay:3},
+      {role:'room',    ax:2, ay:1},
+      {role:'room',    ax:2, ay:5},
+      {role:'room',    ax:4, ay:1},
+      {role:'treasure',ax:4, ay:5},
+      {role:'hub',     ax:4, ay:3},
+      {role:'dead-end',ax:5, ay:1},
+      {role:'dead-end',ax:5, ay:5},
+      {role:'boss',    ax:6, ay:3},
     ];
-    var corridors = [
-      [0,1],[1,2],[1,3],[1,6],
-      [2,4],[3,5],[4,6],[5,6],
-      [4,7],[5,8],[6,9],[7,9],[8,9]
-    ];
-    if (size==='large') {
-      rooms.push({role:'ambush',   x:3, y:0});
-      rooms.push({role:'treasure', x:3, y:6});
-      corridors.push([2, rooms.length-2]);
-      corridors.push([3, rooms.length-1]);
+    var edges=[[0,1],[1,2],[1,3],[1,6],[2,4],[3,5],[4,6],[5,6],[4,7],[5,8],[6,9],[7,9],[8,9]];
+    if(sz==='small') { rooms=rooms.slice(0,7); edges=edges.filter(function(e){return e[0]<7&&e[1]<7;}); }
+    if(sz==='large') {
+      rooms.push({role:'room',ax:3,ay:0}); rooms.push({role:'room',ax:3,ay:6});
+      edges.push([2,rooms.length-2],[3,rooms.length-1]);
     }
-    return {rooms:rooms, corridors:corridors};
+    return {rooms:rooms,edges:edges};
   },
 
-  // AHQ barrow: linear with shortcuts and secret paths
-  barrow: function(rng, size) {
-    var rooms = [
-      {role:'start',    x:0, y:2},
-      {role:'guard',    x:2, y:2},
-      {role:'ambush',   x:4, y:1},
-      {role:'treasure', x:4, y:3},
-      {role:'junction', x:6, y:2},
-      {role:'ritual',   x:6, y:0},
-      {role:'dead-end', x:6, y:4},
-      {role:'guard',    x:8, y:2},
-      {role:'boss',     x:10,y:2},
+  // AHQ Barrow: linear with shortcuts
+  barrow: function(rng, sz) {
+    var rooms=[
+      {role:'start',   ax:0, ay:2},
+      {role:'guard',   ax:1, ay:2},
+      {role:'room',    ax:2, ay:1},
+      {role:'treasure',ax:2, ay:3},
+      {role:'hub',     ax:3, ay:2},
+      {role:'dead-end',ax:3, ay:0},
+      {role:'dead-end',ax:3, ay:4},
+      {role:'guard',   ax:4, ay:2},
+      {role:'boss',    ax:5, ay:2},
     ];
-    var corridors = [
-      [0,1],[1,2],[1,3],[2,4],[3,4],
-      [4,5],[4,6],[4,7],[7,8]
-    ];
-    // Shortcut loop
-    corridors.push([1,4]);
-    if (size==='large') {
-      rooms.push({role:'ambush', x:8,y:0});
-      corridors.push([7, rooms.length-1]);
-      corridors.push([rooms.length-1, 8]);
-    }
-    return {rooms:rooms, corridors:corridors};
+    var edges=[[0,1],[1,2],[1,3],[2,4],[3,4],[4,5],[4,6],[4,7],[7,8],[1,4]]; // shortcut
+    if(sz==='large'){ rooms.push({role:'room',ax:4,ay:0}); edges.push([7,rooms.length-1],[rooms.length-1,8]); }
+    return {rooms:rooms,edges:edges};
   },
 };
 
-/* ── ARCHETYPE SELECTION ────────────────────────────────────*/
-function pickArchetype(rng, routes) {
-  if (routes==='linear')   return rndPick(rng,['spine','barrow']);
-  if (routes==='open')     return rndPick(rng,['hub','catacombs']);
-  return rndPick(rng,['spine','barrow','hub','catacombs']);
+function pickArchetype(rng,routes){
+  if(routes==='linear')   return pick(rng,['spine','barrow']);
+  if(routes==='open')     return pick(rng,['hub','catacombs']);
+  return pick(rng,['spine','barrow','hub','catacombs']);
 }
 
 /* ══════════════════════════════════════════════════════════════
-   GRID PLACER
-   Converts abstract room graph to real tile placements on the
-   builder's 100×80 grid.
-══════════════════════════════════════════════════════════════*/
+   LAYOUT ENGINE
+   Converts abstract archetype to real tile placements.
+   Grid: 100×80. Start tile at left (gx~2). Spread east.
+══════════════════════════════════════════════════════════════ */
 
-var ROOM_STEP_X = 14;  // abstract unit → grid squares
-var ROOM_STEP_Y = 12;
-var ORIGIN_X    = 2;
-var ORIGIN_Y    = 10;
+// Abstract unit → grid squares. Rooms are ~6-8 wide, corridors bridge the gap.
+var AX = 16;  // horizontal spacing per abstract unit
+var AY = 12;  // vertical spacing per abstract unit
+var OX = 2;   // left margin
+var OY = 18;  // top margin (places rooms in vertical centre)
 
-function roleTileId(rng, role, pool, usedBoss) {
-  if (role==='start')    return pool.start;
-  if (role==='boss')     return rndPick(rng, pool.boss);
-  if (role==='stairs')   return rndPick(rng, pool.stairs);
-  if (role==='junction') return rndPick(rng, pool.largeRooms.length ? pool.largeRooms : pool.rooms);
-  return rndPick(rng, pool.rooms);
-}
-
-function placeDungeon(rng, archGraph, pool, addStairs) {
+function layoutDungeon(rng, arch, pool, addStairs) {
   var tiles = [];
-  var nextId = 1;
-  var roomPositions = []; // actual gx,gy of each placed room
+  var idSeq = 1;
+  var placed = []; // {gx, gy, tileId, idx}
 
-  // Place rooms
-  archGraph.rooms.forEach(function(room, idx) {
-    var gx = ORIGIN_X + room.x * ROOM_STEP_X;
-    var gy = ORIGIN_Y + room.y * ROOM_STEP_Y;
-    var tileId = roleTileId(rng, room.role, pool, false);
-
-    // Try to place, nudge if overlap
-    var placed = false;
-    for (var dy=-2; dy<=2 && !placed; dy++) {
-      for (var dx=-2; dx<=2 && !placed; dx++) {
-        if (canPlace(tiles, tileId, gx+dx*2, gy+dy*2, 0)) {
-          tiles.push({id:nextId++, tileId:tileId, gx:gx+dx*2, gy:gy+dy*2, rot:0, _role:room.role});
-          roomPositions.push({gx:gx+dx*2, gy:gy+dy*2, tileId:tileId});
-          placed = true;
-        }
-      }
+  // 1. Place rooms
+  arch.rooms.forEach(function(room, idx) {
+    var tileId = pickRoomTile(rng, room.role, pool);
+    var gx0 = OX + room.ax * AX;
+    var gy0 = OY + (room.ay - 2) * AY; // centre ay=2 vertically
+    var pos = tryPlace(tiles, tileId, gx0, gy0, 0);
+    if (pos) {
+      var t = {id: idSeq++, tileId: tileId, gx: pos.gx, gy: pos.gy, rot: 0, _role: room.role, _idx: idx};
+      tiles.push(t);
+      placed.push(t);
+    } else {
+      placed.push(null); // failed placement — mark null so edges can skip
     }
-    if (!placed) roomPositions.push(null);
   });
 
-  // Place corridors between rooms
-  archGraph.corridors.forEach(function(pair) {
-    var a = roomPositions[pair[0]];
-    var b = roomPositions[pair[1]];
+  // 2. Connect rooms with corridors
+  arch.edges.forEach(function(edge) {
+    var a = placed[edge[0]];
+    var b = placed[edge[1]];
     if (!a || !b) return;
-    placeCorridorBetween(rng, tiles, nextId, pool, a, b);
-    nextId = tiles.length + 1;
+    connectRooms(rng, tiles, idSeq, pool, a, b);
+    idSeq = tiles.length + 1;
   });
 
-  // Optionally add stair room (for multi-floor)
+  // 3. Add stair tile if multi-floor
   if (addStairs) {
-    var stairTile = rndPick(rng, pool.stairs);
-    // Find a quiet spot near the middle of the dungeon
-    var mx = ORIGIN_X + 4 * ROOM_STEP_X;
-    var my = ORIGIN_Y + 2 * ROOM_STEP_Y;
-    for (var dy2=-3; dy2<=3; dy2++) {
-      for (var dx2=-3; dx2<=3; dx2++) {
-        if (canPlace(tiles, stairTile, mx+dx2*3, my+dy2*3, 0)) {
-          tiles.push({id:nextId++, tileId:stairTile, gx:mx+dx2*3, gy:my+dy2*3, rot:0, _role:'stairs'});
-          dy2=99; dx2=99; // break both loops
-        }
-      }
-    }
+    var stairId = pool.stairs || '06bc';
+    // Place near the middle of the dungeon
+    var midX = Math.floor((OX + OX + arch.rooms.length * AX / 2));
+    var midY = OY + AY;
+    var pos = tryPlace(tiles, stairId, midX, midY, 0);
+    if (!pos) pos = tryPlace(tiles, stairId, OX + 2*AX, OY + AY, 0);
+    if (pos) tiles.push({id: idSeq++, tileId: stairId, gx: pos.gx, gy: pos.gy, rot: 0, _role:'stairs'});
   }
 
   return tiles;
 }
 
-/* ── CORRIDOR PLACEMENT ─────────────────────────────────────
-   Connects two rooms with L-shaped corridor routing.
-   Tries horizontal then vertical segments.
+function pickRoomTile(rng, role, pool) {
+  if (role==='start')                  return pool.start;
+  if (role==='boss')                   return pick(rng, pool.boss);
+  if (role==='stairs')                 return pool.stairs;
+  if (role==='hub'||role==='branch')   return pick(rng, pool.rooms); // could be large later
+  return pick(rng, pool.rooms);
+}
+
+/* ── CORRIDOR ROUTING ────────────────────────────────────────
+   Key insight: corridor is 6×2. It attaches edge-to-edge.
+   We route from the nearest edge of room A to the nearest
+   edge of room B using L-shaped segments.
 ──────────────────────────────────────────────────────────── */
-function placeCorridorBetween(rng, tiles, nextId, pool, a, b) {
-  var aSz = rotSize(a.tileId, 0);
-  var bSz = rotSize(b.tileId, 0);
+function connectRooms(rng, tiles, idSeq, pool, a, b) {
+  var aSz = rsz(a.tileId, a.rot||0);
+  var bSz = rsz(b.tileId, b.rot||0);
 
-  // Centre points of each room
-  var ax = a.gx + Math.floor(aSz.w/2);
-  var ay = a.gy + Math.floor(aSz.h/2);
-  var bx = b.gx + Math.floor(bSz.w/2);
-  var by = b.gy + Math.floor(bSz.h/2);
+  // Centres
+  var aCX = a.gx + aSz.w/2;
+  var aCY = a.gy + aSz.h/2;
+  var bCX = b.gx + bSz.w/2;
+  var bCY = b.gy + bSz.h/2;
 
-  var dx = bx - ax;
-  var dy = by - ay;
+  var dx = bCX - aCX;
+  var dy = bCY - aCY;
+  var corrId = pick(rng, pool.corridors);
+  var cSz = tsz(corrId); // always 6×2 for standard corridors
 
-  var corridorTile = rndPick(rng, pool.corridors);
-  var cSz = tileSize(corridorTile); // 6×2
+  // Decide routing: primarily horizontal, then vertical elbow
+  var horzFirst = Math.abs(dx) >= Math.abs(dy);
 
-  // Horizontal segment
-  if (Math.abs(dx) >= cSz.w) {
-    var hCount = Math.floor(Math.abs(dx) / cSz.w);
-    var hDir   = dx > 0 ? 1 : -1;
-    var hX     = ax + (dx>0 ? aSz.w/2 : -cSz.w);
-    var hY     = ay - Math.floor(cSz.h/2);
-    for (var i=0; i<hCount && i<3; i++) {
-      var tx = hX + i * cSz.w * hDir;
-      if (canPlace(tiles, corridorTile, tx, hY, 0))
-        tiles.push({id:nextId++, tileId:corridorTile, gx:tx, gy:hY, rot:0});
+  if (horzFirst) {
+    // Horizontal segment from right edge of A
+    var startX = dx > 0 ? a.gx + aSz.w : b.gx + bSz.w;
+    var endX   = dx > 0 ? b.gx          : a.gx;
+    var corrY  = Math.round(aCY - cSz.h/2);
+
+    placeHCorridors(rng, tiles, pool, idSeq, startX, endX, corrY);
+    idSeq = tiles.length + 1;
+
+    // Vertical elbow if there's a Y gap
+    if (Math.abs(dy) > 2) {
+      var elbowX = dx > 0 ? b.gx - cSz.h - 1 : a.gx - cSz.h - 1;
+      elbowX = Math.max(OX, Math.min(90, elbowX));
+      var startY = dy > 0 ? a.gy + aSz.h : b.gy + bSz.h;
+      var endY   = dy > 0 ? b.gy          : a.gy;
+      placeVCorridors(rng, tiles, pool, idSeq, elbowX, startY, endY);
+      idSeq = tiles.length + 1;
     }
-  }
+  } else {
+    // Vertical first
+    var startY2 = dy > 0 ? a.gy + aSz.h : b.gy + bSz.h;
+    var endY2   = dy > 0 ? b.gy          : a.gy;
+    var corrX   = Math.round(aCX - cSz.h/2);
+    placeVCorridors(rng, tiles, pool, idSeq, corrX, startY2, endY2);
+    idSeq = tiles.length + 1;
 
-  // Vertical segment (rotated corridor = 2×6)
-  if (Math.abs(dy) >= cSz.w) {
-    var vCount = Math.floor(Math.abs(dy) / cSz.w);
-    var vDir   = dy > 0 ? 1 : -1;
-    var vX     = bx - Math.floor(cSz.h/2);
-    var vY     = ay + (dy>0 ? aSz.h/2 : -cSz.w);
-    for (var j=0; j<vCount && j<3; j++) {
-      var ty = vY + j * cSz.w * vDir;
-      if (canPlace(tiles, corridorTile, vX, ty, 1))
-        tiles.push({id:nextId++, tileId:corridorTile, gx:vX, gy:ty, rot:1});
+    // Horizontal elbow
+    if (Math.abs(dx) > 2) {
+      var elbowY2 = dy > 0 ? b.gy - cSz.h - 1 : a.gy - cSz.h - 1;
+      elbowY2 = Math.max(0, Math.min(72, elbowY2));
+      var startX2 = dx > 0 ? a.gx + aSz.w : b.gx + bSz.w;
+      var endX2   = dx > 0 ? b.gx          : a.gx;
+      placeHCorridors(rng, tiles, pool, idSeq, startX2, endX2, elbowY2);
+      idSeq = tiles.length + 1;
     }
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   DUNGEON NAMES
-══════════════════════════════════════════════════════════════*/
-var DUNGEON_NAMES = {
-  dungeon:   ['The Iron Cells','The Warlord\'s Keep','Barracks of the Damned','The Dark Passage','Halls of the Fallen'],
-  crypt:     ['The Silent Tomb','Barrow of the Lich King','Ossuary of Shadows','The Cursed Vault','Chamber of Eternal Rest'],
-  cave:      ['The Black Grotto','Caverns of the Deep','The Hungry Dark','Stalactite Halls','The Breathing Rock'],
-  sewer:     ['The Rat Warrens','Beneath the City','The Overflow Tunnels','Plague Pipes','The Seeping Dark'],
-  civilised: ['The Merchant Quarter','Guildhall of Blades','The Old Palace','Customs House','The Locked Ward'],
-  outdoor:   ['The Blighted Moor','Ruins of the Old Empire','The Broken Hills','Forsaken Outpost','The Grey Wastes'],
+function placeHCorridors(rng, tiles, pool, startId, x1, x2, y) {
+  if (x1 > x2) { var tmp=x1; x1=x2; x2=tmp; }
+  var corrId = pick(rng, pool.corridors);
+  var cW = tsz(corrId).w; // 6
+  var cH = tsz(corrId).h; // 2
+  var x = x1;
+  var limit = 0;
+  while (x < x2 - 1 && limit++ < 20) {
+    var space = x2 - x;
+    if (space < 2) break;
+    // Try to place corridor; if too long just place what fits
+    var w = Math.min(cW, space);
+    if (w < 2) break;
+    // Use the corridor tile but only if it fits
+    if (canPlace(tiles, corrId, x, y, 0)) {
+      tiles.push({id: startId++, tileId: corrId, gx: x, gy: y, rot: 0});
+      x += cW;
+    } else {
+      x += 1; // nudge past obstacle
+    }
+  }
+}
+
+function placeVCorridors(rng, tiles, pool, startId, x, y1, y2) {
+  if (y1 > y2) { var tmp=y1; y1=y2; y2=tmp; }
+  var corrId = pick(rng, pool.corridors);
+  var cW = tsz(corrId).w; // 6 (becomes height when rotated)
+  var cH = tsz(corrId).h; // 2 (becomes width when rotated)
+  // rot=1: tile becomes cH wide × cW tall
+  var y = y1;
+  var limit = 0;
+  while (y < y2 - 1 && limit++ < 20) {
+    var space = y2 - y;
+    if (space < 2) break;
+    if (canPlace(tiles, corrId, x, y, 1)) {
+      tiles.push({id: startId++, tileId: corrId, gx: x, gy: y, rot: 1});
+      y += cW; // cW is the long dimension, which is now vertical
+    } else {
+      y += 1;
+    }
+  }
+}
+
+/* ── NAMES ───────────────────────────────────────────────────── */
+var NAMES = {
+  dungeon:  ['The Iron Cells','The Warlord\'s Keep','Barracks of the Damned','The Sunken Hall','The Dark Passage','Halls of the Fallen','The Torture Pits','Fortress of the Betrayer'],
+  crypt:    ['The Silent Tomb','Barrow of the Lich King','Ossuary of Shadows','The Cursed Vault','Chamber of Eternal Rest','The Bone Labyrinth','Catacombs of the Damned'],
+  cave:     ['The Black Grotto','Caverns of the Deep','The Hungry Dark','Stalactite Halls','The Breathing Rock','Lair of the Ancient','The Dripping Dark'],
+  sewer:    ['The Rat Warrens','Beneath the City','The Overflow Tunnels','Plague Pipes','The Seeping Dark','Channels of Ruin'],
+  civilised:['The Merchant Quarter','Guildhall of Blades','The Old Palace','Customs House','The Locked Ward','The Debtors\' Court'],
+  outdoor:  ['The Blighted Moor','Ruins of the Old Empire','The Broken Hills','Forsaken Outpost','The Grey Wastes','The Shattered Vale'],
 };
 
 /* ══════════════════════════════════════════════════════════════
-   MAIN ENTRY POINT
-   generate(options) → { floors: [{name, tiles, stairRole}], stairLinks }
-   options: { theme, size, routes, floors, seed }
-══════════════════════════════════════════════════════════════*/
-function generate(options) {
-  var opts   = options || {};
-  var theme  = opts.theme  || 'dungeon';
-  var size   = opts.size   || 'medium';
-  var routes = opts.routes || 'branching';
+   PUBLIC API
+   generate(opts) → { name, theme, seed, floors:[{name,tiles}], stairLinks:[] }
+══════════════════════════════════════════════════════════════ */
+function generate(opts) {
+  opts = opts || {};
+  var theme     = opts.theme  || 'dungeon';
+  var size      = opts.size   || 'medium';
+  var routes    = opts.routes || 'branching';
   var numFloors = Math.max(1, Math.min(4, opts.floors || 1));
-  var seed   = opts.seed   || Math.floor(Math.random() * 999999);
-  var rng    = mkRng(seed);
+  var seed      = opts.seed   || (Math.random()*999999|0);
+  var rng       = mkRng(seed);
+  var pool      = POOLS[theme] || POOLS.dungeon;
+  var baseName  = pick(rng, NAMES[theme] || NAMES.dungeon);
+  var floors    = [];
 
-  var pool   = POOLS[theme] || POOLS.dungeon;
-  var names  = DUNGEON_NAMES[theme] || DUNGEON_NAMES.dungeon;
-  var baseName = rndPick(rng, names);
-
-  var floors     = [];
-  var stairLinks = [];
-
-  for (var f=0; f<numFloors; f++) {
-    var archType  = pickArchetype(rng, routes);
-    var archFn    = ARCHETYPES[archType];
-    var archGraph = archFn(rng, size);
-    var isLast    = f === numFloors-1;
-    var addStairs = !isLast; // all floors except the last need a down-stair
-
-    var tiles = placeDungeon(rng, archGraph, pool, addStairs);
+  for (var f = 0; f < numFloors; f++) {
+    var archFn    = ARCHETYPES[pickArchetype(rng, routes)];
+    var arch      = archFn(rng, size);
+    var addStairs = f < numFloors - 1;
+    var tiles     = layoutDungeon(rng, arch, pool, addStairs);
 
     var floorName = numFloors > 1
-      ? baseName + (f===0?' — Ground Floor':(f===numFloors-1?' — Final Level':' — Level '+(f+1)))
+      ? baseName + (f===0 ? ' — Ground Floor' : f===numFloors-1 ? ' — Final Level' : ' — Level '+(f+1))
       : baseName;
 
     floors.push({ name: floorName, tiles: tiles, seed: seed });
-
-    // Record stair link between this floor and the next
-    if (addStairs) {
-      var stairTile = tiles.find(function(t){ return t._role==='stairs'; });
-      if (stairTile) {
-        stairLinks.push({
-          fromFloor: f,
-          fromTileId: stairTile.id,
-          toFloor: f+1,
-          // toTileId will be filled after next floor generates its start
-        });
-      }
-    }
   }
 
-  return {
-    name:       baseName,
-    theme:      theme,
-    seed:       seed,
-    archetype:  'generated',
-    floors:     floors,
-    stairLinks: stairLinks,
-  };
+  return { name: baseName, theme: theme, seed: seed, floors: floors, stairLinks: [] };
 }
 
-/* ── EXPORT ─────────────────────────────────────────────────*/
 global.DungeonGen = { generate: generate };
 
-})(typeof window !== 'undefined' ? window : global);
+})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));

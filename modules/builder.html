@@ -244,6 +244,9 @@ function applyGeneratedDungeon(result) {
   }
 
   api.draw();
+  // Redraw after images load (they may still be fetching on first generation)
+  setTimeout(function(){ if(window._bldTest) window._bldTest.draw(); }, 400);
+  setTimeout(function(){ if(window._bldTest) window._bldTest.draw(); }, 1200);
   console.log('✦ Generated:', result.name, result.floors.length, 'floor(s), seed:', result.seed);
 }
 
