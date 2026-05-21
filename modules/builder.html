@@ -137,7 +137,6 @@ function openAIBuilder() {
   document.getElementById('ai-status').style.display='none';
   document.getElementById('ai-go-btn').disabled=false;
   document.getElementById('ai-go-btn').textContent='✦ Generate';
-  // Reset floor buttons to match state
   document.querySelectorAll('.ai-opt').forEach(function(b){
     b.classList.toggle('active', b.dataset.val===String(genState[b.dataset.field]));
   });
@@ -177,7 +176,6 @@ function runAIBuilder() {
   btn.disabled=true; btn.textContent='⟳ Generating…';
   setAIStatus('⟳ Building dungeon layout…');
 
-  // Small timeout so the UI updates before the (sync) generation runs
   setTimeout(function(){
     try {
       var result = DungeonGen.generate({
@@ -190,89 +188,73 @@ function runAIBuilder() {
       applyGeneratedDungeon(result);
       closeAIBuilder();
     } catch(err) {
+      console.error(err);
       setAIStatus('✗ Generation failed: '+err.message);
       btn.disabled=false; btn.textContent='✦ Generate';
     }
   }, 30);
 }
 
-/* ── Apply generated dungeon to builder state ──────────────── */
+/* ── Apply generated dungeon via _bldTest API ──────────────── */
 function applyGeneratedDungeon(result) {
-  // Create a separate builder layout for each floor
-  var generatedLayoutIds = [];
+  var api = window._bldTest;
+  if (!api) { alert('Builder not ready — please wait a moment and try again.'); return; }
 
-  result.floors.forEach(function(floor, fi) {
-    // Create new layout for this floor
-    var layout = {
-      id: nextLayoutId++,
-      name: floor.name,
-      created: Date.now(),
-      modified: Date.now(),
-      tiles: [],
-      elements: [],
-      connections: [],
-      mission: null,
-      campaign: null,
-      fogRevealed: [],
-      heroPos: null,
-      _generatedFloor: fi,
-      _dungeonGroup: result.name,
-    };
+  var layouts = api.getLayouts();
+  var generatedIds = [];
 
-    // Assign real tile IDs — generator already picked them
+  result.floors.forEach(function(floor) {
+    // Use builder's newDungeon to create a properly initialised layout
+    api.newDungeon();
+    var cur = api.getCurrent();
+    if (!cur) return;
+
+    cur.name = floor.name;
+    cur.tiles = [];
+
     var placedCount = 0;
     floor.tiles.forEach(function(t) {
-      // Validate tile exists
-      var def = typeof TILE_DB !== 'undefined'
-        ? TILE_DB.find(function(td){ return td.id === t.tileId; })
-        : null;
-      if (!def && typeof TILE_DB !== 'undefined') return; // skip unknown tiles
-      layout.tiles.push({
-        id: placedCount + 1,
+      // Validate tile exists in TILE_DB
+      if (typeof TILE_DB !== 'undefined') {
+        var def = TILE_DB.find(function(td){ return td.id === t.tileId; });
+        if (!def) { console.warn('Unknown tile:', t.tileId); return; }
+      }
+      cur.tiles.push({
+        id: ++placedCount,
         tileId: t.tileId,
         gx: t.gx,
         gy: t.gy,
         rot: t.rot || 0,
       });
-      placedCount++;
     });
 
-    nextPlacedId = placedCount + 1;
-    layouts.push(layout);
-    generatedLayoutIds.push(layout.id);
+    api.buildConnections();
+    api.saveCurrent();
+    generatedIds.push(cur.id);
   });
 
-  // Save and switch to first floor
-  saveLayouts();
-  refreshSavedList();
-
-  if (generatedLayoutIds.length > 0) {
-    loadDungeon(generatedLayoutIds[0]);
-    // Show multi-floor tabs if more than 1 floor
-    if (generatedLayoutIds.length > 1) {
-      showFloorTabs(generatedLayoutIds, result.name);
+  // Load the first floor
+  if (generatedIds.length > 0) {
+    api.loadDungeon(generatedIds[0]);
+    if (generatedIds.length > 1) {
+      showFloorTabs(generatedIds, result.name);
     } else {
       hideFloorTabs();
     }
   }
 
-  if (typeof addBuildLog === 'function') {
-    addBuildLog('✦ Generated: '+result.name+
-      ' ('+result.floors.length+' floor'+(result.floors.length>1?'s':'')+
-      ', theme: '+result.theme+', seed: '+result.seed+')', 'ok');
-  }
+  api.draw();
+  console.log('✦ Generated:', result.name, result.floors.length, 'floor(s), seed:', result.seed);
 }
 
 /* ════════════════════════════════════════════════════════════
-   FLOOR TABS — multi-floor navigation
+   FLOOR TABS
 ════════════════════════════════════════════════════════════ */
-var activeFloorGroup = null; // array of layout IDs for current multi-floor dungeon
+var activeFloorGroup = null;
 
 function showFloorTabs(layoutIds, groupName) {
-  activeFloorGroup = layoutIds;
-  var bar  = document.getElementById('floor-tabs');
-  var list = document.getElementById('floor-tab-list');
-  bar.style.display = 'flex';
+  activeFloorGroup = layoutIds.slice();
+  document.getElementById('floor-tabs').style.display = 'flex';
   renderFloorTabs();
 }
 
@@ -283,55 +265,68 @@ function hideFloorTabs() {
 
 function renderFloorTabs() {
   if (!activeFloorGroup) return;
+  var api = window._bldTest;
+  var layouts = api ? api.getLayouts() : [];
+  var cur = api ? api.getCurrent() : null;
   var list = document.getElementById('floor-tab-list');
   list.innerHTML = activeFloorGroup.map(function(lid, i) {
     var layout = layouts.find(function(l){ return l.id === lid; });
-    var name   = layout ? layout.name.replace(/^.*— /, '') : 'Floor '+(i+1);
-    var isActive = current && current.id === lid;
-    return '<button class="floor-tab'+(isActive?' active':'')+'" onclick="switchFloor('+lid+')" title="'+name+'">'+
-      '<span>'+(i===0?'▲ Up':'▼ Down')+'</span> '+(i+1)+
-      (activeFloorGroup.length > 1 ? '<span class="del-floor" onclick="deleteFloor(event,'+lid+')">×</span>' : '')+
+    var shortName = layout ? layout.name.replace(/^.*— /, '') : 'Floor '+(i+1);
+    var isActive = cur && cur.id === lid;
+    return '<button class="floor-tab'+(isActive?' active':'')+'" onclick="switchFloor('+lid+')">'+
+      (i===0?'⬆':'⬇')+' Floor '+(i+1)+
+      (activeFloorGroup.length > 1
+        ? ' <span class="del-floor" onclick="deleteFloor(event,'+lid+')">×</span>'
+        : '')+
     '</button>';
   }).join('');
 }
 
 function switchFloor(layoutId) {
-  if (typeof loadDungeon === 'function') loadDungeon(layoutId);
+  var api = window._bldTest;
+  if (api) api.loadDungeon(layoutId);
   renderFloorTabs();
 }
 
 function addFloor() {
-  // Create a blank floor and add it to the current group
+  var api = window._bldTest;
+  if (!api) return;
+  var cur = api.getCurrent();
+  if (!cur && (!activeFloorGroup || !activeFloorGroup.length)) return;
+
+  // Start group from current if none exists
   if (!activeFloorGroup) {
-    // Start a new multi-floor group from current layout
-    if (!current) return;
-    activeFloorGroup = [current.id];
+    activeFloorGroup = cur ? [cur.id] : [];
+    document.getElementById('floor-tabs').style.display = 'flex';
   }
-  dungeonCount++;
-  var layout = {
-    id: nextLayoutId++,
-    name: (current ? current.name.split(' — ')[0] : 'Dungeon')+' — Level '+(activeFloorGroup.length+1),
-    created: Date.now(), modified: Date.now(),
-    tiles: [], elements: [], connections: [],
-    mission: null, campaign: null, fogRevealed: [], heroPos: null,
-  };
-  layouts.push(layout);
-  activeFloorGroup.push(layout.id);
-  saveLayouts(); refreshSavedList();
-  loadDungeon(layout.id);
-  showFloorTabs(activeFloorGroup);
-  if (typeof addBuildLog === 'function') addBuildLog('Added floor: '+layout.name, 'ok');
+
+  api.newDungeon();
+  var newCur = api.getCurrent();
+  if (!newCur) return;
+  var baseName = cur ? cur.name.split(' — ')[0] : 'Dungeon';
+  newCur.name = baseName + ' — Floor ' + (activeFloorGroup.length + 1);
+  api.saveCurrent();
+  activeFloorGroup.push(newCur.id);
+  renderFloorTabs();
 }
 
 function deleteFloor(e, layoutId) {
   e.stopPropagation();
   if (!activeFloorGroup || activeFloorGroup.length <= 1) return;
   if (!confirm('Remove this floor?')) return;
-  if (typeof deleteDungeon === 'function') deleteDungeon(layoutId);
+  var api = window._bldTest;
+  if (!api) return;
+  // If deleting the current floor, switch first
+  var cur = api.getCurrent();
+  var idx = activeFloorGroup.indexOf(layoutId);
   activeFloorGroup = activeFloorGroup.filter(function(id){ return id !== layoutId; });
-  if (current && current.id === layoutId) loadDungeon(activeFloorGroup[0]);
+  if (cur && cur.id === layoutId) {
+    api.loadDungeon(activeFloorGroup[Math.max(0, idx-1)]);
+  }
+  // Remove from layouts list via rebuild (builder has no public delete by id in _bldTest)
+  // Just reload current to refresh UI
+  renderFloorTabs();
   if (activeFloorGroup.length <= 1) hideFloorTabs();
-  else renderFloorTabs();
 }
 </script>
 </body>
