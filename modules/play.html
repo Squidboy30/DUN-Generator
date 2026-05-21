@@ -7,124 +7,120 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:          #0d0a06;
-  --bg-panel:    #1a1208;
-  --bg-card:     #211609;
-  --border:      #5a3e18;
-  --border-gold: #a07820;
-  --gold:        #e0b840;
-  --gold-dim:    #8a7030;
-  --text:        #f0e4c0;
-  --text-muted:  #b09060;
-  --green:       #4a8a4a;
-  --green-light: #7aba7a;
-  --red:         #8a2a2a;
-  --red-light:   #e07070;
-  --grey:        #3a3020;
-  --grey-text:   #706050;
+  --bg:#0d0a06; --bg-panel:#1a1208; --border:#5a3e18; --border-gold:#a07820;
+  --gold:#e0b840; --gold-dim:#8a7030; --text:#f0e4c0; --text-muted:#b09060;
+  --green:#4a8a4a; --green-light:#7aba7a; --red:#8a2a2a; --red-light:#e07070;
+  --grey:#3a3020; --grey-text:#706050;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); font-family: 'IM Fell English', Georgia, serif; color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 
 /* HEADER */
-.hdr { background: var(--bg-panel); border-bottom: 2px solid var(--border-gold); padding: 10px 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; z-index: 10; }
-.hdr-back { font-family: Cinzel,serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); text-decoration: none; border: 1px solid var(--border); padding: 5px 10px; transition: all .15s; }
-.hdr-back:hover { border-color: var(--border-gold); color: var(--gold); }
-.hdr-title { font-family: 'Cinzel Decorative', serif; font-size: 16px; color: var(--gold); letter-spacing: 2px; }
-.hdr-sub { font-family: Cinzel,serif; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); }
-.hdr-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.hdr-progress { font-family: Cinzel,serif; font-size: 10px; letter-spacing: 1px; color: var(--text-muted); }
-.hdr-progress b { color: var(--gold); }
-.btn { font-family: Cinzel,serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 14px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; transition: all .15s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-.btn:hover { border-color: var(--border-gold); color: var(--gold); }
-.btn.danger { border-color: var(--red); color: var(--red-light); }
-.btn.danger:hover { background: rgba(138,42,42,.2); }
+.hdr{background:var(--bg-panel);border-bottom:2px solid var(--border-gold);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0;z-index:20;}
+.hdr-back{font-family:Cinzel,serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);text-decoration:none;border:1px solid var(--border);padding:5px 10px;transition:all .15s;}
+.hdr-back:hover{border-color:var(--border-gold);color:var(--gold);}
+.hdr-title{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);letter-spacing:2px;}
+.hdr-sub{font-family:Cinzel,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text-muted);}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.hdr-progress{font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;color:var(--text-muted);}
+.hdr-progress b{color:var(--gold);}
+.btn{font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{border-color:var(--border-gold);color:var(--gold);}
+.btn.danger{border-color:var(--red);color:var(--red-light);}
+.btn.danger:hover{background:rgba(138,42,42,.2);}
 
-/* BODY */
-.body { flex:1; display:flex; overflow:hidden; position:relative; }
-.map-backdrop { position:absolute; inset:0; background-image:url('arasca-map.jpg'); background-size:cover; background-position:center; filter:saturate(0.8) brightness(0.8); z-index:0; }
+/* MAIN BODY */
+.play-body{flex:1;display:flex;overflow:hidden;position:relative;}
 
-/* FLOW AREA */
-.flow-area { flex:1; position:relative; overflow:hidden; z-index:1; cursor:default; }
-.flow-world { position:absolute; top:0; left:0; transform-origin:0 0; }
-.flow-svg { position:absolute; top:0; left:0; pointer-events:none; overflow:visible; }
-.flow-nodes { position:absolute; top:0; left:0; }
+/* MAP VIEWPORT — clips the zoomable world */
+#map-viewport{flex:1;position:relative;overflow:hidden;background:#050403;cursor:grab;}
+#map-viewport.panning{cursor:grabbing;}
 
-/* NODE CARDS */
-.pnode { position:absolute; width:190px; border:1px solid var(--border); background:rgba(26,18,8,0.92); transition:border-color .2s, box-shadow .2s, transform .15s; user-select:none; }
-.pnode.locked { opacity:.35; filter:saturate(.15); }
-.pnode.available { border-color:var(--border-gold); cursor:pointer; box-shadow:0 0 12px rgba(160,120,32,.25); }
-.pnode.available:hover { border-color:var(--gold); box-shadow:0 0 22px rgba(224,184,64,.38); transform:translateY(-2px); }
-.pnode.active { border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 0 28px rgba(224,184,64,.4); cursor:pointer; }
-.pnode.active::after { content:''; position:absolute; inset:-4px; border:2px solid var(--gold); opacity:0; animation:pulse-ring 2s ease-out infinite; pointer-events:none; }
-@keyframes pulse-ring { 0%{inset:-4px;opacity:.7} 100%{inset:-16px;opacity:0} }
-.pnode.victory { border-color:var(--green); opacity:.7; }
-.pnode.defeat  { border-color:var(--red);   opacity:.7; }
-.pnode-hdr { padding:7px 10px 5px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:6px; }
-.pnode-num { font-family:Cinzel,serif; font-size:9px; color:var(--text-muted); flex-shrink:0; min-width:14px; }
-.pnode-name { font-family:Cinzel,serif; font-size:10px; color:var(--text); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.pnode-icon { font-size:12px; flex-shrink:0; }
-.pnode-body { padding:6px 10px 8px; }
-.pnode-goal { font-size:10px; color:var(--text-muted); font-style:italic; line-height:1.4; margin-bottom:4px; }
-.pnode-region { font-family:Cinzel,serif; font-size:8px; letter-spacing:1px; color:var(--gold-dim); text-transform:uppercase; }
+/* THE WORLD — single transform target */
+#map-world{position:absolute;top:0;left:0;transform-origin:0 0;}
+
+#map-img{display:block;max-width:none;user-select:none;pointer-events:none;}
+
+/* SVG layer — pins, leader lines, connection arrows */
+#map-svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;}
+
+/* CARDS layer */
+#map-cards{position:absolute;top:0;left:0;}
+
+/* MISSION CARDS */
+.pnode{position:absolute;width:170px;border:1px solid var(--border);background:rgba(13,10,6,0.88);transition:border-color .2s,box-shadow .2s,transform .15s;user-select:none;backdrop-filter:blur(2px);}
+.pnode.locked{opacity:.3;filter:saturate(.1);}
+.pnode.available{border-color:var(--border-gold);cursor:pointer;box-shadow:0 0 14px rgba(160,120,32,.35);}
+.pnode.available:hover{border-color:var(--gold);box-shadow:0 0 24px rgba(224,184,64,.5);transform:translateY(-2px) scale(1.02);}
+.pnode.active{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 30px rgba(224,184,64,.45);cursor:pointer;}
+.pnode.active::after{content:'';position:absolute;inset:-4px;border:2px solid var(--gold);opacity:0;animation:pulse-ring 2s ease-out infinite;pointer-events:none;}
+@keyframes pulse-ring{0%{inset:-4px;opacity:.7}100%{inset:-18px;opacity:0}}
+.pnode.victory{border-color:var(--green);opacity:.75;}
+.pnode.defeat{border-color:var(--red);opacity:.75;}
+.pnode-hdr{padding:6px 9px 5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px;}
+.pnode-num{font-family:Cinzel,serif;font-size:8px;color:var(--text-muted);flex-shrink:0;min-width:12px;}
+.pnode-name{font-family:Cinzel,serif;font-size:9px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pnode-icon{font-size:11px;flex-shrink:0;}
+.pnode-body{padding:5px 9px 7px;}
+.pnode-goal{font-size:9px;color:var(--text-muted);font-style:italic;line-height:1.4;margin-bottom:3px;}
+.pnode-region{font-family:Cinzel,serif;font-size:7px;letter-spacing:1px;color:var(--gold-dim);text-transform:uppercase;}
 
 /* ZOOM CONTROLS */
-.zoom-ctrl { position:absolute; bottom:14px; left:14px; display:flex; gap:4px; z-index:10; }
-.zoom-ctrl button { width:26px; height:26px; background:rgba(10,8,6,.85); border:1px solid var(--border); color:var(--gold); font-family:Cinzel,serif; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color .15s; }
-.zoom-ctrl button:hover { border-color:var(--gold); }
-.zoom-ctrl .fit-btn { width:auto; padding:0 8px; font-size:9px; letter-spacing:0; }
+.zoom-ctrl{position:absolute;bottom:14px;left:14px;display:flex;gap:4px;z-index:10;}
+.zoom-ctrl button{width:26px;height:26px;background:rgba(10,8,6,.88);border:1px solid var(--border);color:var(--gold);font-family:Cinzel,serif;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s;}
+.zoom-ctrl button:hover{border-color:var(--gold);}
+.zoom-ctrl .fit-btn{width:auto;padding:0 8px;font-size:9px;letter-spacing:0;}
 
 /* LEGEND */
-.legend { position:absolute; top:12px; left:12px; background:rgba(10,8,6,.82); border:1px solid var(--border); padding:8px 12px; z-index:10; display:flex; flex-direction:column; gap:5px; }
-.legend-item { display:flex; align-items:center; gap:7px; font-family:Cinzel,serif; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); }
-.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.legend{position:absolute;top:12px;left:12px;background:rgba(10,8,6,.88);border:1px solid var(--border);padding:8px 12px;z-index:10;display:flex;flex-direction:column;gap:5px;}
+.legend-item{display:flex;align-items:center;gap:7px;font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 
 /* BRIEF PANEL */
-.brief { width:340px; flex-shrink:0; background:rgba(26,18,8,0.96); border-left:2px solid var(--border-gold); display:flex; flex-direction:column; z-index:2; overflow:hidden; }
-.brief-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text-muted); font-style:italic; font-size:13px; padding:40px; text-align:center; }
-.brief-empty-icon { font-size:36px; opacity:.35; }
-.brief-content { display:none; flex-direction:column; flex:1; overflow:hidden; }
-.brief-top { padding:16px 20px 12px; border-bottom:1px solid var(--border); background:rgba(160,120,32,.06); flex-shrink:0; }
-.brief-mission-name { font-family:'Cinzel Decorative',serif; font-size:14px; color:var(--gold); margin-bottom:3px; line-height:1.3; }
-.brief-region-label { font-family:Cinzel,serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px; }
-.brief-badge { display:inline-block; font-family:Cinzel,serif; font-size:8px; letter-spacing:1px; text-transform:uppercase; padding:2px 8px; border-radius:2px; }
-.b-available { background:rgba(160,120,32,.15); border:1px solid var(--border-gold); color:var(--gold); }
-.b-active    { background:rgba(224,184,64,.2);  border:1px solid var(--gold);        color:var(--gold); }
-.b-victory   { background:rgba(74,138,74,.15);  border:1px solid var(--green);       color:var(--green-light); }
-.b-defeat    { background:rgba(138,42,42,.15);  border:1px solid var(--red);         color:var(--red-light); }
-.b-locked    { background:rgba(58,48,32,.3);    border:1px solid var(--grey);        color:var(--grey-text); }
-.brief-scroll { flex:1; overflow-y:auto; padding:16px 20px; }
-.brief-scroll::-webkit-scrollbar { width:4px; }
-.brief-scroll::-webkit-scrollbar-thumb { background:var(--border); }
-.b-narrative { font-size:13px; color:var(--text-muted); font-style:italic; line-height:1.7; padding:10px 12px; border-left:3px solid var(--border-gold); background:rgba(160,120,32,.04); margin-bottom:14px; }
-.b-row { margin-bottom:11px; }
-.b-label { font-family:Cinzel,serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:3px; }
-.b-val { font-size:12px; color:var(--text); line-height:1.6; }
-.b-val.gold { color:var(--gold); }
-.b-sep { border:none; border-top:1px solid var(--border); margin:12px 0; }
-.b-element { display:flex; align-items:flex-start; gap:8px; margin-bottom:5px; font-size:12px; }
-.b-element-num { width:18px; height:18px; border-radius:50%; background:var(--text); color:var(--bg); font-family:Cinzel,serif; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
-.brief-actions { padding:14px 20px; border-top:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:7px; }
-.brief-actions-label { font-family:Cinzel,serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); }
-.launch-btn { display:flex; align-items:center; justify-content:center; gap:8px; font-family:Cinzel,serif; font-size:11px; letter-spacing:2px; text-transform:uppercase; padding:10px; border:1px solid var(--border-gold); background:rgba(160,120,32,.1); color:var(--gold); text-decoration:none; cursor:pointer; transition:all .15s; width:100%; }
-.launch-btn:hover { background:rgba(160,120,32,.25); border-color:var(--gold); }
-.outcome-row { display:flex; gap:7px; }
-.oc-btn { flex:1; font-family:Cinzel,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; padding:9px 6px; border:1px solid var(--border); background:transparent; cursor:pointer; transition:all .15s; }
-.oc-btn.v { border-color:var(--green); color:var(--green-light); }
-.oc-btn.v:hover { background:rgba(74,138,74,.2); }
-.oc-btn.d { border-color:var(--red); color:var(--red-light); }
-.oc-btn.d:hover { background:rgba(138,42,42,.2); }
-.reset-btn { width:100%; font-family:Cinzel,serif; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:7px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; transition:all .15s; }
-.reset-btn:hover { border-color:var(--red); color:var(--red-light); }
+.brief{width:330px;flex-shrink:0;background:rgba(26,18,8,.97);border-left:2px solid var(--border-gold);display:flex;flex-direction:column;z-index:15;overflow:hidden;}
+.brief-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-muted);font-style:italic;font-size:13px;padding:40px;text-align:center;}
+.brief-empty-icon{font-size:36px;opacity:.35;}
+.brief-content{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.brief-top{padding:15px 18px 11px;border-bottom:1px solid var(--border);background:rgba(160,120,32,.06);flex-shrink:0;}
+.brief-mission-name{font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--gold);margin-bottom:3px;line-height:1.3;}
+.brief-region-label{font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
+.brief-badge{display:inline-block;font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:2px;}
+.b-available{background:rgba(160,120,32,.15);border:1px solid var(--border-gold);color:var(--gold);}
+.b-active{background:rgba(224,184,64,.2);border:1px solid var(--gold);color:var(--gold);}
+.b-victory{background:rgba(74,138,74,.15);border:1px solid var(--green);color:var(--green-light);}
+.b-defeat{background:rgba(138,42,42,.15);border:1px solid var(--red);color:var(--red-light);}
+.b-locked{background:rgba(58,48,32,.3);border:1px solid var(--grey);color:var(--grey-text);}
+.brief-scroll{flex:1;overflow-y:auto;padding:14px 18px;}
+.brief-scroll::-webkit-scrollbar{width:4px;}
+.brief-scroll::-webkit-scrollbar-thumb{background:var(--border);}
+.b-narrative{font-size:12px;color:var(--text-muted);font-style:italic;line-height:1.7;padding:9px 11px;border-left:3px solid var(--border-gold);background:rgba(160,120,32,.04);margin-bottom:12px;}
+.b-row{margin-bottom:10px;}
+.b-label{font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:3px;}
+.b-val{font-size:12px;color:var(--text);line-height:1.6;}
+.b-val.gold{color:var(--gold);}
+.b-sep{border:none;border-top:1px solid var(--border);margin:10px 0;}
+.b-element{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;font-size:12px;}
+.b-element-num{width:16px;height:16px;border-radius:50%;background:var(--text);color:var(--bg);font-family:Cinzel,serif;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.brief-actions{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:7px;}
+.brief-actions-label{font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);}
+.launch-btn{display:flex;align-items:center;justify-content:center;gap:8px;font-family:Cinzel,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:9px;border:1px solid var(--border-gold);background:rgba(160,120,32,.1);color:var(--gold);text-decoration:none;cursor:pointer;transition:all .15s;width:100%;}
+.launch-btn:hover{background:rgba(160,120,32,.25);border-color:var(--gold);}
+.outcome-row{display:flex;gap:7px;}
+.oc-btn{flex:1;font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 6px;border:1px solid var(--border);background:transparent;cursor:pointer;transition:all .15s;}
+.oc-btn.v{border-color:var(--green);color:var(--green-light);}
+.oc-btn.v:hover{background:rgba(74,138,74,.2);}
+.oc-btn.d{border-color:var(--red);color:var(--red-light);}
+.oc-btn.d:hover{background:rgba(138,42,42,.2);}
 
-/* SVG CONNECTION COLOURS */
-.cv { stroke:#a07820; } .cd { stroke:#8b1a1a; } .cc { stroke:#4a5a6e; } .cl { stroke:#3a3020; stroke-dasharray:4 3; }
+/* SVG classes */
+.cv{stroke:#a07820;}.cd{stroke:#8b1a1a;}.cc{stroke:#4a5a6e;}.cl{stroke:#3a3020;stroke-dasharray:4 3;}
+.pin-leader{stroke:rgba(224,184,64,0.4);stroke-width:1;stroke-dasharray:3 3;fill:none;}
 </style>
 </head>
 <body>
 
 <div class="hdr">
-  <a href="../index.html" style="text-decoration:none;font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);letter-spacing:2px;flex-shrink:0;" title="Home">⚔</a>
+  <a href="../index.html" style="text-decoration:none;font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);flex-shrink:0;" title="Home">⚔</a>
   <a class="hdr-back" href="campaigns.html">← Campaigns</a>
   <div>
     <div class="hdr-title" id="hdr-title">Loading…</div>
@@ -136,11 +132,16 @@ body { background: var(--bg); font-family: 'IM Fell English', Georgia, serif; co
   </div>
 </div>
 
-<div class="body">
-  <div class="map-backdrop"></div>
+<div class="play-body">
 
-  <!-- Flow graph -->
-  <div class="flow-area" id="flow-area">
+  <!-- Unified zoomable map + cards viewport -->
+  <div id="map-viewport">
+    <div id="map-world">
+      <img id="map-img" src="arasca-map.jpg" alt="World of Arasca" draggable="false">
+      <svg id="map-svg"></svg>
+      <div id="map-cards"></div>
+    </div>
+
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#a07820;border:1px solid #e0b840"></div>Available</div>
       <div class="legend-item"><div class="legend-dot" style="background:#e0b840;box-shadow:0 0 5px #e0b840"></div>Active</div>
@@ -148,22 +149,19 @@ body { background: var(--bg); font-family: 'IM Fell English', Georgia, serif; co
       <div class="legend-item"><div class="legend-dot" style="background:#8a2a2a"></div>Defeat</div>
       <div class="legend-item"><div class="legend-dot" style="background:#3a3020"></div>Locked</div>
     </div>
-    <div id="flow-world">
-      <svg class="flow-svg" id="flow-svg"><defs></defs></svg>
-      <div class="flow-nodes" id="flow-nodes"></div>
-    </div>
+
     <div class="zoom-ctrl">
-      <button onclick="fZoom(.15)">+</button>
-      <button onclick="fZoom(-.15)">−</button>
-      <button class="fit-btn" onclick="fFit()">Fit</button>
+      <button onclick="mZoom(.15)">+</button>
+      <button onclick="mZoom(-.15)">−</button>
+      <button class="fit-btn" onclick="mFit()">Fit</button>
     </div>
   </div>
 
   <!-- Brief panel -->
-  <div class="brief" id="brief">
+  <div class="brief">
     <div class="brief-empty" id="brief-empty">
       <div class="brief-empty-icon">⚔</div>
-      <div>Select an available mission to view its brief and begin play</div>
+      <div>Select an available mission on the map to begin play</div>
     </div>
     <div class="brief-content" id="brief-content">
       <div class="brief-top">
@@ -178,65 +176,159 @@ body { background: var(--bg); font-family: 'IM Fell English', Georgia, serif; co
 </div>
 
 <script>
+// ── DATA ──────────────────────────────────────────────────────
 var campaign = null;
 var customMissions = [];
 var playState = null;
 var selNodeId = null;
-var NODE_W = 190, NODE_H = 95;
-var fScale = 1, fOX = 0, fOY = 0;
-var fDrag = false, fDSX = 0, fDSY = 0, fDOX = 0, fDOY = 0;
+var NODE_W = 170, NODE_H = 88;
+var IMG_W = 2000, IMG_H = 722; // natural image size
 
-// ── LOAD ──────────────────────────────────────────────────────
+// Pan/zoom
+var mScale = 1, mOX = 0, mOY = 0;
+var mDrag = false, mDSX = 0, mDSY = 0, mDOX = 0, mDOY = 0;
+var mDragged = false; // distinguish click from drag
 
-function load() {
-  var params = new URLSearchParams(window.location.search);
-  var id = params.get('c');
-  try { customMissions = JSON.parse(localStorage.getItem('dun_custom_missions') || '[]'); } catch(e){}
-  var camps = []; try { camps = JSON.parse(localStorage.getItem('dun_campaigns') || '[]'); } catch(e){}
-  campaign = camps.find(function(c){ return c.id === id; });
-  if (!campaign) { document.getElementById('hdr-title').textContent = 'Campaign not found'; return; }
-  document.title = campaign.name + ' — DUN Play';
-  document.getElementById('hdr-title').textContent = campaign.name;
-  var saved = null; try { saved = JSON.parse(localStorage.getItem('dun_play_' + id)); } catch(e){}
-  playState = saved || buildInitialState();
-  renderAll();
-  setTimeout(fFit, 80);
-}
-
-function buildInitialState() {
-  var s = {};
-  (campaign.nodes||[]).forEach(function(n, i){ s[n.id] = i === 0 ? 'available' : 'locked'; });
-  saveState();
-  return s;
-}
-function saveState() { localStorage.setItem('dun_play_' + campaign.id, JSON.stringify(playState)); }
-
-// Official missions — matches campaigns.html OFFICIAL_MISSIONS
 var OFFICIAL_MISSIONS = [
-  { id:'off_1',  name:'Defeat the Leader',       icon:'⚔',  goal:'Knock out the Quest Leader.',                                    settings:['dungeon','civilised','outdoor'], turnLimit:null },
-  { id:'off_2',  name:'Steal the Relic',          icon:'💎', goal:'Steal the relic from the Leader and escape.',                   settings:['dungeon','civilised'],           turnLimit:45   },
-  { id:'off_3',  name:'Rescue the Prisoner',      icon:'⛓',  goal:'Free the prisoner and escort them to the exit.',               settings:['dungeon','civilised'],           turnLimit:40   },
-  { id:'off_4',  name:'Destroy the Artefact',     icon:'💥', goal:'Reach the Artefact and destroy it before it empowers the enemy.', settings:['dungeon'],                    turnLimit:null },
-  { id:'off_5',  name:'Escort the Messenger',     icon:'📜', goal:'Keep the messenger alive until they reach the exit.',           settings:['dungeon','civilised','outdoor'], turnLimit:35   },
-  { id:'off_6',  name:'Survive the Night',        icon:'🌑', goal:'Survive until dawn — hold out for the required number of turns.', settings:['dungeon','civilised'],         turnLimit:20   },
-  { id:'off_7',  name:'Plunder the Vault',        icon:'🏆', goal:'Collect as much treasure as possible and escape.',              settings:['dungeon','civilised'],           turnLimit:35   },
-  { id:'off_8',  name:'Assassinate the Champion', icon:'🗡', goal:'Eliminate the Champion without alerting the full garrison.',    settings:['dungeon','civilised'],           turnLimit:null },
-  { id:'off_9',  name:'Retrieve the Tome',        icon:'📖', goal:'Find and retrieve the ancient tome from its resting place.',   settings:['dungeon','civilised'],           turnLimit:50   },
-  { id:'off_10', name:'The Gauntlet',             icon:'🏃', goal:'All heroes must reach the Exit before the turn limit.',        settings:['dungeon'],                       turnLimit:25   },
-  { id:'off_11', name:'The Siege',                icon:'🏰', goal:'Defend the stronghold entrance for the required turns.',       settings:['dungeon','civilised'],           turnLimit:15   },
-  { id:'off_12', name:'The Final Reckoning',      icon:'💀', goal:'Defeat the Boss and all Champions before the dungeon collapses.', settings:['dungeon'],                   turnLimit:20   },
+  {id:'off_1',  name:'Defeat the Leader',       icon:'⚔',  goal:'Knock out the Quest Leader.',                                       settings:['dungeon','civilised','outdoor'], turnLimit:null},
+  {id:'off_2',  name:'Steal the Relic',          icon:'💎', goal:'Steal the relic from the Leader and escape.',                      settings:['dungeon','civilised'],           turnLimit:45},
+  {id:'off_3',  name:'Rescue the Prisoner',      icon:'⛓',  goal:'Free the prisoner and escort them to the exit.',                  settings:['dungeon','civilised'],           turnLimit:40},
+  {id:'off_4',  name:'Destroy the Artefact',     icon:'💥', goal:'Reach the Artefact and destroy it.',                              settings:['dungeon'],                       turnLimit:null},
+  {id:'off_5',  name:'Escort the Messenger',     icon:'📜', goal:'Keep the messenger alive until they reach the exit.',             settings:['dungeon','civilised','outdoor'], turnLimit:35},
+  {id:'off_6',  name:'Survive the Night',        icon:'🌑', goal:'Survive until dawn.',                                             settings:['dungeon','civilised'],           turnLimit:20},
+  {id:'off_7',  name:'Plunder the Vault',        icon:'🏆', goal:'Collect as much treasure as possible and escape.',               settings:['dungeon','civilised'],           turnLimit:35},
+  {id:'off_8',  name:'Assassinate the Champion', icon:'🗡', goal:'Eliminate the Champion without alerting the garrison.',           settings:['dungeon','civilised'],           turnLimit:null},
+  {id:'off_9',  name:'Retrieve the Tome',        icon:'📖', goal:'Find and retrieve the ancient tome.',                            settings:['dungeon','civilised'],           turnLimit:50},
+  {id:'off_10', name:'The Gauntlet',             icon:'🏃', goal:'All heroes must reach the Exit before the turn limit.',          settings:['dungeon'],                       turnLimit:25},
+  {id:'off_11', name:'The Siege',                icon:'🏰', goal:'Defend the stronghold entrance for the required turns.',        settings:['dungeon','civilised'],           turnLimit:15},
+  {id:'off_12', name:'The Final Reckoning',      icon:'💀', goal:'Defeat the Boss and all Champions.',                             settings:['dungeon'],                       turnLimit:20},
 ];
 
 function getMission(mid) {
-  return OFFICIAL_MISSIONS.find(function(m){ return m.id === mid; }) ||
-    customMissions.find(function(m){ return m.id === mid; }) ||
-    (campaign._missions||[]).find(function(m){ return m.id === mid; }) || null;
+  return OFFICIAL_MISSIONS.find(function(m){return m.id===mid;}) ||
+    customMissions.find(function(m){return m.id===mid;}) ||
+    (campaign._missions||[]).find(function(m){return m.id===mid;}) || null;
+}
+
+// ── LOAD ──────────────────────────────────────────────────────
+function load() {
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get('c');
+  try{customMissions=JSON.parse(localStorage.getItem('dun_custom_missions')||'[]');}catch(e){}
+  var camps=[]; try{camps=JSON.parse(localStorage.getItem('dun_campaigns')||'[]');}catch(e){}
+  campaign = camps.find(function(c){return c.id===id;});
+  if (!campaign) { document.getElementById('hdr-title').textContent='Campaign not found'; return; }
+  document.title = campaign.name+' — DUN Play';
+  document.getElementById('hdr-title').textContent = campaign.name;
+  var saved=null; try{saved=JSON.parse(localStorage.getItem('dun_play_'+id));}catch(e){}
+  playState = saved || buildInitialState();
+  computeCardPositions();
+  renderAll();
+  var img = document.getElementById('map-img');
+  if (img.complete && img.naturalWidth) { syncSvgSize(); mFit(); }
+  else { img.onload = function(){ syncSvgSize(); mFit(); }; }
+}
+
+function buildInitialState() {
+  var s={};
+  (campaign.nodes||[]).forEach(function(n,i){ s[n.id]=i===0?'available':'locked'; });
+  saveState(); return s;
+}
+function saveState(){ localStorage.setItem('dun_play_'+campaign.id, JSON.stringify(playState)); }
+function nodeStatus(nid){ return playState[nid]||'locked'; }
+
+// ── CARD POSITION COMPUTATION ─────────────────────────────────
+// Each node gets a cardPos {x,y} — upper-left of the card in image-space pixels.
+// Pinned nodes: start near their pin, then separation pass.
+// Unpinned nodes: cluster in bottom-left.
+var cardPositions = {}; // nodeId → {x, y, pinX, pinY, hasPinned}
+
+function computeCardPositions() {
+  var nodes = campaign.nodes || [];
+  var positions = [];
+
+  // First pass: set initial positions from pin or auto-cluster
+  var clusterX = 20, clusterY = IMG_H - NODE_H - 20;
+  var clusterIdx = 0;
+
+  nodes.forEach(function(node) {
+    var pos;
+    if (node.mapPin) {
+      var pinX = node.mapPin.x * IMG_W;
+      var pinY = node.mapPin.y * IMG_H;
+      // Place card above and to the right of the pin by default
+      pos = {
+        x: pinX - NODE_W / 2,
+        y: pinY - NODE_H - 24,
+        pinX: pinX, pinY: pinY, hasPinned: true
+      };
+    } else {
+      // No pin — stack in bottom-left
+      var col = clusterIdx % 3;
+      var row = Math.floor(clusterIdx / 3);
+      pos = {
+        x: clusterX + col * (NODE_W + 10),
+        y: clusterY - row * (NODE_H + 10),
+        pinX: null, pinY: null, hasPinned: false
+      };
+      clusterIdx++;
+    }
+    // Clamp to image bounds
+    pos.x = Math.max(4, Math.min(IMG_W - NODE_W - 4, pos.x));
+    pos.y = Math.max(4, Math.min(IMG_H - NODE_H - 4, pos.y));
+    positions.push({ nodeId: node.id, pos: pos });
+  });
+
+  // Separation pass — push overlapping cards apart
+  var PADDING = 10;
+  var MAX_ITER = 80;
+  for (var iter = 0; iter < MAX_ITER; iter++) {
+    var moved = false;
+    for (var i = 0; i < positions.length; i++) {
+      for (var j = i + 1; j < positions.length; j++) {
+        var a = positions[i].pos, b = positions[j].pos;
+        var overlapX = (NODE_W + PADDING) - Math.abs(a.x - b.x);
+        var overlapY = (NODE_H + PADDING) - Math.abs(a.y - b.y);
+        if (overlapX > 0 && overlapY > 0) {
+          // Push apart along the smaller overlap axis
+          var push = Math.min(overlapX, overlapY) / 2 + 1;
+          if (overlapX < overlapY) {
+            var dirX = a.x < b.x ? -1 : 1;
+            a.x += dirX * push; b.x -= dirX * push;
+          } else {
+            var dirY = a.y < b.y ? -1 : 1;
+            a.y += dirY * push; b.y -= dirY * push;
+          }
+          // Re-clamp
+          a.x = Math.max(4, Math.min(IMG_W - NODE_W - 4, a.x));
+          a.y = Math.max(4, Math.min(IMG_H - NODE_H - 4, a.y));
+          b.x = Math.max(4, Math.min(IMG_W - NODE_W - 4, b.x));
+          b.y = Math.max(4, Math.min(IMG_H - NODE_H - 4, b.y));
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+
+  // Store results
+  cardPositions = {};
+  positions.forEach(function(p){ cardPositions[p.nodeId] = p.pos; });
+}
+
+function syncSvgSize() {
+  var img = document.getElementById('map-img');
+  var svg = document.getElementById('map-svg');
+  var w = img.naturalWidth || IMG_W;
+  var h = img.naturalHeight || IMG_H;
+  IMG_W = w; IMG_H = h;
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.style.width = w + 'px';
+  svg.style.height = h + 'px';
 }
 
 // ── PLAY LOGIC ─────────────────────────────────────────────────
-
-function nodeStatus(nid) { return playState[nid] || 'locked'; }
-
 function recordOutcome(nid, outcome) {
   playState[nid] = outcome;
   (campaign.connections||[]).forEach(function(c) {
@@ -245,67 +337,49 @@ function recordOutcome(nid, outcome) {
       if (nodeStatus(c.to) === 'locked') playState[c.to] = 'available';
     }
   });
-  saveState();
-  selNodeId = null;
-  renderAll();
+  saveState(); selNodeId = null; renderAll();
 }
 
 function confirmReset() {
-  if (!confirm('Reset all progress for "' + campaign.name + '"?')) return;
-  playState = buildInitialState();
-  selNodeId = null;
-  renderAll();
+  if (!confirm('Reset all progress for "'+campaign.name+'"?')) return;
+  playState = buildInitialState(); selNodeId = null; renderAll();
 }
 
 // ── RENDER ─────────────────────────────────────────────────────
+function renderAll() { renderCards(); renderMapSvg(); renderBrief(); updateProgress(); }
 
-function renderAll() {
-  renderNodes();
-  renderConns();
-  renderBrief();
-  updateProgress();
-}
+var sIcon  = {available:'◆', active:'▶', victory:'✓', defeat:'✗', locked:'○'};
+var sLabel = {available:'Available', active:'In Progress', victory:'Victory', defeat:'Defeat', locked:'Locked'};
+var sBadge = {available:'b-available', active:'b-active', victory:'b-victory', defeat:'b-defeat', locked:'b-locked'};
 
-var statusIcon  = { available:'◆', active:'▶', victory:'✓', defeat:'✗', locked:'○' };
-var statusLabel = { available:'Available', active:'In Progress', victory:'Victory', defeat:'Defeat', locked:'Locked' };
-var badgeClass  = { available:'b-available', active:'b-active', victory:'b-victory', defeat:'b-defeat', locked:'b-locked' };
-
-function renderNodes() {
-  var el = document.getElementById('flow-nodes');
-  var svg = document.getElementById('flow-svg');
+function renderCards() {
+  var el = document.getElementById('map-cards');
   el.innerHTML = '';
-  var maxX = 0, maxY = 0;
-  (campaign.nodes||[]).forEach(function(n) {
-    maxX = Math.max(maxX, (n.x||0) + NODE_W + 40);
-    maxY = Math.max(maxY, (n.y||0) + NODE_H + 40);
-  });
-  svg.setAttribute('width', maxX); svg.setAttribute('height', maxY);
-
   (campaign.nodes||[]).forEach(function(node, idx) {
     var m = getMission(node.missionId);
     var st = nodeStatus(node.id);
-    var isSel = node.id === selNodeId;
+    var pos = cardPositions[node.id] || {x: 20 + idx*20, y: 20 + idx*20};
     var playable = st === 'available' || st === 'active';
 
     var d = document.createElement('div');
-    d.className = 'pnode ' + st + (isSel ? ' active' : '');
-    d.style.left = (node.x||0) + 'px';
-    d.style.top  = (node.y||0) + 'px';
+    d.className = 'pnode ' + st + (node.id === selNodeId ? ' active' : '');
+    d.style.left = Math.round(pos.x) + 'px';
+    d.style.top  = Math.round(pos.y) + 'px';
 
     var locNum = node.locNum || (idx + 1);
     var name   = m ? m.name : node.missionId;
-    var goal   = m ? (m.goal||'').substring(0,58) : '';
+    var goal   = m ? (m.goal||'').substring(0, 52) : '';
     var region = node.region || '';
 
     d.innerHTML =
       '<div class="pnode-hdr">' +
-        '<div class="pnode-num">' + locNum + '</div>' +
-        '<div class="pnode-name">' + (m ? (m.icon||'◆') + ' ' : '') + name + '</div>' +
-        '<div class="pnode-icon">' + (statusIcon[st]||'○') + '</div>' +
+        '<div class="pnode-num">'+locNum+'</div>' +
+        '<div class="pnode-name">'+(m?(m.icon||'◆')+' ':'')+name+'</div>' +
+        '<div class="pnode-icon">'+(sIcon[st]||'○')+'</div>' +
       '</div>' +
       '<div class="pnode-body">' +
-        (goal ? '<div class="pnode-goal">' + goal + (m&&m.goal&&m.goal.length>58?'…':'') + '</div>' : '') +
-        (region ? '<div class="pnode-region">📍 ' + region + '</div>' : '') +
+        (goal?'<div class="pnode-goal">'+goal+(m&&m.goal&&m.goal.length>52?'…':'')+'</div>':'')+
+        (region?'<div class="pnode-region">📍 '+region+'</div>':'')+
       '</div>';
 
     if (playable) d.addEventListener('click', function(){ selectNode(node.id); });
@@ -313,40 +387,88 @@ function renderNodes() {
   });
 }
 
-function renderConns() {
-  var svg = document.getElementById('flow-svg');
-  Array.from(svg.querySelectorAll('.cg')).forEach(function(g){ g.remove(); });
-  var defs = svg.querySelector('defs');
+function renderMapSvg() {
+  var svg = document.getElementById('map-svg');
+  svg.innerHTML = '';
 
-  var cols = { victory:'#a07820', defeat:'#8b1a1a', custom:'#4a5a6e', locked:'#3a3020' };
-  ['victory','defeat','custom','locked'].forEach(function(o) {
-    if (defs.querySelector('#arr-'+o)) return;
+  // Defs — arrowheads
+  var defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  var cols = {victory:'#a07820', defeat:'#8b1a1a', custom:'#4a5a6e', locked:'#3a3020'};
+  Object.keys(cols).forEach(function(o) {
     var mk = document.createElementNS('http://www.w3.org/2000/svg','marker');
     mk.setAttribute('id','arr-'+o); mk.setAttribute('markerWidth','8'); mk.setAttribute('markerHeight','6');
     mk.setAttribute('refX','7'); mk.setAttribute('refY','3'); mk.setAttribute('orient','auto');
     var poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
     poly.setAttribute('points','0 0, 8 3, 0 6'); poly.setAttribute('fill',cols[o]);
-    poly.setAttribute('opacity', o==='locked'?'0.25':'0.85');
+    poly.setAttribute('opacity', o==='locked'?'0.25':'0.9');
     mk.appendChild(poly); defs.appendChild(mk);
   });
+  svg.appendChild(defs);
 
+  // Leader lines — from card centre to pin dot
+  (campaign.nodes||[]).forEach(function(node) {
+    var pos = cardPositions[node.id];
+    if (!pos || !pos.hasPinned) return;
+    var cx = pos.x + NODE_W / 2;
+    var cy = pos.y + NODE_H / 2;
+    // Only draw if card moved significantly from pin
+    var dist = Math.sqrt(Math.pow(cx - pos.pinX, 2) + Math.pow(cy - pos.pinY, 2));
+    if (dist < 8) return;
+    var line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+    line.setAttribute('x2', pos.pinX); line.setAttribute('y2', pos.pinY);
+    line.setAttribute('class','pin-leader');
+    svg.appendChild(line);
+  });
+
+  // Pin dots
+  (campaign.nodes||[]).forEach(function(node, idx) {
+    var pos = cardPositions[node.id];
+    if (!pos || !pos.hasPinned) return;
+    var st = nodeStatus(node.id);
+    var pinColor = {available:'#a07820', active:'#e0b840', victory:'#4a8a4a', defeat:'#8a2a2a', locked:'#3a3020'}[st]||'#3a3020';
+    var locNum = node.locNum || (idx + 1);
+
+    // Pin circle
+    var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', pos.pinX); circle.setAttribute('cy', pos.pinY);
+    circle.setAttribute('r', '10');
+    circle.setAttribute('fill', pinColor);
+    circle.setAttribute('stroke', '#0a0806');
+    circle.setAttribute('stroke-width', '1.5');
+    svg.appendChild(circle);
+
+    // Pin number
+    var txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x', pos.pinX); txt.setAttribute('y', pos.pinY);
+    txt.setAttribute('text-anchor','middle'); txt.setAttribute('dominant-baseline','central');
+    txt.setAttribute('fill','#0a0806'); txt.setAttribute('font-size', String(locNum).length > 2 ? '7' : '9');
+    txt.setAttribute('font-family','Cinzel,serif'); txt.setAttribute('font-weight','700');
+    txt.textContent = locNum;
+    svg.appendChild(txt);
+  });
+
+  // Connection arrows — drawn between card centres
   (campaign.connections||[]).forEach(function(conn) {
-    var fn = (campaign.nodes||[]).find(function(n){ return n.id===conn.from; });
-    var tn = (campaign.nodes||[]).find(function(n){ return n.id===conn.to; });
+    var fn = (campaign.nodes||[]).find(function(n){return n.id===conn.from;});
+    var tn = (campaign.nodes||[]).find(function(n){return n.id===conn.to;});
     if (!fn||!tn) return;
+    var fp = cardPositions[fn.id], tp = cardPositions[tn.id];
+    if (!fp||!tp) return;
 
     var fst = nodeStatus(conn.from), tst = nodeStatus(conn.to);
-    var isLocked = fst==='locked' || tst==='locked';
+    var isLocked = fst==='locked'||tst==='locked';
     var oc = isLocked ? 'locked' : (conn.outcome||'custom');
-    var opacity = isLocked ? 0.25 : (fst==='victory'||fst==='defeat' ? 1 : 0.7);
-    var cls = { victory:'cv', defeat:'cd', custom:'cc', locked:'cl' }[oc] || 'cc';
+    var opacity = isLocked ? 0.2 : (fst==='victory'||fst==='defeat' ? 1 : 0.65);
+    var cls = {victory:'cv',defeat:'cd',custom:'cc',locked:'cl'}[oc]||'cc';
 
-    var x1=(fn.x||0)+NODE_W, y1=(fn.y||0)+NODE_H/2;
-    var x2=(tn.x||0),        y2=(tn.y||0)+NODE_H/2;
-    var mx=(x1+x2)/2;
+    // Arrow from right edge of from-card to left edge of to-card
+    var x1 = fp.x + NODE_W, y1 = fp.y + NODE_H/2;
+    var x2 = tp.x,          y2 = tp.y + NODE_H/2;
+    var mx = (x1+x2)/2;
 
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.setAttribute('class','cg'); g.setAttribute('opacity',opacity);
+    g.setAttribute('opacity', opacity);
 
     var path = document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d','M '+x1+' '+y1+' C '+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2);
@@ -355,13 +477,13 @@ function renderConns() {
     g.appendChild(path);
 
     // Label
-    var ltext = conn.label || (oc!=='locked'&&oc!=='custom' ? oc : '');
+    var ltext = conn.label||(oc!=='locked'&&oc!=='custom'?oc:'');
     if (ltext) {
       var lt = document.createElementNS('http://www.w3.org/2000/svg','text');
-      lt.setAttribute('x',mx); lt.setAttribute('y',(y1+y2)/2-5);
+      lt.setAttribute('x',mx); lt.setAttribute('y',(y1+y2)/2-6);
       lt.setAttribute('text-anchor','middle'); lt.setAttribute('fill',cols[oc]||'#4a5a6e');
       lt.setAttribute('font-size','9'); lt.setAttribute('font-family','Cinzel,serif');
-      lt.textContent = ltext.length>13 ? ltext.substring(0,12)+'…' : ltext;
+      lt.textContent = ltext.length>13?ltext.substring(0,12)+'…':ltext;
       g.appendChild(lt);
     }
     svg.appendChild(g);
@@ -370,169 +492,137 @@ function renderConns() {
 
 function updateProgress() {
   var total = (campaign.nodes||[]).length;
-  var done  = (campaign.nodes||[]).filter(function(n){ var s=nodeStatus(n.id); return s==='victory'||s==='defeat'; }).length;
+  var done  = (campaign.nodes||[]).filter(function(n){var s=nodeStatus(n.id);return s==='victory'||s==='defeat';}).length;
   document.getElementById('hdr-progress').innerHTML = 'Missions: <b>'+done+'</b> / '+total;
 }
 
 // ── BRIEF PANEL ────────────────────────────────────────────────
-
-function selectNode(nid) {
-  selNodeId = nid;
-  renderAll();
-}
+function selectNode(nid) { selNodeId = nid; renderAll(); }
 
 function renderBrief() {
   var empty = document.getElementById('brief-empty');
   var cont  = document.getElementById('brief-content');
   if (!selNodeId) { empty.style.display='flex'; cont.style.display='none'; return; }
-  var node = (campaign.nodes||[]).find(function(n){ return n.id===selNodeId; });
+  var node = (campaign.nodes||[]).find(function(n){return n.id===selNodeId;});
   if (!node) return;
   var m = getMission(node.missionId);
   var st = nodeStatus(selNodeId);
-  empty.style.display = 'none'; cont.style.display = 'flex';
+  empty.style.display='none'; cont.style.display='flex';
 
-  document.getElementById('b-name').textContent    = m ? m.name : node.missionId;
-  document.getElementById('b-region').textContent  = node.region ? '📍 ' + node.region : '';
-  document.getElementById('b-badge').textContent   = statusLabel[st] || st;
-  document.getElementById('b-badge').className     = 'brief-badge ' + (badgeClass[st]||'b-locked');
+  document.getElementById('b-name').textContent    = m?m.name:node.missionId;
+  document.getElementById('b-region').textContent  = node.region?'📍 '+node.region:'';
+  document.getElementById('b-badge').textContent   = sLabel[st]||st;
+  document.getElementById('b-badge').className     = 'brief-badge '+(sBadge[st]||'b-locked');
 
-  // Body content
-  var body = '';
+  var body='';
   if (m) {
-    if (m.narrative) body += '<div class="b-narrative">' + m.narrative + '</div>';
-    body += brow('Goal', m.goal);
-    if (m.faction) body += brow('Faction', m.faction);
-    if (m.setup)   { body += '<hr class="b-sep">'; body += brow('Set-Up', m.setup); }
-    if (m.specialRules) body += brow('Special Rules', m.specialRules);
-    if (m.specialElements && m.specialElements.length) {
-      body += '<div class="b-row"><span class="b-label">Special Elements</span>';
-      m.specialElements.forEach(function(el,i){ body += '<div class="b-element"><div class="b-element-num">'+(i+1)+'</div><div>'+el+'</div></div>'; });
-      body += '</div>';
+    if (m.narrative) body+='<div class="b-narrative">'+m.narrative+'</div>';
+    body+=brow('Goal',m.goal);
+    if (m.faction) body+=brow('Faction',m.faction);
+    if (m.setup){body+='<hr class="b-sep">';body+=brow('Set-Up',m.setup);}
+    if (m.specialRules) body+=brow('Special Rules',m.specialRules);
+    if (m.specialElements&&m.specialElements.length) {
+      body+='<div class="b-row"><span class="b-label">Special Elements</span>';
+      m.specialElements.forEach(function(el,i){body+='<div class="b-element"><div class="b-element-num">'+(i+1)+'</div><div>'+el+'</div></div>';});
+      body+='</div>';
     }
-    if (m.furniture&&m.furniture.length)     body += brow('Furniture', m.furniture.join(', '));
-    if (m.otherElements&&m.otherElements.length) body += brow('Other Elements', m.otherElements.join(', '));
-    body += '<hr class="b-sep">';
-    body += brow('Quest End', m.questEnd);
-    if (m.rewards)   body += '<div class="b-row"><span class="b-label">Rewards</span><div class="b-val gold">'+m.rewards+'</div></div>';
-    if (m.tiles)     body += brow('Tiles', m.tiles);
-    if (m.turnLimit) body += brow('Turn Limit', m.turnLimit + ' turns');
+    if (m.furniture&&m.furniture.length) body+=brow('Furniture',m.furniture.join(', '));
+    if (m.otherElements&&m.otherElements.length) body+=brow('Other Elements',m.otherElements.join(', '));
+    body+='<hr class="b-sep">';
+    body+=brow('Quest End',m.questEnd);
+    if (m.rewards) body+='<div class="b-row"><span class="b-label">Rewards</span><div class="b-val gold">'+m.rewards+'</div></div>';
+    if (m.tiles) body+=brow('Tiles',m.tiles);
+    if (m.turnLimit) body+=brow('Turn Limit',m.turnLimit+' turns');
   } else {
-    body += '<div style="color:var(--text-muted);font-style:italic;font-size:12px;padding:8px 0;">Mission details not available — official missions are not stored locally.</div>';
+    body+='<div style="color:var(--text-muted);font-style:italic;font-size:12px;padding:8px 0;">Mission details not available.</div>';
   }
   document.getElementById('b-body').innerHTML = body;
 
-  // Actions
-  var dt = node.dungeonType || 'random';
-  var act = '';
-
-  if (st === 'available' || st === 'active') {
-    act += '<div class="brief-actions-label">' + (st==='available' ? 'Ready to Play' : 'In Progress') + '</div>';
-    act += '<button class="launch-btn" onclick="launchDungeon(\'' + selNodeId + '\')">⚔ Launch Dungeon</button>';
-    act += '<div class="outcome-row">' +
-      '<button class="oc-btn v" onclick="recordOutcome(\''+selNodeId+'\',\'victory\')">✓ Victory</button>' +
-      '<button class="oc-btn d" onclick="recordOutcome(\''+selNodeId+'\',\'defeat\')">✗ Defeat</button>' +
+  var dt = node.dungeonType||'random';
+  var act='';
+  if (st==='available'||st==='active') {
+    act+='<div class="brief-actions-label">'+(st==='available'?'Ready to Play':'In Progress')+'</div>';
+    act+='<button class="launch-btn" onclick="launchDungeon(\''+selNodeId+'\')">⚔ Launch Dungeon</button>';
+    act+='<div class="outcome-row">'+
+      '<button class="oc-btn v" onclick="recordOutcome(\''+selNodeId+'\',\'victory\')">✓ Victory</button>'+
+      '<button class="oc-btn d" onclick="recordOutcome(\''+selNodeId+'\',\'defeat\')">✗ Defeat</button>'+
     '</div>';
-  } else if (st === 'victory') {
-    act += '<div style="color:var(--green-light);font-family:Cinzel,serif;font-size:11px;letter-spacing:1px;text-align:center;">✓ Completed — Victory</div>';
-    var ul = unlockedBy(selNodeId,'victory');
-    if (ul.length) act += '<div style="font-size:10px;color:var(--text-muted);font-style:italic;">Unlocked: '+ul.join(', ')+'</div>';
-  } else if (st === 'defeat') {
-    act += '<div style="color:var(--red-light);font-family:Cinzel,serif;font-size:11px;letter-spacing:1px;text-align:center;">✗ Completed — Defeat</div>';
-    var ul2 = unlockedBy(selNodeId,'defeat');
-    if (ul2.length) act += '<div style="font-size:10px;color:var(--text-muted);font-style:italic;">Unlocked: '+ul2.join(', ')+'</div>';
+  } else if (st==='victory') {
+    act+='<div style="color:var(--green-light);font-family:Cinzel,serif;font-size:11px;letter-spacing:1px;text-align:center;">✓ Completed — Victory</div>';
+    var ul=unlockedBy(selNodeId,'victory'); if(ul.length) act+='<div style="font-size:10px;color:var(--text-muted);font-style:italic;">Unlocked: '+ul.join(', ')+'</div>';
+  } else if (st==='defeat') {
+    act+='<div style="color:var(--red-light);font-family:Cinzel,serif;font-size:11px;letter-spacing:1px;text-align:center;">✗ Completed — Defeat</div>';
+    var ul2=unlockedBy(selNodeId,'defeat'); if(ul2.length) act+='<div style="font-size:10px;color:var(--text-muted);font-style:italic;">Unlocked: '+ul2.join(', ')+'</div>';
   } else {
-    act += '<div style="color:var(--grey-text);font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-align:center;padding:4px;">🔒 Complete preceding missions to unlock</div>';
+    act+='<div style="color:var(--grey-text);font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-align:center;padding:4px;">🔒 Complete preceding missions to unlock</div>';
   }
   document.getElementById('b-actions').innerHTML = act;
 }
 
+function brow(l,v){return v?'<div class="b-row"><span class="b-label">'+l+'</span><div class="b-val">'+v+'</div></div>':'';}
+function unlockedBy(nid,outcome){
+  return (campaign.connections||[]).filter(function(c){return c.from===nid&&c.outcome===outcome;})
+    .map(function(c){var tn=(campaign.nodes||[]).find(function(n){return n.id===c.to;});if(!tn)return null;var m=getMission(tn.missionId);return m?m.name:tn.missionId;}).filter(Boolean);
+}
+
 function launchDungeon(nid) {
-  var node = (campaign.nodes||[]).find(function(n){ return n.id===nid; });
-  if (!node) return;
-  var m = getMission(node.missionId);
-  var dt = node.dungeonType || 'random';
-  var settings = m ? (m.settings||['dungeon']) : ['dungeon'];
-  var setting = node.preferredSetting || settings[0] || 'dungeon';
-  var handoff = {
-    campaignId: campaign.id,
-    nodeId: nid,
-    mission: m || { id: nid, name: node.missionId, goal: '', icon: '⚔', settings: ['dungeon'] },
-    dungeonType: dt,
-    setting: setting
-  };
-  try { localStorage.setItem('dun_campaign_launch', JSON.stringify(handoff)); } catch(e){}
-  window.location.href = 'generator.html';
-}
-
-function brow(label, val) {
-  if (!val) return '';
-  return '<div class="b-row"><span class="b-label">'+label+'</span><div class="b-val">'+val+'</div></div>';
-}
-
-function unlockedBy(nid, outcome) {
-  return (campaign.connections||[])
-    .filter(function(c){ return c.from===nid && c.outcome===outcome; })
-    .map(function(c) {
-      var tn = (campaign.nodes||[]).find(function(n){ return n.id===c.to; });
-      if (!tn) return null;
-      var m = getMission(tn.missionId);
-      return m ? m.name : tn.missionId;
-    }).filter(Boolean);
+  var node=(campaign.nodes||[]).find(function(n){return n.id===nid;});
+  if(!node) return;
+  var m=getMission(node.missionId);
+  var settings=m?(m.settings||['dungeon']):['dungeon'];
+  var handoff={campaignId:campaign.id,nodeId:nid,mission:m||{id:nid,name:node.missionId,goal:'',icon:'⚔',settings:['dungeon']},dungeonType:node.dungeonType||'random',setting:node.preferredSetting||settings[0]||'dungeon'};
+  try{localStorage.setItem('dun_campaign_launch',JSON.stringify(handoff));}catch(e){}
+  window.location.href='generator.html';
 }
 
 // ── PAN / ZOOM ─────────────────────────────────────────────────
-
-function applyT() {
-  document.getElementById('flow-world').style.transform =
-    'translate('+fOX+'px,'+fOY+'px) scale('+fScale+')';
+function applyT(){
+  document.getElementById('map-world').style.transform=
+    'translate('+mOX+'px,'+mOY+'px) scale('+mScale+')';
 }
-function fZoom(d) {
-  var vp = document.getElementById('flow-area');
-  var cx=vp.clientWidth/2, cy=vp.clientHeight/2;
-  var ns = Math.max(.3, Math.min(3, fScale+d));
-  var r = ns/fScale;
-  fOX = cx - r*(cx-fOX); fOY = cy - r*(cy-fOY); fScale = ns;
-  applyT();
+function mZoom(d,cx,cy){
+  var vp=document.getElementById('map-viewport');
+  if(cx===undefined){cx=vp.clientWidth/2; cy=vp.clientHeight/2;}
+  var ns=Math.max(.15,Math.min(6,mScale+d*mScale));
+  var r=ns/mScale;
+  mOX=cx-r*(cx-mOX); mOY=cy-r*(cy-mOY); mScale=ns; applyT();
 }
-function fFit() {
-  var nodes = campaign ? campaign.nodes||[] : [];
-  if (!nodes.length) return;
-  var vp = document.getElementById('flow-area');
+function mFit(){
+  var img=document.getElementById('map-img');
+  var vp=document.getElementById('map-viewport');
+  var iw=img.naturalWidth||IMG_W, ih=img.naturalHeight||IMG_H;
   var vw=vp.clientWidth, vh=vp.clientHeight;
-  var minX=Infinity, minY=Infinity, maxX=0, maxY=0;
-  nodes.forEach(function(n){ minX=Math.min(minX,n.x||0); minY=Math.min(minY,n.y||0); maxX=Math.max(maxX,(n.x||0)+NODE_W); maxY=Math.max(maxY,(n.y||0)+NODE_H); });
-  var pad=60;
-  fScale = Math.min((vw-pad*2)/(maxX-minX||1), (vh-pad*2)/(maxY-minY||1), 1.4);
-  fOX = pad - minX*fScale; fOY = pad - minY*fScale;
+  mScale=Math.min(vw/iw, vh/ih);
+  mOX=(vw-iw*mScale)/2; mOY=(vh-ih*mScale)/2;
   applyT();
 }
 
-(function initPan() {
-  var vp = document.getElementById('flow-area');
-  vp.addEventListener('wheel', function(e) {
+(function initPan(){
+  var vp=document.getElementById('map-viewport');
+  vp.addEventListener('wheel',function(e){
     e.preventDefault();
-    var r = vp.getBoundingClientRect();
-    var cx=e.clientX-r.left, cy=e.clientY-r.top;
-    var d = (e.deltaY>0?-1:1)*0.1;
-    var ns=Math.max(.3,Math.min(3,fScale+d*fScale)), ratio=ns/fScale;
-    fOX=cx-ratio*(cx-fOX); fOY=cy-ratio*(cy-fOY); fScale=ns;
-    applyT();
+    var r=vp.getBoundingClientRect();
+    mZoom(e.deltaY>0?-0.08:0.08, e.clientX-r.left, e.clientY-r.top);
   },{passive:false});
-  vp.addEventListener('mousedown', function(e) {
-    if (e.target.closest('.pnode')) return;
-    fDrag=true; fDSX=e.clientX; fDSY=e.clientY; fDOX=fOX; fDOY=fOY;
-    vp.style.cursor='grabbing';
+  vp.addEventListener('mousedown',function(e){
+    if(e.target.closest('.pnode')) return;
+    mDrag=true; mDragged=false;
+    mDSX=e.clientX; mDSY=e.clientY; mDOX=mOX; mDOY=mOY;
+    vp.classList.add('panning');
   });
-  document.addEventListener('mousemove', function(e) {
-    if (!fDrag) return;
-    fOX=fDOX+(e.clientX-fDSX); fOY=fDOY+(e.clientY-fDSY); applyT();
+  document.addEventListener('mousemove',function(e){
+    if(!mDrag) return;
+    var dx=e.clientX-mDSX, dy=e.clientY-mDSY;
+    if(Math.abs(dx)+Math.abs(dy)>3) mDragged=true;
+    mOX=mDOX+dx; mOY=mDOY+dy; applyT();
   });
-  document.addEventListener('mouseup', function() {
-    if (!fDrag) return; fDrag=false;
-    document.getElementById('flow-area').style.cursor='default';
+  document.addEventListener('mouseup',function(){
+    if(!mDrag) return; mDrag=false;
+    document.getElementById('map-viewport').classList.remove('panning');
   });
 })();
 
+window.addEventListener('resize',function(){ mFit(); });
 load();
 </script>
 </body>
