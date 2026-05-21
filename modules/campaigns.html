@@ -905,6 +905,7 @@ body {
   flex: 1;
   overflow: hidden;
   cursor: crosshair;
+  background: #000;
 }
 .map-bg {
   position: absolute;
@@ -921,8 +922,9 @@ body {
   position: absolute;
   inset: 0;
   background-image: url('arasca-map.jpg');
-  background-size: cover;
+  background-size: contain;
   background-position: center;
+  background-repeat: no-repeat;
   filter: saturate(0.15) brightness(0.25);
   opacity: 1;
   transition: filter 0.8s ease, opacity 0.8s ease;
@@ -990,8 +992,9 @@ body {
   position: absolute;
   inset: 0;
   background-image: url('arasca-map.jpg');
-  background-size: cover;
+  background-size: contain;
   background-position: center;
+  background-repeat: no-repeat;
   filter: saturate(0.12) brightness(0.18);
   opacity: 0;
   transition: opacity 0.6s ease, filter 0.6s ease;
