@@ -210,8 +210,25 @@ function buildInitialState() {
 }
 function saveState() { localStorage.setItem('dun_play_' + campaign.id, JSON.stringify(playState)); }
 
+// Official missions — matches campaigns.html OFFICIAL_MISSIONS
+var OFFICIAL_MISSIONS = [
+  { id:'off_1',  name:'Defeat the Leader',       icon:'⚔',  goal:'Knock out the Quest Leader.',                                    settings:['dungeon','civilised','outdoor'], turnLimit:null },
+  { id:'off_2',  name:'Steal the Relic',          icon:'💎', goal:'Steal the relic from the Leader and escape.',                   settings:['dungeon','civilised'],           turnLimit:45   },
+  { id:'off_3',  name:'Rescue the Prisoner',      icon:'⛓',  goal:'Free the prisoner and escort them to the exit.',               settings:['dungeon','civilised'],           turnLimit:40   },
+  { id:'off_4',  name:'Destroy the Artefact',     icon:'💥', goal:'Reach the Artefact and destroy it before it empowers the enemy.', settings:['dungeon'],                    turnLimit:null },
+  { id:'off_5',  name:'Escort the Messenger',     icon:'📜', goal:'Keep the messenger alive until they reach the exit.',           settings:['dungeon','civilised','outdoor'], turnLimit:35   },
+  { id:'off_6',  name:'Survive the Night',        icon:'🌑', goal:'Survive until dawn — hold out for the required number of turns.', settings:['dungeon','civilised'],         turnLimit:20   },
+  { id:'off_7',  name:'Plunder the Vault',        icon:'🏆', goal:'Collect as much treasure as possible and escape.',              settings:['dungeon','civilised'],           turnLimit:35   },
+  { id:'off_8',  name:'Assassinate the Champion', icon:'🗡', goal:'Eliminate the Champion without alerting the full garrison.',    settings:['dungeon','civilised'],           turnLimit:null },
+  { id:'off_9',  name:'Retrieve the Tome',        icon:'📖', goal:'Find and retrieve the ancient tome from its resting place.',   settings:['dungeon','civilised'],           turnLimit:50   },
+  { id:'off_10', name:'The Gauntlet',             icon:'🏃', goal:'All heroes must reach the Exit before the turn limit.',        settings:['dungeon'],                       turnLimit:25   },
+  { id:'off_11', name:'The Siege',                icon:'🏰', goal:'Defend the stronghold entrance for the required turns.',       settings:['dungeon','civilised'],           turnLimit:15   },
+  { id:'off_12', name:'The Final Reckoning',      icon:'💀', goal:'Defeat the Boss and all Champions before the dungeon collapses.', settings:['dungeon'],                   turnLimit:20   },
+];
+
 function getMission(mid) {
-  return customMissions.find(function(m){ return m.id === mid; }) ||
+  return OFFICIAL_MISSIONS.find(function(m){ return m.id === mid; }) ||
+    customMissions.find(function(m){ return m.id === mid; }) ||
     (campaign._missions||[]).find(function(m){ return m.id === mid; }) || null;
 }
 
