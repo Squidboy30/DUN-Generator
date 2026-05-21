@@ -1117,6 +1117,7 @@ body {
       <button class="tab-btn" id="tab-btn-map" onclick="switchTab('map')">🗺 World Map</button>
     </div>
     <div style="display:flex;gap:6px">
+      <button class="tool-btn" style="border-color:var(--border-gold);color:var(--gold-light);" onclick="openAIGenerate()">✦ AI Campaign</button>
       <button class="tool-btn" onclick="exportCampaign()">Export</button>
       <button class="tool-btn" onclick="triggerImport()">Import</button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importCampaign(event)">
@@ -1281,6 +1282,88 @@ body {
     </div>
   </div>
 </div>
+
+<!-- AI Campaign Generator Modal -->
+<div class="modal-overlay" id="modal-ai-gen">
+  <div class="modal-box" style="max-width:560px;width:100%;">
+    <div class="modal-title" style="display:flex;align-items:center;gap:8px;">✦ AI Campaign Generator</div>
+    <div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:18px;line-height:1.6;">Inspired by Advanced HeroQuest, Warhammer Fantasy and classic dungeon crawlers. The AI will write a full linked campaign and place missions on the world map.</div>
+
+    <div class="form-group">
+      <label class="form-label">Theme</label>
+      <div id="ai-theme-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:12px;">
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">Missions <span style="font-size:9px;font-style:italic;text-transform:none;letter-spacing:0;color:var(--text-muted);">(3–8)</span></label>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+          <button class="ai-num-btn active" data-val="3" onclick="setAINum('missions',3,this)">3</button>
+          <button class="ai-num-btn" data-val="4" onclick="setAINum('missions',4,this)">4</button>
+          <button class="ai-num-btn" data-val="5" onclick="setAINum('missions',5,this)">5</button>
+          <button class="ai-num-btn" data-val="6" onclick="setAINum('missions',6,this)">6</button>
+          <button class="ai-num-btn" data-val="7" onclick="setAINum('missions',7,this)">7</button>
+          <button class="ai-num-btn" data-val="8" onclick="setAINum('missions',8,this)">8</button>
+        </div>
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">Hero Level</label>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+          <button class="ai-num-btn active" data-val="1" onclick="setAINum('level',1,this)">1–2</button>
+          <button class="ai-num-btn" data-val="3" onclick="setAINum('level',3,this)">3–4</button>
+          <button class="ai-num-btn" data-val="5" onclick="setAINum('level',5,this)">5–6</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:12px;">
+      <label class="form-label">Extra Notes <span style="font-size:9px;font-style:italic;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
+      <textarea class="form-textarea" id="ai-notes" placeholder="e.g. Set in the northern mountains · Include a betrayal · Start in a tavern..." style="height:56px;"></textarea>
+    </div>
+
+    <div id="ai-status" style="display:none;padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);margin-top:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;color:var(--gold-light);text-align:center;"></div>
+
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="modal-btn" onclick="closeModal('modal-ai-gen')">Cancel</button>
+      <button class="modal-btn confirm" id="ai-gen-btn" onclick="runAIGenerate()">✦ Generate Campaign</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ─── AI GENERATE MODAL ───────────────────────────────────── */
+.ai-theme-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ai-theme-btn:hover { border-color: var(--border-gold); color: var(--text-light); }
+.ai-theme-btn.selected { border-color: var(--gold-light); color: var(--gold-light); background: rgba(139,105,20,0.15); }
+.ai-num-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  padding: 5px 10px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+}
+.ai-num-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
+.ai-num-btn.active { border-color: var(--gold-light); color: var(--gold-light); background: rgba(139,105,20,0.15); }
+</style>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -2411,7 +2494,250 @@ function closeBriefOnBackdrop(e) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// START
+// AI CAMPAIGN GENERATOR
+// ═══════════════════════════════════════════════════════════════
+
+var AI_THEMES = [
+  { id:'chaos',     icon:'🔥', label:'Chaos Incursion',     desc:'Dark rituals, Chaos warriors, mutation and corruption spread across the land.' },
+  { id:'skaven',    icon:'🐀', label:'Skaven Warrens',       desc:'Under-city tunnels, plague monks, warpstone, clan treachery beneath the streets.' },
+  { id:'undead',    icon:'💀', label:'Undead Uprising',      desc:'Necromancers, barrow kings, cursed crypts, the restless dead reclaim their domain.' },
+  { id:'greenskin', icon:'⚔', label:'Greenskin Raid',       desc:'Warbosses, cave networks, tribal camps, WAAAGH! sweeping down from the mountains.' },
+  { id:'beastmen',  icon:'🐂', label:'Beastmen Warband',     desc:'Ancient forests, herdstones, ambushes, the Children of Chaos stalk the old roads.' },
+  { id:'darkelf',   icon:'🗡', label:'Dark Elf Corsairs',    desc:'Coastal raids, slave pens, dark sorcery, a Black Ark threatening the coastline.' },
+  { id:'vampire',   icon:'🦇', label:'Vampire\'s Domain',    desc:'Crumbling castles, generational curses, thralls, a bloodline that refuses to die.' },
+  { id:'dwarf',     icon:'⚒', label:'Dwarf Grudge',         desc:'Clan vengeance, lost holds, ancient traps, a grudge that must be settled in blood.' },
+];
+
+var aiState = { theme: null, missions: 3, level: 1 };
+
+function openAIGenerate() {
+  // Build theme grid
+  var grid = document.getElementById('ai-theme-grid');
+  grid.innerHTML = AI_THEMES.map(function(t) {
+    return '<button class="ai-theme-btn" data-id="'+t.id+'" onclick="selectAITheme(\''+t.id+'\')">' +
+      '<span style="font-size:16px;flex-shrink:0;">'+t.icon+'</span>' +
+      '<span>'+t.label+'</span>' +
+    '</button>';
+  }).join('');
+  // Reset state
+  aiState = { theme: null, missions: 3, level: 1 };
+  document.getElementById('ai-status').style.display = 'none';
+  document.getElementById('ai-gen-btn').disabled = false;
+  document.getElementById('ai-gen-btn').textContent = '✦ Generate Campaign';
+  document.getElementById('ai-notes').value = '';
+  // Reset num buttons
+  document.querySelectorAll('.ai-num-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.val === '3' || b.dataset.val === '1');
+  });
+  document.getElementById('modal-ai-gen').classList.add('open');
+}
+
+function selectAITheme(id) {
+  aiState.theme = id;
+  document.querySelectorAll('.ai-theme-btn').forEach(function(b) {
+    b.classList.toggle('selected', b.dataset.id === id);
+  });
+}
+
+function setAINum(field, val, btn) {
+  aiState[field] = val;
+  var group = btn.parentElement.querySelectorAll('.ai-num-btn');
+  group.forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function setAIStatus(msg, loading) {
+  var el = document.getElementById('ai-status');
+  el.style.display = 'block';
+  el.textContent = loading ? '⟳ ' + msg : msg;
+}
+
+async function runAIGenerate() {
+  if (!aiState.theme) { alert('Please select a theme first.'); return; }
+
+  var theme = AI_THEMES.find(function(t){ return t.id === aiState.theme; });
+  var btn = document.getElementById('ai-gen-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ Generating…';
+
+  var notes = document.getElementById('ai-notes').value.trim();
+  var levelLabel = {1:'1-2', 3:'3-4', 5:'5-6'}[aiState.level] || '1-2';
+
+  var systemPrompt = `You are a dungeon campaign designer for the board game Dungeon Universalis (DUN), inspired by Advanced HeroQuest and Warhammer Fantasy Roleplay. You create dramatic, atmospheric campaigns with branching outcomes.
+
+DUN RULES YOU MUST FOLLOW:
+- Each mission has: name, icon (emoji), narrative (flavour text), goal, faction, setup, specialRules, specialElements (array of strings), furniture (array), otherElements (array), questEnd, rewards, tiles, settings (array: dungeon/civilised/outdoor), turnLimit (number or null)
+- Missions link via connections: each connection has from/to (mission id) and outcome (victory/defeat/custom) and optional label
+- Every campaign must have exactly one starting mission (first in the array, no incoming connections)
+- Victory and defeat paths should lead to meaningfully different missions — not just repeat
+- The final mission should have no outgoing connections or only a victory end
+
+WORLD OF ARASCA REGIONS (use these for map pin locations, give normalised x/y 0-1 across the map image):
+West map cities and approximate positions:
+Urakul(0.08,0.45), Breten(0.10,0.52), Kamhul(0.11,0.38), Toulounne(0.13,0.55), Casa del oso(0.12,0.48), Raazkund(0.16,0.44), Aurion(0.16,0.52), Nigazul(0.17,0.47), Varinn(0.22,0.42), Canmor(0.21,0.53), Besalar(0.21,0.58), Ridley(0.26,0.50), Lamparshion(0.28,0.55), Alcoy(0.29,0.60), Larche(0.30,0.58), Lausan(0.31,0.57), Shanain(0.32,0.53), Salzor(0.34,0.57), Tesara(0.34,0.62), Caboalto(0.36,0.60), Monteazul(0.38,0.65), Bercy(0.36,0.55), Conor(0.42,0.58), Castro(0.42,0.62)
+East map cities and approximate positions:
+Larkfall(0.52,0.38), Doren(0.54,0.42), Asthal(0.55,0.40), Orkhuz(0.57,0.42), Thorzul(0.57,0.46), Varzul(0.57,0.50), Rizul(0.58,0.48), Bibal(0.59,0.52), Vallacl(0.60,0.51), Barrock(0.60,0.47), Aitania(0.61,0.46), Verneck(0.62,0.45), Sudfall(0.62,0.52), Carrick(0.63,0.46), Norkfall(0.64,0.50), Menon(0.65,0.52), Issi-thai(0.66,0.55), Aris-Thai(0.66,0.48), Thamor(0.68,0.58), Thamey(0.68,0.60), Shion-Thai(0.69,0.56), Drunn(0.70,0.52), Krazmor(0.72,0.55), Bandmor(0.73,0.53), Thoronbur(0.74,0.57), Adramor(0.75,0.50), Maramor(0.76,0.52), Vulgrabur(0.77,0.58), Kirfall(0.78,0.54)
+
+DUNGEON THEMES for tiles field: dungeon, sewer, crypt, cave, civilised, outdoor, forest
+
+OUTPUT: Respond with ONLY a valid JSON object, no markdown, no explanation:
+{
+  "title": "Campaign Title",
+  "description": "One sentence campaign hook",
+  "missions": [
+    {
+      "id": "m1",
+      "name": "Mission Name",
+      "icon": "⚔",
+      "narrative": "Atmospheric flavour paragraph (2-3 sentences)",
+      "goal": "One sentence win condition",
+      "faction": "Enemy faction name",
+      "setup": "Setup instructions",
+      "specialRules": "Any special rules",
+      "specialElements": ["Element x1", "Token x2"],
+      "furniture": ["Throne x1"],
+      "otherElements": [],
+      "questEnd": "Win/lose conditions",
+      "rewards": "What heroes gain",
+      "tiles": "dungeon",
+      "settings": ["dungeon"],
+      "turnLimit": null,
+      "region": "City name",
+      "mapPin": {"x": 0.55, "y": 0.45}
+    }
+  ],
+  "connections": [
+    {"from": "m1", "to": "m2", "outcome": "victory", "label": ""},
+    {"from": "m1", "to": "m3", "outcome": "defeat", "label": "Barely escaped"}
+  ]
+}`;
+
+  var userPrompt = 'Generate a ' + aiState.missions + '-mission campaign for hero level ' + levelLabel + '.\n' +
+    'Theme: ' + theme.label + ' — ' + theme.desc + '\n' +
+    (notes ? 'Additional notes: ' + notes + '\n' : '') +
+    'Make it dramatic with branching outcomes. Ensure victory and defeat paths feel meaningfully different. Use AHQ/WHFB tone — grim, dangerous, rewarding.';
+
+  try {
+    setAIStatus('Contacting the Oracle…', true);
+
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    var data = await response.json();
+    var text = data.content && data.content[0] && data.content[0].text;
+    if (!text) throw new Error('No response from API');
+
+    setAIStatus('Parsing campaign…', true);
+
+    // Strip any markdown fences
+    text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/,'').trim();
+    var generated = JSON.parse(text);
+
+    setAIStatus('Building campaign…', true);
+    applyGeneratedCampaign(generated);
+
+  } catch(err) {
+    setAIStatus('✗ Generation failed: ' + err.message, false);
+    btn.disabled = false;
+    btn.textContent = '✦ Generate Campaign';
+  }
+}
+
+function applyGeneratedCampaign(gen) {
+  // Build custom mission objects from generated data
+  var newMissions = gen.missions.map(function(m) {
+    var mid = 'cust_ai_' + Date.now() + '_' + m.id;
+    return {
+      id: mid,
+      _aiId: m.id, // keep for connection mapping
+      type: 'custom',
+      name: m.name || 'Mission',
+      icon: m.icon || '⚔',
+      narrative: m.narrative || '',
+      goal: m.goal || '',
+      faction: m.faction || '',
+      setup: m.setup || '',
+      specialRules: m.specialRules || '',
+      specialElements: m.specialElements || [],
+      furniture: m.furniture || [],
+      otherElements: m.otherElements || [],
+      questEnd: m.questEnd || '',
+      rewards: m.rewards || '',
+      tiles: m.tiles || 'dungeon',
+      settings: m.settings || ['dungeon'],
+      turnLimit: m.turnLimit || null,
+    };
+  });
+
+  // Add missions to customMissions
+  newMissions.forEach(function(m) { customMissions.push(m); });
+
+  // Build id map: aiId → real mission id
+  var idMap = {};
+  gen.missions.forEach(function(gm, i) { idMap[gm.id] = newMissions[i].id; });
+
+  // Build campaign nodes with positions (auto-layout by index)
+  var cols = Math.ceil(Math.sqrt(newMissions.length * 1.5));
+  var cellW = 240, cellH = 160;
+  var nodes = newMissions.map(function(m, i) {
+    var genM = gen.missions[i];
+    var col = i % cols, row = Math.floor(i / cols);
+    return {
+      id: 'node_ai_' + Date.now() + '_' + i,
+      missionId: m.id,
+      x: 40 + col * cellW,
+      y: 40 + row * cellH,
+      dungeonType: 'random',
+      region: genM.region || '',
+      mapPin: genM.mapPin || null,
+      locNum: String(i + 1),
+    };
+  });
+
+  // Build connections
+  var connections = (gen.connections || []).map(function(c) {
+    return {
+      from: idMap[c.from] ? nodes.find(function(n){ return n.missionId === idMap[c.from]; }).id : null,
+      to:   idMap[c.to]   ? nodes.find(function(n){ return n.missionId === idMap[c.to]; }).id   : null,
+      outcome: c.outcome || 'victory',
+      label: c.label || '',
+    };
+  }).filter(function(c){ return c.from && c.to; });
+
+  // Create and activate the campaign
+  activeCampaign = {
+    id: 'camp_ai_' + Date.now(),
+    name: gen.title || 'AI Campaign',
+    description: gen.description || '',
+    nodes: nodes,
+    connections: connections,
+  };
+
+  document.getElementById('campaign-name').value = activeCampaign.name;
+
+  // Save everything
+  var existing = campaigns.findIndex(function(c){ return c.id === activeCampaign.id; });
+  if (existing !== -1) campaigns[existing] = JSON.parse(JSON.stringify(activeCampaign));
+  else campaigns.push(JSON.parse(JSON.stringify(activeCampaign)));
+  saveLocal();
+
+  closeModal('modal-ai-gen');
+  switchTab('designer');
+  renderSidebar();
+  renderNodes();
+
+  setAIStatus('✓ Campaign "' + activeCampaign.name + '" generated with ' + nodes.length + ' missions!', false);
+}
+
+
 // ═══════════════════════════════════════════════════════════════
 
 init();
