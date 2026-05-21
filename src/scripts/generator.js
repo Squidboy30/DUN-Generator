@@ -2244,9 +2244,97 @@ window.addEventListener('keydown', e => {
 });
 
 /* ═══════════════════════════════════════
-   INIT
+   CAMPAIGN LAUNCH HOOK
+   When arriving from play.html, a handoff object in localStorage
+   pre-selects the mission and skips the selection overlay.
    ═══════════════════════════════════════ */
-resizeCanvas();
+(function checkCampaignLaunch(){
+  var raw = null;
+  try { raw = localStorage.getItem('dun_campaign_launch'); } catch(e){}
+  if (!raw) return;
+
+  var handoff = null;
+  try { handoff = JSON.parse(raw); } catch(e){ return; }
+
+  // Consume immediately so a refresh doesn't re-trigger
+  try { localStorage.removeItem('dun_campaign_launch'); } catch(e){}
+
+  if (!handoff || !handoff.mission) return;
+
+  var m = handoff.mission;
+  var settings = m.settings || ['dungeon'];
+  var setting  = handoff.setting || settings[0] || 'dungeon';
+
+  // Apply category to selectors
+  var catSel = document.getElementById('sel-category');
+  if (catSel) { catSel.value = setting; activeCategory = setting; }
+
+  var themeCtrl = document.getElementById('ctrl-theme');
+  var themeSel  = document.getElementById('sel-theme');
+  if (themeCtrl) themeCtrl.style.display = setting === 'civilised' ? 'none' : '';
+  if (themeSel)  themeSel.value = 'any';
+  rebuildDecks();
+
+  // Set active mission
+  activeMission = {
+    id:            m.id || 'campaign',
+    name:          m.name || 'Campaign Mission',
+    goal:          m.goal || 'Complete your mission.',
+    icon:          m.icon || '⚔',
+    turnsLeft:     m.turnLimit || null,
+    chosenSetting: setting,
+    isCustom:      !!m.isCustom
+  };
+
+  // Update sidebar mission display
+  var mDisp = document.getElementById('mission-display');
+  var mName = document.getElementById('s-mission-name');
+  var mGoal = document.getElementById('s-mission-goal');
+  if (mDisp) mDisp.style.display = 'flex';
+  if (mName) mName.textContent = activeMission.icon + ' ' + activeMission.name;
+  if (mGoal) mGoal.textContent = activeMission.goal;
+
+  // Turn limit
+  var turnRow    = document.getElementById('turn-limit-row');
+  var turnEl     = document.getElementById('s-turns');
+  var endTurnBtn = document.getElementById('btn-end-turn');
+  if (m.turnLimit) {
+    if (turnRow)    turnRow.style.display = 'flex';
+    if (turnEl)     { turnEl.textContent = m.turnLimit; turnEl.style.color = '#e8b040'; }
+    if (endTurnBtn) endTurnBtn.style.display = '';
+  } else {
+    if (turnRow)    turnRow.style.display = 'none';
+    if (endTurnBtn) endTurnBtn.style.display = 'none';
+  }
+
+  // Update header subtitle
+  var headerP = document.querySelector('#header p');
+  if (headerP) headerP.textContent =
+    activeMission.icon + ' ' + activeMission.name.toUpperCase() + ' · ' + setting.toUpperCase();
+
+  // Hide mission overlay and launch dungeon
+  var overlay = document.getElementById('mission-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  // Add "Return to Campaign" button in controls
+  var ctrl = document.querySelector('#controls');
+  if (ctrl && handoff.campaignId) {
+    var retBtn = document.createElement('a');
+    retBtn.className = 'back-home-btn btn';
+    retBtn.style.cssText = 'border-color:#a07820;color:#e0b840;text-decoration:none;';
+    retBtn.textContent = '← Campaign';
+    retBtn.href = 'play.html?c=' + handoff.campaignId;
+    // Insert before the HOME button
+    var homeBtn = ctrl.querySelector('.back-home-btn');
+    if (homeBtn) ctrl.insertBefore(retBtn, homeBtn);
+    else ctrl.appendChild(retBtn);
+  }
+
+  newDungeon();
+  requestAnimationFrame(function(){ resizeCanvas(); fitDungeon(); draw(); });
+})();
+
+
 preloadTileImages();  // Start loading all tile images in background
 // Dungeon is generated when player confirms mission in the modal
 

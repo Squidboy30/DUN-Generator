@@ -410,7 +410,7 @@ function renderBrief() {
 
   if (st === 'available' || st === 'active') {
     act += '<div class="brief-actions-label">' + (st==='available' ? 'Ready to Play' : 'In Progress') + '</div>';
-    act += '<a class="launch-btn" href="'+launchUrl+'" target="_blank">⚔ Launch Dungeon ↗</a>';
+    act += '<button class="launch-btn" onclick="launchDungeon(\'' + selNodeId + '\')">⚔ Launch Dungeon</button>';
     act += '<div class="outcome-row">' +
       '<button class="oc-btn v" onclick="recordOutcome(\''+selNodeId+'\',\'victory\')">✓ Victory</button>' +
       '<button class="oc-btn d" onclick="recordOutcome(\''+selNodeId+'\',\'defeat\')">✗ Defeat</button>' +
@@ -427,6 +427,25 @@ function renderBrief() {
     act += '<div style="color:var(--grey-text);font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-align:center;padding:4px;">🔒 Complete preceding missions to unlock</div>';
   }
   document.getElementById('b-actions').innerHTML = act;
+}
+
+function launchDungeon(nid) {
+  var node = (campaign.nodes||[]).find(function(n){ return n.id===nid; });
+  if (!node) return;
+  var m = getMission(node.missionId);
+  var dt = node.dungeonType || 'random';
+  var settings = m ? (m.settings||['dungeon']) : ['dungeon'];
+  var setting = node.preferredSetting || settings[0] || 'dungeon';
+  var handoff = {
+    campaignId: campaign.id,
+    nodeId: nid,
+    mission: m || { id: nid, name: node.missionId, goal: '', icon: '⚔', settings: ['dungeon'] },
+    dungeonType: dt,
+    setting: setting
+  };
+  try { localStorage.setItem('dun_campaign_launch', JSON.stringify(handoff)); } catch(e){}
+  var url = dt === 'planned' ? 'builder.html' : 'generator.html';
+  window.location.href = url;
 }
 
 function brow(label, val) {
