@@ -271,7 +271,10 @@ function recordOutcome(nid, outcome) {
   playState[nid] = outcome;
   (campaign.connections||[]).forEach(function(c){
     if (c.from!==nid) return;
-    if (c.outcome===outcome||c.outcome==='custom') {
+    // Unlock if: outcome matches, connection is 'custom', or connection has no outcome set
+    var co = c.outcome || '';
+    var unlocks = co==='' || co===outcome || co==='custom';
+    if (unlocks) {
       if (nodeStatus(c.to)==='locked') playState[c.to]='available';
     }
   });
