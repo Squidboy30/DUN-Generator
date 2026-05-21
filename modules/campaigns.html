@@ -2337,13 +2337,10 @@ function importCampaign(e) {
             customMissions.push(m);
           }
         });
-        // Add or update in campaigns list
-        var existing = campaigns.findIndex(function(c){ return c.id === data.campaign.id; });
-        if (existing !== -1) {
-          campaigns[existing] = data.campaign;
-        } else {
-          campaigns.push(data.campaign);
-        }
+        // Always create a new entry — give it a fresh ID
+        data.campaign.id = 'camp_' + Date.now();
+        // Add to campaigns list
+        campaigns.push(data.campaign);
         activeCampaign = data.campaign;
         document.getElementById('campaign-name').value = activeCampaign.name;
         saveLocal();
