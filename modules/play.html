@@ -247,11 +247,44 @@ function load() {
     svg.setAttribute('height', IMG_H);
     svg.style.width  = IMG_W + 'px';
     svg.style.height = IMG_H + 'px';
+    ensurePins();
     renderMap();
     mFit();
   }
   if (img.complete && img.naturalWidth) onImgReady();
   else img.onload = onImgReady;
+}
+
+// Fallback pin positions spread across the map — used when a node has no mapPin.
+// Arranged in a loose grid that avoids the sea areas at the edges.
+var FALLBACK_PINS = [
+  {x:0.18,y:0.48},{x:0.28,y:0.52},{x:0.38,y:0.48},{x:0.48,y:0.52},
+  {x:0.58,y:0.46},{x:0.65,y:0.50},{x:0.72,y:0.48},{x:0.78,y:0.52},
+  {x:0.22,y:0.60},{x:0.34,y:0.60},{x:0.44,y:0.58},{x:0.54,y:0.58},
+  {x:0.62,y:0.58},{x:0.70,y:0.58},{x:0.30,y:0.40},{x:0.50,y:0.40},
+];
+
+function ensurePins() {
+  var fallbackIdx = 0;
+  // Build a set of already-used positions so fallbacks don't land on existing pins
+  var used = {};
+  (campaign.nodes||[]).forEach(function(n){
+    if (n.mapPin) used[n.mapPin.x.toFixed(2)+','+n.mapPin.y.toFixed(2)] = true;
+  });
+
+  (campaign.nodes||[]).forEach(function(n) {
+    if (n.mapPin) return; // already pinned
+    // Find next fallback not already used
+    var pos;
+    while (fallbackIdx < FALLBACK_PINS.length) {
+      pos = FALLBACK_PINS[fallbackIdx++];
+      var key = pos.x.toFixed(2)+','+pos.y.toFixed(2);
+      if (!used[key]) { used[key]=true; break; }
+    }
+    if (!pos) pos = {x: 0.1 + (fallbackIdx*0.07)%0.8, y: 0.45 + (fallbackIdx%3)*0.08};
+    // Assign directly to the node object in campaign (in-memory only, not saved back)
+    n.mapPin = { x: pos.x, y: pos.y, isAutoPin: true };
+  });
 }
 
 function buildInitialState() {
