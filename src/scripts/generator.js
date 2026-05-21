@@ -1854,6 +1854,11 @@ function addLog(msg, cls) {
     overlay.style.display = 'flex';
   });
 
+  // Show overlay on load — unless a campaign handoff is waiting
+  var hasCampaignLaunch = false;
+  try { hasCampaignLaunch = !!localStorage.getItem('dun_campaign_launch'); } catch(e){}
+  if (!hasCampaignLaunch) overlay.style.display = 'flex';
+
   // The overlay starts visible on load — no need to show it manually
 })();
 
