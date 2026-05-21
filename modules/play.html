@@ -42,7 +42,7 @@ body { background: var(--bg); font-family: 'IM Fell English', Georgia, serif; co
 
 /* BODY */
 .body { flex:1; display:flex; overflow:hidden; position:relative; }
-.map-backdrop { position:absolute; inset:0; background-image:url('arasca-map.jpg'); background-size:cover; background-position:center; filter:saturate(.08) brightness(.12); z-index:0; }
+.map-backdrop { position:absolute; inset:0; background-image:url('arasca-map.jpg'); background-size:cover; background-position:center; filter:saturate(0.8) brightness(0.8); z-index:0; }
 
 /* FLOW AREA */
 .flow-area { flex:1; position:relative; overflow:hidden; z-index:1; cursor:default; }
@@ -51,7 +51,7 @@ body { background: var(--bg); font-family: 'IM Fell English', Georgia, serif; co
 .flow-nodes { position:absolute; top:0; left:0; }
 
 /* NODE CARDS */
-.pnode { position:absolute; width:190px; border:1px solid var(--border); background:var(--bg-card); transition:border-color .2s, box-shadow .2s, transform .15s; user-select:none; }
+.pnode { position:absolute; width:190px; border:1px solid var(--border); background:rgba(26,18,8,0.92); transition:border-color .2s, box-shadow .2s, transform .15s; user-select:none; }
 .pnode.locked { opacity:.35; filter:saturate(.15); }
 .pnode.available { border-color:var(--border-gold); cursor:pointer; box-shadow:0 0 12px rgba(160,120,32,.25); }
 .pnode.available:hover { border-color:var(--gold); box-shadow:0 0 22px rgba(224,184,64,.38); transform:translateY(-2px); }
@@ -80,7 +80,7 @@ body { background: var(--bg); font-family: 'IM Fell English', Georgia, serif; co
 .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
 /* BRIEF PANEL */
-.brief { width:340px; flex-shrink:0; background:var(--bg-panel); border-left:2px solid var(--border-gold); display:flex; flex-direction:column; z-index:2; overflow:hidden; }
+.brief { width:340px; flex-shrink:0; background:rgba(26,18,8,0.96); border-left:2px solid var(--border-gold); display:flex; flex-direction:column; z-index:2; overflow:hidden; }
 .brief-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text-muted); font-style:italic; font-size:13px; padding:40px; text-align:center; }
 .brief-empty-icon { font-size:36px; opacity:.35; }
 .brief-content { display:none; flex-direction:column; flex:1; overflow:hidden; }

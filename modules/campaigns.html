@@ -2330,19 +2330,27 @@ function importCampaign(e) {
     try {
       var data = JSON.parse(ev.target.result);
       if (data.campaign) {
-        // merge custom missions
+        // Merge custom missions
         (data.customMissions || []).forEach(function(m) {
           if (!customMissions.find(function(x){ return x.id === m.id; })) {
             m.type = 'custom';
             customMissions.push(m);
           }
         });
+        // Add or update in campaigns list
+        var existing = campaigns.findIndex(function(c){ return c.id === data.campaign.id; });
+        if (existing !== -1) {
+          campaigns[existing] = data.campaign;
+        } else {
+          campaigns.push(data.campaign);
+        }
         activeCampaign = data.campaign;
         document.getElementById('campaign-name').value = activeCampaign.name;
         saveLocal();
         renderSidebar();
         renderNodes();
-        alert('Campaign "' + activeCampaign.name + '" imported.');
+        renderCampaigns();
+        alert('Campaign "' + activeCampaign.name + '" imported. Find it in My Campaigns.');
       }
     } catch(err) { alert('Invalid campaign file.'); }
   };
