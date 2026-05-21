@@ -2280,7 +2280,12 @@ function renderCampaigns() {
       '<div class="campaign-item-meta">' + (c.description||'Custom campaign') + '</div>' +
       '<div class="campaign-item-missions">' +
         missionNames.map(function(n){ return '<span class="cim-pill">'+n+'</span>'; }).join('') +
-      '</div></div>';
+      '</div>' +
+      '<div style="margin-top:10px;display:flex;gap:8px;">' +
+        '<button class="tool-btn" onclick="event.stopPropagation();loadCampaign(\''+c.id+'\')">Edit</button>' +
+        '<a class="tool-btn primary" href="play.html?c='+c.id+'" style="text-decoration:none;padding:5px 14px;" onclick="event.stopPropagation()">▶ Play</a>' +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 

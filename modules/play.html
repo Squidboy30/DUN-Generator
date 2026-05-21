@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dungeon Universalis — Play Campaign</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital,wght@0,400;1,400&display=swap');
+
+:root {
+  --bg:          #0a0806;
+  --bg-panel:    #130f09;
+  --border-gold: #6a4a20;
+  --gold:        #a07820;
+  --gold-light:  #e0b840;
+  --text:        #f0e0b0;
+  --text-muted:  #a08060;
+  --red:         #8b1a1a;
+  --red-light:   #e05050;
+  --green:       #1a5a1a;
+  --green-light: #50c050;
+  --locked:      #2a2018;
+  --locked-text: #4a3828;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'IM Fell English', Georgia, serif;
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.play-header {
+  background: var(--bg-panel);
+  border-bottom: 2px solid var(--border-gold);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.play-header-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 14px;
+  color: var(--gold-light);
+  letter-spacing: 2px;
+}
+.play-campaign-name {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.play-header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.play-status-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--border-gold);
+  color: var(--text-muted);
+}
+.play-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border: 1px solid var(--border-gold);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.play-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
+.play-btn.danger { border-color: var(--red); color: var(--red-light); }
+.play-btn.danger:hover { background: rgba(139,26,26,0.15); }
+
+/* ── MAIN AREA ───────────────────────────────────────────── */
+.play-main {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Map background */
+.play-map-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('arasca-map.jpg');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(0.08) brightness(0.15);
+  z-index: 0;
+}
+
+/* Flow canvas */
+.play-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: auto;
+}
+.play-canvas-inner {
+  position: relative;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+/* Connection SVG */
+.play-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── PLAY NODES ──────────────────────────────────────────── */
+.play-node {
+  position: absolute;
+  width: 180px;
+  border: 1px solid var(--locked-text);
+  background: rgba(10,8,6,0.85);
+  cursor: default;
+  z-index: 2;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  user-select: none;
+}
+.play-node.state-locked {
+  border-color: var(--locked-text);
+  opacity: 0.45;
+}
+.play-node.state-available {
+  border-color: var(--border-gold);
+  cursor: pointer;
+}
+.play-node.state-available:hover {
+  border-color: var(--gold-light);
+  box-shadow: 0 0 12px rgba(160,120,32,0.4);
+}
+.play-node.state-current {
+  border-color: var(--gold-light);
+  box-shadow: 0 0 20px rgba(224,184,64,0.5), 0 0 40px rgba(224,184,64,0.2);
+  cursor: pointer;
+  animation: pulse-current 2s infinite;
+}
+@keyframes pulse-current {
+  0%,100% { box-shadow: 0 0 16px rgba(224,184,64,0.5), 0 0 32px rgba(224,184,64,0.2); }
+  50%      { box-shadow: 0 0 28px rgba(224,184,64,0.7), 0 0 56px rgba(224,184,64,0.3); }
+}
+.play-node.state-victory {
+  border-color: var(--green);
+  opacity: 0.75;
+}
+.play-node.state-defeat {
+  border-color: var(--red);
+  opacity: 0.75;
+}
+
+.play-node-header {
+  padding: 7px 10px 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(106,74,32,0.3);
+}
+.play-node-num {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--text-muted);
+  width: 16px;
+  flex-shrink: 0;
+}
+.play-node-title {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.play-node-status-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.play-node-body {
+  padding: 7px 10px 8px;
+}
+.play-node-goal {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  margin-bottom: 5px;
+}
+.play-node-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+.play-node-dt {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.play-node-action {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.state-locked .play-node-title,
+.state-locked .play-node-goal,
+.state-locked .play-node-action { color: var(--locked-text) !important; }
+
+/* ── MISSION PANEL ───────────────────────────────────────── */
+.mission-panel-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5,4,3,0.75);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.mission-panel-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.mission-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  width: 560px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 20px rgba(160,120,32,0.2);
+}
+.mp-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border-gold);
+  background: rgba(160,120,32,0.08);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.mp-icon { font-size: 30px; line-height: 1; flex-shrink: 0; }
+.mp-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 16px;
+  color: var(--gold-light);
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+.mp-sub {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.mp-close {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border-gold);
+  color: var(--text-muted);
+  width: 26px; height: 26px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.mp-close:hover { border-color: var(--gold-light); color: var(--gold-light); }
+
+.mp-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+}
+.mp-scroll::-webkit-scrollbar { width: 4px; }
+.mp-scroll::-webkit-scrollbar-thumb { background: var(--border-gold); }
+
+.mp-narrative {
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  border-left: 3px solid var(--border-gold);
+  padding: 10px 14px;
+  background: rgba(160,120,32,0.05);
+  margin-bottom: 16px;
+}
+.mp-section { margin-bottom: 12px; }
+.mp-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+.mp-body { font-size: 13px; color: var(--text); line-height: 1.6; }
+.mp-body.gold { color: var(--gold-light); }
+.mp-divider { border: none; border-top: 1px solid rgba(106,74,32,0.4); margin: 14px 0; }
+
+/* Dungeon launch area */
+.mp-launch {
+  background: rgba(160,120,32,0.08);
+  border: 1px solid rgba(160,120,32,0.3);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mp-launch-info { flex: 1; }
+.mp-launch-type {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.mp-launch-desc { font-size: 12px; color: var(--text-muted); font-style: italic; }
+.mp-launch-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  background: rgba(160,120,32,0.2);
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.mp-launch-btn:hover { background: rgba(160,120,32,0.35); }
+
+/* Outcome buttons */
+.mp-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border-gold);
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mp-outcome-btn {
+  flex: 1;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 0;
+  border: 1px solid;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mp-outcome-btn.victory {
+  border-color: var(--green);
+  color: var(--green-light);
+}
+.mp-outcome-btn.victory:hover { background: rgba(26,90,26,0.3); }
+.mp-outcome-btn.defeat {
+  border-color: var(--red);
+  color: var(--red-light);
+}
+.mp-outcome-btn.defeat:hover { background: rgba(139,26,26,0.3); }
+.mp-outcome-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Already completed banner */
+.mp-completed-banner {
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.mp-completed-banner.victory {
+  background: rgba(26,90,26,0.2);
+  border: 1px solid var(--green);
+  color: var(--green-light);
+}
+.mp-completed-banner.defeat {
+  background: rgba(139,26,26,0.2);
+  border: 1px solid var(--red);
+  color: var(--red-light);
+}
+
+/* ── CAMPAIGN END SCREEN ─────────────────────────────────── */
+.end-screen {
+  position: absolute;
+  inset: 0;
+  background: rgba(5,4,3,0.92);
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+}
+.end-screen.open { display: flex; }
+.end-screen-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 36px;
+  color: var(--gold-light);
+  margin-bottom: 12px;
+  letter-spacing: 3px;
+}
+.end-screen-sub {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+.end-screen-missions {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  line-height: 2;
+}
+.end-screen-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 28px;
+  border: 1px solid var(--border-gold);
+  background: transparent;
+  color: var(--gold-light);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.end-screen-btn:hover { background: rgba(160,120,32,0.2); }
+
+/* ── NO CAMPAIGN ERROR ───────────────────────────────────── */
+.no-campaign {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: var(--text-muted);
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="play-header">
+  <div>
+    <div class="play-header-title">⚔ Dungeon Universalis</div>
+    <div class="play-campaign-name" id="header-campaign-name">Loading...</div>
+  </div>
+  <div class="play-header-right">
+    <div class="play-status-badge" id="status-badge">Mission 0 / 0</div>
+    <button class="play-btn danger" onclick="confirmReset()">↺ Reset</button>
+    <a class="play-btn" href="campaigns.html">← Back</a>
+  </div>
+</div>
+
+<div class="play-main" id="play-main">
+  <div class="play-map-bg"></div>
+
+  <div class="play-canvas" id="play-canvas">
+    <div class="play-canvas-inner" id="play-canvas-inner">
+      <svg class="play-svg" id="play-svg">
+        <defs></defs>
+      </svg>
+      <div id="play-nodes"></div>
+    </div>
+  </div>
+
+  <!-- Mission Panel -->
+  <div class="mission-panel-overlay" id="mission-panel-overlay" onclick="closePanelOnBackdrop(event)">
+    <div class="mission-panel" id="mission-panel">
+      <div class="mp-header">
+        <div class="mp-icon" id="mp-icon">◆</div>
+        <div>
+          <div class="mp-title" id="mp-title">Mission</div>
+          <div class="mp-sub" id="mp-sub"></div>
+        </div>
+        <button class="mp-close" onclick="closePanel()">✕</button>
+      </div>
+      <div class="mp-scroll" id="mp-scroll"></div>
+      <div class="mp-footer" id="mp-footer"></div>
+    </div>
+  </div>
+
+  <!-- End screen -->
+  <div class="end-screen" id="end-screen">
+    <div class="end-screen-title" id="end-title">Campaign Complete</div>
+    <div class="end-screen-sub" id="end-sub">The adventure is over</div>
+    <div class="end-screen-missions" id="end-missions"></div>
+    <a class="end-screen-btn" href="campaigns.html">← Return to Campaigns</a>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+
+var OFFICIAL_MISSIONS = [
+  { id:'off_1',  type:'official', name:'Defeat the Leader',     icon:'⚔',  goal:'Knock out the Quest Leader.',                                    narrative:'Deep within the fortress, a great evil holds dominion. The heroes must press through the dungeons below and confront the Leader in their own domain.',          setup:'Place the Quest Leader in the Boss Room. Heroes enter from the Start Tile.',                                                                         specialRules:'The Quest Leader activates every turn once revealed.',                                             questEnd:'Heroes win when the Quest Leader is knocked out. Dark Player wins if all heroes fall.',    rewards:'XP per hero level + 1d6 gold each',             settings:['dungeon','civilised','outdoor'], turnLimit:null,  faction:'Any' },
+  { id:'off_2',  type:'official', name:'Steal the Relic',       icon:'💎', goal:'Steal the relic from the Leader and escape.',                    narrative:'Word has reached the heroes of a powerful artifact locked away in the vaults below. Retrieve it before the forces of darkness can use it against the realm.',  setup:'The Quest Leader holds the relic. Place them in the Boss Room.',                                                                                     specialRules:'To steal: adjacent hero rolls Skilled Hands vs Perception.',                                       questEnd:'Heroes win when relic-carrier exits. Dark Player wins if all heroes fall or turn limit expires.', rewards:'+1 Fame + relic item card',               settings:['dungeon','civilised'],           turnLimit:45,    faction:'Any' },
+  { id:'off_3',  type:'official', name:'Rescue the Prisoner',   icon:'⛓',  goal:'Free the prisoner and escort them to the exit.',                 narrative:'A captured ally languishes in the dungeons below. Every hour that passes brings them closer to death. The heroes must move quickly.',                        setup:'Place the prisoner token in a locked Cell. Keys are distributed randomly among monster leaders.',                                                    specialRules:'A hero adjacent to the prisoner may spend 1 action to escort them.',                               questEnd:'Heroes win when prisoner exits from the Start Tile.',                                      rewards:'+Ally card',                                    settings:['dungeon','civilised'],           turnLimit:40,    faction:'Any' },
+  { id:'off_4',  type:'official', name:'Destroy the Artefact',  icon:'💥', goal:'Reach the Artefact and destroy it.',                             narrative:'The dark ritual approaches completion. If the artefact is not destroyed, an unstoppable force will be unleashed.',                                          setup:'Place the Artefact token on a special altar in the deepest room.',                                                                                    specialRules:'Destroying requires 2 actions and a Strength roll (7+).',                                          questEnd:'Heroes win when artefact is destroyed.',                                                  rewards:'+2 XP each + 1 random magic item',              settings:['dungeon'],                       turnLimit:null,  faction:'Cultists' },
+  { id:'off_5',  type:'official', name:'Hold the Line',         icon:'🛡',  goal:'Survive for the required number of turns.',                      narrative:'The forces of darkness press in from all sides. The heroes must stand firm until the cavalry arrives.',                                                     setup:'Heroes start in a central room. Monsters spawn from all dungeon edges each turn.',                                                                    specialRules:'Each turn, roll 1d6. On a 6, an additional monster group spawns.',                                 questEnd:'Heroes win by surviving to Turn 20.',                                                     rewards:'+Fame + 2d6 gold',                              settings:['dungeon','outdoor'],             turnLimit:20,    faction:'Any' },
+  { id:'off_6',  type:'official', name:'Assassinate the Priest',icon:'🗡',  goal:'Eliminate the Dark Priest before the ritual completes.',         narrative:'A dark priest performs a forbidden ritual. Heroes must push through the defenders and end the ceremony.',                                                    setup:'Place the Dark Priest in the innermost room.',                                                                                                        specialRules:"If the ritual completes, all heroes suffer 3 wounds each.",                                        questEnd:'Heroes win when the Priest is KO\'d.',                                                    rewards:"+Priest's spell tome",                          settings:['dungeon','civilised'],           turnLimit:null,  faction:'Cultists' },
+  { id:'off_7',  type:'official', name:'Plunder the Vault',     icon:'🏆', goal:'Collect as much treasure as possible and escape.',               narrative:'Word of an unguarded vault has reached the heroes. Between them and limitless riches lie only locked doors and many guards.',                               setup:'Scatter 6 chest tokens randomly across revealed rooms.',                                                                                              specialRules:'Monsters are attracted to opened chests.',                                                         questEnd:'Heroes win if at least 3 chests are looted and all carriers exit.',                       rewards:'All gold collected + bonus magic items',        settings:['dungeon','civilised'],           turnLimit:35,    faction:'Any' },
+  { id:'off_8',  type:'official', name:'Explore the Unknown',   icon:'🗺',  goal:'Reveal all dungeon tiles and survive.',                          narrative:'The dungeon holds secrets no living being has witnessed. Chart its depths and return with the tale.',                                                       setup:'Use maximum tile set. Heroes start at the centre tile. All doors are closed.',                                                                        specialRules:'Each newly revealed tile spawns enemies from the Encounter table.',                                questEnd:'Heroes win when all tiles are revealed and at least one hero survives.',                  rewards:'5 gold per Exploration Point + 1 XP per hero', settings:['dungeon','outdoor'],             turnLimit:null,  faction:'Mixed' },
+  { id:'off_9',  type:'official', name:'Light the Beacons',     icon:'🔥', goal:'Activate all three Beacon Braziers.',                            narrative:'The portal must be sealed. Ancient braziers throughout the dungeon hold the key — but lighting them will draw the darkness down.',                          setup:'Place one Brazier token in each of three marked rooms.',                                                                                              specialRules:'When each Brazier is lit, spawn 2 monsters at the nearest dungeon edge.',                          questEnd:'Heroes win when all three are lit and at least one hero exits.',                          rewards:'+1 to each hero\'s maximum Wounds permanently', settings:['dungeon','outdoor'],             turnLimit:30,    faction:'Demons' },
+  { id:'off_10', type:'official', name:'The Gauntlet',          icon:'🏃', goal:'All heroes must reach the Exit before the turn limit.',          narrative:'There is no fighting retreat. The heroes must run and trust each other not to fall behind.',                                                              setup:'Place the Exit token at the far end of a long dungeon.',                                                                                              specialRules:'At the start of each Dark Player turn, spawn 1d3 monsters at the Start Tile.',                    questEnd:'Heroes win when all surviving heroes exit.',                                              rewards:'+1 Speed to all surviving heroes (permanent)',  settings:['dungeon'],                       turnLimit:25,    faction:'Any' },
+  { id:'off_11', type:'official', name:'The Siege',             icon:'🏰', goal:'Defend the stronghold entrance for the required turns.',         narrative:'They are coming. The heroes hold the only defensible position.',                                                                                            setup:'Heroes are placed in a fortified room. Monsters attempt to break through barricaded doors.',                                                          specialRules:'Doors may be repaired (1 action, Craftsmanship roll 4+).',                                         questEnd:'Heroes win if both doors survive to Turn 15, or if all monsters are eliminated.',        rewards:'+1d6 gold per intact door + renown bonus',      settings:['dungeon','civilised'],           turnLimit:15,    faction:'Any' },
+  { id:'off_12', type:'official', name:'The Final Reckoning',   icon:'💀', goal:'Defeat the Boss and all Champions before the dungeon collapses.',narrative:'This is what it has all been leading to. Every quest, every scar, every fallen companion — it ends here.',                                               setup:'Place the Boss in the Boss Room with 2 Champions.',                                                                                                   specialRules:'Champions each have a unique special ability. The Boss is immune to Fear effects.',                questEnd:'Heroes win if Boss and both Champions are defeated before Turn 20.',                     rewards:'Campaign End: Legendary item + max XP award',   settings:['dungeon'],                       turnLimit:20,    faction:'Any' }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+
+var campaign = null;
+var customMissions = [];
+var playState = null; // { completedNodes: {nodeId: 'victory'|'defeat'}, currentNodeIds: [nodeId] }
+var openNodeId = null;
+
+function allMissions() { return OFFICIAL_MISSIONS.concat(customMissions); }
+
+function getMission(missionId) {
+  return allMissions().find(function(m){ return m.id === missionId; });
+}
+
+function playStateKey() { return 'dun_play_' + campaign.id; }
+
+function savePlayState() {
+  localStorage.setItem(playStateKey(), JSON.stringify(playState));
+}
+
+function loadPlayState() {
+  try {
+    var s = localStorage.getItem(playStateKey());
+    if (s) return JSON.parse(s);
+  } catch(e) {}
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NODE AVAILABILITY
+// ═══════════════════════════════════════════════════════════════
+
+// A node is 'available' if:
+//   - it is the start node (index 0, no incoming connections), OR
+//   - at least one predecessor is completed with a matching outcome connection
+function getNodeState(nodeId) {
+  var completed = playState.completedNodes[nodeId];
+  if (completed) return 'state-' + completed; // 'state-victory' or 'state-defeat'
+
+  // Check if it's a start node (no incoming connections)
+  var hasIncoming = campaign.connections.some(function(c){ return c.to === nodeId; });
+  if (!hasIncoming) return 'state-current'; // first node
+
+  // Check if any predecessor was completed with a matching outcome link
+  var unlocked = campaign.connections.some(function(c) {
+    if (c.to !== nodeId) return false;
+    var predCompleted = playState.completedNodes[c.from];
+    if (!predCompleted) return false;
+    // Connection outcome must match predecessor's result (or be 'custom' which always unlocks)
+    return c.outcome === predCompleted || c.outcome === 'custom';
+  });
+
+  return unlocked ? 'state-available' : 'state-locked';
+}
+
+function isPlayable(nodeId) {
+  var s = getNodeState(nodeId);
+  return s === 'state-current' || s === 'state-available';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+
+function renderPlay() {
+  if (!campaign) return;
+
+  var dtLabels = { random: '🎲 Random', planned: '🗺 Pre-planned', scripted: '📜 Scripted' };
+  var stateIcons = { 'state-victory': '✓', 'state-defeat': '✕', 'state-current': '▶', 'state-available': '◆', 'state-locked': '🔒' };
+
+  var nodesContainer = document.getElementById('play-nodes');
+  nodesContainer.innerHTML = '';
+
+  // Size the inner canvas
+  var maxX = 0, maxY = 0;
+  campaign.nodes.forEach(function(n) {
+    maxX = Math.max(maxX, n.x + 200);
+    maxY = Math.max(maxY, n.y + 140);
+  });
+  var inner = document.getElementById('play-canvas-inner');
+  inner.style.width = Math.max(maxX + 60, window.innerWidth) + 'px';
+  inner.style.height = Math.max(maxY + 60, window.innerHeight - 60) + 'px';
+
+  var svg = document.getElementById('play-svg');
+  svg.style.width = inner.style.width;
+  svg.style.height = inner.style.height;
+
+  // Render connections
+  renderPlayConnections();
+
+  // Render nodes
+  campaign.nodes.forEach(function(node, idx) {
+    var m = getMission(node.missionId);
+    if (!m) return;
+
+    var state = getNodeState(node.id);
+    var playable = state === 'state-current' || state === 'state-available';
+    var locNum = node.locNum || (idx + 1);
+
+    var div = document.createElement('div');
+    div.className = 'play-node ' + state;
+    div.id = 'pnode-' + node.id;
+    div.style.left = node.x + 'px';
+    div.style.top = node.y + 'px';
+
+    var statusIcon = stateIcons[state] || '';
+    var dtLabel = dtLabels[node.dungeonType || 'random'];
+
+    div.innerHTML =
+      '<div class="play-node-header">' +
+        '<div class="play-node-num">' + locNum + '</div>' +
+        '<div class="play-node-title">' + (m.icon||'◆') + ' ' + m.name + '</div>' +
+        '<div class="play-node-status-icon">' + statusIcon + '</div>' +
+      '</div>' +
+      '<div class="play-node-body">' +
+        '<div class="play-node-goal">' + (state === 'state-locked' ? '???' : (m.goal||'').substring(0,60)) + '</div>' +
+        '<div class="play-node-footer">' +
+          '<span class="play-node-dt">' + (state === 'state-locked' ? '' : dtLabel) + '</span>' +
+          (playable ? '<span class="play-node-action">▶ Enter</span>' : '') +
+        '</div>' +
+      '</div>';
+
+    if (playable) {
+      div.addEventListener('click', function() { openMissionPanel(node.id); });
+    }
+
+    nodesContainer.appendChild(div);
+  });
+
+  // Update status badge
+  var total = campaign.nodes.length;
+  var done = Object.keys(playState.completedNodes).length;
+  document.getElementById('status-badge').textContent = 'Mission ' + done + ' / ' + total;
+}
+
+function renderPlayConnections() {
+  var svg = document.getElementById('play-svg');
+  svg.querySelectorAll('.pconn').forEach(function(el){ el.remove(); });
+
+  var outcomeColor = { victory: '#1a6a1a', defeat: '#6a1a1a', custom: '#3a4a5a' };
+  var outcomeLabel = { victory: 'Victory', defeat: 'Defeat', custom: '' };
+  var defs = svg.querySelector('defs');
+
+  ['victory','defeat','custom'].forEach(function(o) {
+    if (!defs.querySelector('#parrow-' + o)) {
+      var m = document.createElementNS('http://www.w3.org/2000/svg','marker');
+      m.setAttribute('id','parrow-'+o);
+      m.setAttribute('markerWidth','8'); m.setAttribute('markerHeight','6');
+      m.setAttribute('refX','7'); m.setAttribute('refY','3'); m.setAttribute('orient','auto');
+      var p = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      p.setAttribute('points','0 0, 8 3, 0 6');
+      p.setAttribute('fill', outcomeColor[o]);
+      p.setAttribute('opacity','0.7');
+      m.appendChild(p); defs.appendChild(m);
+    }
+  });
+
+  campaign.connections.forEach(function(conn) {
+    var fn = campaign.nodes.find(function(n){ return n.id === conn.from; });
+    var tn = campaign.nodes.find(function(n){ return n.id === conn.to; });
+    if (!fn || !tn) return;
+
+    var outcome = conn.outcome || 'victory';
+    var color = outcomeColor[outcome];
+    var x1 = fn.x + 180, y1 = fn.y + 45;
+    var x2 = tn.x,       y2 = tn.y + 45;
+    var mx = (x1 + x2) / 2;
+
+    var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','pconn');
+
+    var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d','M '+x1+' '+y1+' C '+mx+' '+y1+','+mx+' '+y2+','+x2+' '+y2);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width','1.5');
+    path.setAttribute('stroke-dasharray', outcome === 'defeat' ? '5,3' : 'none');
+    path.setAttribute('marker-end','url(#parrow-'+outcome+')');
+    g.appendChild(path);
+
+    // Outcome label
+    var lbl = conn.label || outcomeLabel[outcome];
+    if (lbl) {
+      var midX = mx, midY = (y1 + y2) / 2;
+      var bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      var lw = lbl.length * 5.5 + 8;
+      bg.setAttribute('x', midX - lw/2); bg.setAttribute('y', midY - 9);
+      bg.setAttribute('width', lw); bg.setAttribute('height', 14);
+      bg.setAttribute('fill','var(--bg-panel)'); bg.setAttribute('rx','2');
+      g.appendChild(bg);
+      var lt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      lt.setAttribute('x', midX); lt.setAttribute('y', midY + 1);
+      lt.setAttribute('text-anchor','middle');
+      lt.setAttribute('fill', color);
+      lt.setAttribute('font-size','8');
+      lt.setAttribute('font-family','Cinzel,serif');
+      lt.textContent = lbl;
+      g.appendChild(lt);
+    }
+
+    svg.appendChild(g);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MISSION PANEL
+// ═══════════════════════════════════════════════════════════════
+
+function openMissionPanel(nodeId) {
+  var node = campaign.nodes.find(function(n){ return n.id === nodeId; });
+  if (!node) return;
+  var m = getMission(node.missionId);
+  if (!m) return;
+
+  openNodeId = nodeId;
+  var state = getNodeState(nodeId);
+  var completed = playState.completedNodes[nodeId];
+
+  document.getElementById('mp-icon').textContent = m.icon || '◆';
+  document.getElementById('mp-title').textContent = m.name;
+  document.getElementById('mp-sub').textContent =
+    (node.region ? node.region + ' · ' : '') +
+    (m.settings||[]).join(' · ') +
+    (m.turnLimit ? ' · ' + m.turnLimit + ' Turns' : '');
+
+  // Build scroll content
+  var s = '';
+
+  if (completed) {
+    s += '<div class="mp-completed-banner ' + completed + '">' +
+      (completed === 'victory' ? '⚔ Victory — Mission Completed' : '💀 Defeat — Mission Failed') +
+    '</div>';
+  }
+
+  if (m.narrative) s += '<div class="mp-narrative">' + m.narrative + '</div>';
+
+  s += mpSection('Goal', m.goal);
+  if (m.faction) s += mpSection('Faction', m.faction);
+
+  // Dungeon launch
+  var dt = node.dungeonType || 'random';
+  if (dt !== 'scripted') {
+    var launchUrl = dt === 'random' ? 'generator.html' : 'builder.html';
+    var launchLabel = dt === 'random' ? '🎲 Open Random Generator' : '🗺 Open Dungeon Builder';
+    var launchDesc = dt === 'random'
+      ? 'A dungeon will be procedurally generated for this mission.'
+      : 'A pre-planned dungeon layout has been designed for this mission.';
+    s += '<div class="mp-launch">' +
+      '<div class="mp-launch-info">' +
+        '<div class="mp-launch-type">Dungeon</div>' +
+        '<div class="mp-launch-desc">' + launchDesc + '</div>' +
+      '</div>' +
+      '<a class="mp-launch-btn" href="' + launchUrl + '" target="_blank">' + launchLabel + ' ↗</a>' +
+    '</div>';
+  }
+
+  s += '<hr class="mp-divider">';
+  if (m.setup) s += mpSection('Set-Up', m.setup);
+  if (m.specialRules) s += mpSection('Special Rules', m.specialRules);
+  if (m.specialElements && m.specialElements.length) {
+    s += '<div class="mp-section"><span class="mp-label">Special Elements</span>';
+    m.specialElements.forEach(function(el,i){
+      s += '<div class="mp-body" style="display:flex;gap:8px;align-items:center;margin-bottom:3px;">' +
+        '<span style="width:18px;height:18px;border-radius:50%;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:9px;flex-shrink:0;">'+(i+1)+'</span>' +
+        el + '</div>';
+    });
+    s += '</div>';
+  }
+  if (m.furniture && m.furniture.length) s += mpSection('Furniture', m.furniture.join(', '));
+  s += '<hr class="mp-divider">';
+  s += mpSection('Quest End', m.questEnd);
+  if (m.rewards) {
+    s += '<div class="mp-section"><span class="mp-label">Rewards</span><div class="mp-body gold">' + m.rewards + '</div></div>';
+  }
+
+  document.getElementById('mp-scroll').innerHTML = s;
+
+  // Footer — outcome buttons or already done message
+  var footer = document.getElementById('mp-footer');
+  if (completed) {
+    footer.innerHTML = '<button class="play-btn" onclick="closePanel()" style="flex:1;padding:10px;">Close</button>';
+  } else {
+    footer.innerHTML =
+      '<button class="mp-outcome-btn victory" onclick="recordOutcome(\'' + nodeId + '\',\'victory\')">⚔ Victory</button>' +
+      '<button class="mp-outcome-btn defeat"  onclick="recordOutcome(\'' + nodeId + '\',\'defeat\')">💀 Defeat</button>';
+  }
+
+  document.getElementById('mission-panel-overlay').classList.add('open');
+}
+
+function mpSection(label, body) {
+  if (!body) return '';
+  return '<div class="mp-section"><span class="mp-label">'+label+'</span><div class="mp-body">'+body+'</div></div>';
+}
+
+function closePanel() {
+  document.getElementById('mission-panel-overlay').classList.remove('open');
+  openNodeId = null;
+}
+
+function closePanelOnBackdrop(e) {
+  if (e.target === document.getElementById('mission-panel-overlay')) closePanel();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OUTCOME
+// ═══════════════════════════════════════════════════════════════
+
+function recordOutcome(nodeId, outcome) {
+  playState.completedNodes[nodeId] = outcome;
+  savePlayState();
+  closePanel();
+  renderPlay();
+
+  // Check if campaign is complete — no more playable nodes
+  setTimeout(function() {
+    var anyPlayable = campaign.nodes.some(function(n) {
+      return isPlayable(n.id);
+    });
+    if (!anyPlayable) showEndScreen();
+  }, 400);
+}
+
+function showEndScreen() {
+  var total = campaign.nodes.length;
+  var victories = Object.values(playState.completedNodes).filter(function(v){ return v === 'victory'; }).length;
+  var defeats = Object.values(playState.completedNodes).filter(function(v){ return v === 'defeat'; }).length;
+
+  document.getElementById('end-title').textContent = victories > defeats ? 'Victory!' : 'Campaign Over';
+  document.getElementById('end-sub').textContent = victories > defeats
+    ? 'The heroes have prevailed'
+    : 'The darkness has won';
+
+  var lines = campaign.nodes.map(function(node, idx) {
+    var m = getMission(node.missionId);
+    var result = playState.completedNodes[node.id];
+    var icon = result === 'victory' ? '✓' : result === 'defeat' ? '✕' : '○';
+    var color = result === 'victory' ? '#50c050' : result === 'defeat' ? '#e05050' : '#6a5a4a';
+    return '<span style="color:' + color + '">' + icon + ' ' + (m ? m.name : 'Mission '+(idx+1)) + '</span>';
+  }).join('<br>');
+  document.getElementById('end-missions').innerHTML = lines;
+
+  document.getElementById('end-screen').classList.add('open');
+}
+
+function confirmReset() {
+  if (confirm('Reset all campaign progress? This cannot be undone.')) {
+    playState = { completedNodes: {} };
+    savePlayState();
+    document.getElementById('end-screen').classList.remove('open');
+    renderPlay();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+function init() {
+  // Load custom missions
+  try {
+    var cm = localStorage.getItem('dun_custom_missions');
+    if (cm) customMissions = JSON.parse(cm);
+  } catch(e) {}
+
+  // Get campaign ID from URL
+  var params = new URLSearchParams(window.location.search);
+  var campId = params.get('c');
+
+  if (!campId) {
+    showNoCampaign('No campaign ID in URL.');
+    return;
+  }
+
+  // Load campaigns
+  try {
+    var camps = localStorage.getItem('dun_campaigns');
+    if (camps) {
+      var all = JSON.parse(camps);
+      campaign = all.find(function(c){ return c.id === campId; });
+    }
+  } catch(e) {}
+
+  if (!campaign) {
+    showNoCampaign('Campaign not found. Make sure you saved it first.');
+    return;
+  }
+
+  document.getElementById('header-campaign-name').textContent = campaign.name;
+  document.title = campaign.name + ' — DUN Campaign';
+
+  // Load or init play state
+  playState = loadPlayState() || { completedNodes: {} };
+  savePlayState();
+
+  renderPlay();
+}
+
+function showNoCampaign(msg) {
+  document.getElementById('play-main').innerHTML =
+    '<div class="no-campaign">' +
+      '<div style="font-size:32px;">⚔</div>' +
+      '<div>' + msg + '</div>' +
+      '<a class="play-btn" href="campaigns.html" style="margin-top:8px;">← Back to Campaigns</a>' +
+    '</div>';
+}
+
+init();
+</script>
+</body>
+</html>
