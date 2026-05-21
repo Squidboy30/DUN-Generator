@@ -1704,8 +1704,8 @@ function renderNodes() {
 
     var dt = node.dungeonType || 'random';
     var dtLabels = {random:'🎲 Random', planned:'🗺 Pre-planned', scripted:'📜 Scripted'};
-    var launchUrl = dt === 'random' ? 'generator.html' : 'builder.html';
-    var launchLabel = dt === 'random' ? 'Open Generator' : 'Open Builder';
+    var launchUrl = 'generator.html';
+    var launchLabel = dt === 'planned' ? 'Open Builder' : 'Open Generator';
 
     var connectBtnClass = 'node-connect-btn' + (connectingFrom === node.id ? ' connecting' : '') + (connectingFrom && connectingFrom !== node.id ? ' connectable' : '');
     var connectBtnLabel = (connectingFrom && connectingFrom !== node.id) ? '→' : '⊕';

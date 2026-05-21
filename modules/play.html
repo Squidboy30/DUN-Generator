@@ -405,7 +405,6 @@ function renderBrief() {
 
   // Actions
   var dt = node.dungeonType || 'random';
-  var launchUrl = dt === 'random' ? 'generator.html' : 'builder.html';
   var act = '';
 
   if (st === 'available' || st === 'active') {
@@ -444,8 +443,7 @@ function launchDungeon(nid) {
     setting: setting
   };
   try { localStorage.setItem('dun_campaign_launch', JSON.stringify(handoff)); } catch(e){}
-  var url = dt === 'planned' ? 'builder.html' : 'generator.html';
-  window.location.href = url;
+  window.location.href = 'generator.html';
 }
 
 function brow(label, val) {
