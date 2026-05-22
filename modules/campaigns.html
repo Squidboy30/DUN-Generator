@@ -2552,104 +2552,522 @@ function setAIStatus(msg, loading) {
   el.textContent = loading ? '⟳ ' + msg : msg;
 }
 
-async function runAIGenerate() {
+// ─── PROCEDURAL CAMPAIGN GENERATOR ───────────────────────────
+// Self-contained — no API calls. All content baked in.
+
+var GEN_DATA = {
+  chaos: {
+    factions: ['Chaos Warriors','Beastmen Vanguard','Cultists of Tzeentch','Marauder Warband','Daemonkin'],
+    titles: ['The Shadow Ascendant','Tide of Ruin','When the Dark Gods Stir','Blood and Brass','The Corrupted Age'],
+    missionNames: [
+      ['The First Sign','Whispers in the Dark','A Town Corrupted','The Ritual Begins'],
+      ['Into the Warcamp','The Champion\'s Challenge','Blood for the Blood God','Desecrated Ground'],
+      ['The Daemon Gate','Siege of the Bastion','The Chosen One','Last Wall'],
+      ['Heart of Corruption','The Final Ritual','Where Gods Bleed','End of All Things']
+    ],
+    icons: ['\u{1F525}','\u2694','\u{1F480}','\u{1F5E1}','\u{1F441}'],
+    tiles: ['dungeon','cave','outdoor'],
+    settings: [['dungeon'],['outdoor'],['dungeon','civilised'],['cave']],
+    furniture: [['Bonfire x1','Altar x1'],['Throne x1'],['Torture machine x1','Chains x2'],['Great statue x1','Brazier x2']],
+    specialElements: [['Dark relic x1','Chaos sigil x2'],['Champion\'s banner x1'],['Ritual stone x1','Skull pile x2'],['Daemon vessel x1']],
+    narratives: [
+      'The smell of ash and wrongness hangs over the village. Mutated livestock lie in the fields, and the few survivors speak of warriors clad in black iron who march beneath a banner of fire. The corruption spreads faster than anyone dares admit.',
+      'The warcamp stretches across the valley floor, a city of tents and blood-poles. Inside its heart, a champion of the Dark Gods prepares a ritual that will tear the veil between worlds. Time is running out.',
+      'The daemon gate pulses with malevolent energy, its stones carved with runes that burn the eyes to read. If it opens fully, nothing short of a miracle will stop what pours through. The heroes have one chance to seal it forever.',
+      'This is where it ends. The Chaos Lord stands in his sanctum, surrounded by the chosen, laughing at the audacity of mortals who dare challenge the will of the Dark Gods. He has never been wrong to laugh. Until now.'
+    ],
+    goals: [
+      'Discover the source of the corruption and destroy the chaos altar before the ritual is complete.',
+      'Defeat the Chaos Champion and burn the warcamp to the ground.',
+      'Close the daemon gate by destroying all three ritual focus points.',
+      'Slay the Chaos Lord and end his dark crusade before the final seal breaks.'
+    ],
+    setups: [
+      'Place 3 Cultists in the first room. The Chaos Altar is in the boss room (Token 1). Draw Dark Player cards normally.',
+      'The warcamp has 2 Chaos Warriors guarding each corridor entrance. The Champion starts in the boss room with 2 Marauder bodyguards.',
+      'The daemon gate is in the main room. Three ritual focus stones (Tokens 1-3) are placed in rooms 2, 4 and 6. Destroying one increases the Dark Player reserve by 1.',
+      'The Chaos Lord activates at the start of Turn 3. Until then, his elite guard patrols the dungeon. He cannot be harmed while any Champion remains alive.'
+    ],
+    specialRules: [
+      'Corruption Spread: at the end of each Dark Player turn, roll 1d6. On a 6, the nearest hero gains a Corruption token. At 3 tokens, they are Stunned.',
+      'Blood Frenzy: Chaos Warriors that suffer a wound but survive gain +1 Attack until end of their next activation.',
+      'Daemon Touched: the boss room is always illuminated by unnatural fire. Heroes in this room may not Flee.',
+      'The Dark Gods Watch: the Chaos Lord regenerates 1 wound at the start of each of his activations. He cannot be reduced below 1 wound while the gate remains open.'
+    ],
+    questEnds: [
+      'Victory: the altar is destroyed and all heroes escape. Defeat: the ritual completes — the Dark Player wins the campaign.',
+      'Victory: the Champion is slain. Defeat: if 3 or more heroes are knocked out, the warcamp is not destroyed and chaos advances.',
+      'Victory: all three focus stones destroyed. Defeat: if the gate remains open at the end of Turn 12, it tears fully open.',
+      'Victory: the Chaos Lord is slain. Defeat: all heroes are eliminated. The darkness wins.'
+    ],
+    rewards: [
+      '50 gold per hero. Each hero may roll on the Minor Magic Items table.',
+      '75 gold per hero. The hero who dealt the killing blow gains 1 extra XP.',
+      '100 gold per hero. Heroes may choose one item from the Special Objects deck.',
+      '150 gold + 3 XP each. The campaign is won.'
+    ]
+  },
+  skaven: {
+    factions: ['Clan Pestilens','Clan Eshin','Clan Skryre','Clan Moulder','Grey Seers'],
+    titles: ['Under-City','The Warpstone Conspiracy','Plague Below','Shadows of the Under-Empire','The Grey Seer\'s Gambit'],
+    missionNames: [
+      ['The First Tunnel','Plague Rats Below','Stolen in the Night','A Missing Merchant'],
+      ['Clan Eshin Contracts','The Warpstone Seam','Pestilent Warrens','Moulder\'s Menagerie'],
+      ['The Warlock Engineer','Assassination Run','Breeding Pits','Grey Seer\'s Sanctum'],
+      ['Heart of the Warrens','The Great Clan War','Gnaw-gnaw-gnaw','The Under-City Falls']
+    ],
+    icons: ['\u{1F400}','\u2697','\u{1F5E1}','\u2620','\u{1F49A}'],
+    tiles: ['sewer','dungeon','cave'],
+    settings: [['dungeon'],['sewer'],['sewer','dungeon'],['cave']],
+    furniture: [['Alembic x1','Barrels x2'],['Poison cache x1'],['Warp-lightning cannon x1'],['Breeding cage x2','Altar x1']],
+    specialElements: [['Warpstone shard x1','Skaven idol x1'],['Clan Eshin contract x1'],['Warp-bomb x1','Poison tank x2'],['Grey Seer\'s staff x1']],
+    narratives: [
+      'The sewers stink worse than usual. Merchants report goods vanishing from locked warehouses. The rat-men are moving beneath the city streets, and they have been busy.',
+      'Warpstone has been found in a seam deep beneath the old city. Three clans are racing to claim it, and the heroes are caught in the middle of a war fought in the dark.',
+      'The breeding pits of Clan Moulder writhe with half-finished horrors. The Warlock Engineer\'s workshop crackles with green lightning. Whatever the Skaven are building, it must be stopped.',
+      'The Grey Seer stands at the apex of the under-city, master of all the intriguing clans below. He has played them all against each other, and now he plays his final hand.'
+    ],
+    goals: [
+      'Locate and destroy the Skaven nest before they breach the city streets.',
+      'Claim the warpstone seam before the Skaven can use it to power their war machines.',
+      'Destroy the Warlock Engineer\'s weapon before it is unleashed on the surface city.',
+      'Slay the Grey Seer and scatter his council of clans.'
+    ],
+    setups: [
+      'Place Skaven Slaves in the first two rooms. The Nest Burrow (Token 1) is in room 4. Dark Player draws 2 extra cards per turn.',
+      'Three warpstone shards (Tokens 1-3) are placed randomly in rooms. Skaven from two clans fight each other — heroes may exploit this.',
+      'The weapon (Token 1) is in the boss room. Clan Skryre Warlocks patrol in pairs.',
+      'The Grey Seer is accompanied by two Clan Eshin Night Runners as bodyguards. He will flee to the next room if reduced to half wounds.'
+    ],
+    specialRules: [
+      'Plague Touch: any hero wounded by a Plague Monk must pass an Endurance test or gain the Poisoned condition.',
+      'They Come From the Walls: at the start of each Dark Player turn, roll 1d6. On a 5+, 1 Skaven Slave enters from the nearest unexplored tile edge.',
+      'Warpstone Exposure: heroes adjacent to a warpstone shard gain 5 XP but must pass an Endurance test or take 1 wound.',
+      'The Grey Seer\'s Word: once per turn the Grey Seer may reroll any single Dark Player die. He does this automatically on any roll of 1.'
+    ],
+    questEnds: [
+      'Victory: nest burrow destroyed and heroes escape. Defeat: if not destroyed by Turn 10, the Skaven swarm the city.',
+      'Victory: 2+ warpstone shards claimed by heroes. Defeat: Skaven claim all three and power a devastating weapon.',
+      'Victory: the weapon is destroyed. Defeat: if any hero is knocked out when the weapon fires, they suffer an additional d6 wounds.',
+      'Victory: Grey Seer slain. Defeat: heroes eliminated. The under-empire rises.'
+    ],
+    rewards: [
+      '40 gold per hero. Heroes who found warpstone shards may sell them for 25 gold each.',
+      '60 gold per hero. Any warpstone shard kept may be used once as a +2 damage bonus.',
+      '80 gold per hero. The Warlock Engineer\'s notes yield one free Skill card per hero.',
+      '120 gold + 3 XP per hero. The under-city is crippled. The Grey Seer\'s staff is a Relic item.'
+    ]
+  },
+  undead: {
+    factions: ['Barrow Kings','Vampire Thralls','Skeleton Legions','Ghost Court','Necromancer\'s Retinue'],
+    titles: ['The Risen Dark','When Dead Men Walk','The Barrow King\'s Wrath','Eternal Damnation','No Rest for the Wicked'],
+    missionNames: [
+      ['The First Grave','Robbed Tombs','Unquiet Dead','The Necromancer\'s Student'],
+      ['The Barrow Maze','Cursed Ground','Walking Dead','The Knight Revenant'],
+      ['Crypt of the Barrow King','Vampire\'s Tower','The Ritual of Unbinding','Bone Throne'],
+      ['Final Rest','The Last Seal','Undying Hatred','End of the Curse']
+    ],
+    icons: ['\u{1F480}','\u{1F9B4}','\u{1F47B}','\u26B0','\u{1F56F}'],
+    tiles: ['crypt','dungeon','cave'],
+    settings: [['dungeon'],['dungeon','outdoor'],['crypt'],['crypt']],
+    furniture: [['Tomb x2','Candles x2'],['Sarcophagus x1','Altar x1'],['Bone throne x1','Skull pile x3'],['Great tomb x1','Brazier x2']],
+    specialElements: [['Cursed relic x1','Grave marker x2'],['Soul vessel x1'],['Barrow crown x1','Binding stone x2'],['Death mask x1']],
+    narratives: [
+      'The graves in the old cemetery have been disturbed — not robbed, but opened from within. Somewhere nearby, a necromancer has begun their work, and the living are running out of time.',
+      'The barrow maze shifts and changes, its passages rearranging as if alive. Something ancient has awakened in the deep dark, and it hungers for the warmth of the living.',
+      'The Barrow King was sealed here a thousand years ago — not dead, but imprisoned. His prison has been opened by a fool\'s greed. He rises now with a thousand years of silent rage.',
+      'This is the final curse. The heroes stand at the heart of the undead domain, one chance to end the nightmare. The dead press in from every direction. There will be no second attempt.'
+    ],
+    goals: [
+      'Find and destroy the necromancer\'s focus stone before he completes the ritual of raising.',
+      'Navigate the barrow maze and destroy the Barrow King\'s sigil at its heart.',
+      'Defeat the Barrow King and reseal his tomb with the binding crown.',
+      'Destroy the phylactery hidden in the final crypt to permanently end the curse.'
+    ],
+    setups: [
+      'Skeletons occupy all corridors. The necromancer is in the final room. Heroes may not rest — the dead do not pause.',
+      'After each room is revealed, roll 1d6. On a 1, swap its exit randomly. The sigil (Token 1) is in room 5 or later.',
+      'The Barrow King rises at Turn 4 unless heroes reach his throne room first. The binding crown (Token 1) must be placed on him to reseal the tomb.',
+      'The phylactery (Token 1) is hidden in the boss room. Until destroyed, slain undead return next turn on a 4+.'
+    ],
+    specialRules: [
+      'Unquiet Dead: slain Skeleton Warriors return to the board at the start of the next Dark Player turn on a roll of 5+.',
+      'Cursed Ground: heroes who rest in the dungeon must pass a Willpower test or gain the Frightened condition.',
+      'Ancient Hatred: the Barrow King gains +1 to all combat rolls for each hero currently Stunned or Knocked Out.',
+      'Deathless: while the phylactery remains intact, the boss cannot be reduced below 1 wound.'
+    ],
+    questEnds: [
+      'Victory: focus stone destroyed, necromancer defeated. Defeat: ritual completes — d6 additional undead enter play permanently.',
+      'Victory: sigil destroyed, heroes escape. Defeat: the maze seals — heroes must fight through double enemies to escape.',
+      'Victory: Barrow King defeated and resealed. Defeat: he escapes the dungeon and begins raising an army.',
+      'Victory: phylactery destroyed, curse ended. Defeat: all heroes eliminated. The undead domain spreads unchecked.'
+    ],
+    rewards: [
+      '45 gold per hero. Heroes gain 1 XP for each undead slain in excess of 5.',
+      '65 gold per hero. The barrow yields 1 random Magic Object card per hero.',
+      '90 gold per hero. The binding crown may be sold for 80 gold or kept as a Relic.',
+      '130 gold + 3 XP per hero. The curse is lifted. One hero may draw from the Relic deck.'
+    ]
+  },
+  greenskin: {
+    factions: ['Orc Warband','Goblin Tribe','Night Goblin Fanatics','Troll Kin','Black Orc Boss'],
+    titles: ['WAAAGH!','Green Tide','The Boss\'s Calling','Teeth and Iron','Biggest and Baddest'],
+    missionNames: [
+      ['First Blood','Greenskin Scouts','Raided Village','The Warboss Laughs'],
+      ['Mountain Pass','Cave Network','Troll Bridge','Goblin Ambush'],
+      ['The War Camp','Squig Pens','Night of the Fanatics','Black Orc Regiment'],
+      ['Warboss Showdown','The WAAAGH! Breaks','Last Stronghold','End of the Green Tide']
+    ],
+    icons: ['\u2694','\u{1FA93}','\u{1F6E1}','\u{1F49A}','\u{1F44A}'],
+    tiles: ['cave','dungeon','outdoor'],
+    settings: [['outdoor'],['cave'],['cave','dungeon'],['dungeon']],
+    furniture: [['War trophy x2','Bonfire x1'],['Squig pen x1','Cage x2'],['Warboss throne x1','Skull pile x3'],['Great weapon rack x1','Bonfire x2']],
+    specialElements: [['Warchief idol x1','Orcish standard x1'],['Squig x2 (as monsters)'],['Fanatic ball-and-chain x1 (hazard)'],['Warboss banner x1']],
+    narratives: [
+      'They came out of the mountains three days ago — a mob of greenskins, howling and waving rusty weapons. The village was lucky; most ran before the burning started. But they left tracks leading into the caves.',
+      'The cave network runs deeper than anyone guessed, honeycombed with goblin dens and orc sleeping holes. Somewhere in the dark, something big is doing a lot of shouting.',
+      'The WAAAGH! has a beating heart: the Warboss. He is enormous. He has three Black Orc bodyguards and absolutely no interest in negotiations.',
+      'The Warboss stands in his great hall, bellowing challenges that can be heard three rooms away. He has been waiting for a proper fight. He is about to get one.'
+    ],
+    goals: [
+      'Drive the greenskins from the village outskirts and destroy their supply cache.',
+      'Navigate the cave network and destroy the goblin idol that draws the tribe together.',
+      'Defeat the Warboss before his WAAAGH! crests and overwhelms the region.',
+      'Slay the Black Orc Warboss and break the WAAAGH! before it reaches the city walls.'
+    ],
+    setups: [
+      'Goblins occupy the first two rooms. The supply cache (Token 1) is in room 3. For every 2 rooms revealed, add 1 Goblin to any explored room.',
+      'Night Goblins lurk in the dark — all corridor rooms are unlit. The idol (Token 1) is in room 4 or later.',
+      'The Warboss has a pet Squig as companion — he activates both on his turn. His bodyguards activate before him.',
+      'The Warboss issues a challenge at game start: one hero must face him in single combat first. Others may not assist unless the hero is Knocked Out.'
+    ],
+    specialRules: [
+      'WAAAGH! Frenzy: at the start of each Orc activation, if there are 3+ Orcs on the board, each gains +1 Attack this turn.',
+      'Goblin Cowardice: Goblins who are the sole enemy in a room roll morale. On a 1-2, they flee off the board edge.',
+      'Night Goblin Fanatics: if a hero moves adjacent to a Night Goblin unit, roll 1d6. On a 4+, a Fanatic attacks with 3 Attack dice.',
+      'Biggest and Baddest: the Warboss gains +1 wound for each Orc still alive when combat begins (max +4).'
+    ],
+    questEnds: [
+      'Victory: supply cache destroyed, heroes escape. Defeat: greenskins resupplied and raid the village.',
+      'Victory: idol destroyed, tribe disperses. Defeat: idol intact at Turn 10 — a second tribe answers the call.',
+      'Victory: Warboss slain. Defeat: WAAAGH! reaches full strength and the region is overrun.',
+      'Victory: Warboss and all Black Orcs slain. Defeat: heroes eliminated. The green tide breaks through.'
+    ],
+    rewards: [
+      '35 gold per hero. Orc loot: roll 1d6 per hero, on a 5+ find a Common Object card.',
+      '55 gold per hero. The idol is worth 40 gold to the right buyer.',
+      '85 gold per hero. Warboss trophy: one hero gains a unique trophy item (Relic quality).',
+      '110 gold + 2 XP per hero. The WAAAGH! is broken.'
+    ]
+  },
+  beastmen: {
+    factions: ['Gor Herd','Ungor Skirmishers','Minotaur Warband','Shaman\'s Cult','Bestigor Chosen'],
+    titles: ['The Old Forest\'s Wrath','Children of Chaos','Herdstone Rising','Blood of the Wild','The Shaman\'s Vision'],
+    missionNames: [
+      ['Strange Tracks','Forest Ambush','The Herdstone\'s Pull','Travellers Lost'],
+      ['Deep in the Wood','Ritual at Dusk','The Minotaur\'s Path','Ungor Nets'],
+      ['Gor Warband','The Shaman Speaks','Ancient Stones','Bestigor Guard'],
+      ['The Herdstone','Shaman\'s Sanctum','Last Grove','Where the Wild Things End']
+    ],
+    icons: ['\u{1F402}','\u{1F332}','\u{1F5E1}','\u{1F525}','\u{1F441}'],
+    tiles: ['outdoor','cave','dungeon'],
+    settings: [['outdoor'],['outdoor'],['outdoor','cave'],['cave','dungeon']],
+    furniture: [['Herdstone x1','Skull totem x2'],['Ritual fire x1','Bone pile x2'],['Beast idol x1'],['Shaman altar x1','Great herdstone x1']],
+    specialElements: [['Chaos talisman x1','Beast skull x2'],['Blood offering x1'],['Minotaur collar x1 (trophy)'],['Shaman staff x1','Warpstone x1']],
+    narratives: [
+      'The forest road has not been safe for weeks. The tracks found at the last ambush site were not human, not animal — something between. The Beastmen are massing, drawn by something in the deep wood.',
+      'The herdstone pulses with dark energy. The Gor herds dance around it in the moonlight. A Beastman shaman leads the ritual. He must not finish it.',
+      'The Bestigor are the chosen of the herd — bigger, stronger, more cunning than their kin. They guard the shaman\'s sanctum, and they will not be bargained with.',
+      'At the heart of the ancient grove stands the great herdstone. Destroy it and the herd loses its focus. Fail and the forest will swallow every road within twenty miles.'
+    ],
+    goals: [
+      'Track the Beastmen to their lair and destroy the trail-marking totems that guide the herd.',
+      'Disrupt the herdstone ritual by slaying the Shaman before moonrise (Turn 8).',
+      'Breach the Bestigor guard and reach the inner sanctum.',
+      'Destroy the great herdstone at the heart of the ancient grove.'
+    ],
+    setups: [
+      'Ungor Skirmishers occupy corridors. Totems (Tokens 1-3) are in rooms 1, 3, and 5. Each destroyed totem reduces Dark Player reserve by 1.',
+      'The Shaman begins in the boss room. At Turn 8, if ritual incomplete, all Beastmen gain +1 Attack permanently.',
+      'All corridors have Bestigor patrols (2 per corridor). The sanctum door is locked — heroes need the Key (Token 1) found in room 3.',
+      'The herdstone (Token 1) is in the boss room. It can only be destroyed by a magic weapon or the Shaman\'s staff (found in room 4).'
+    ],
+    specialRules: [
+      'Forest Ambush: when a new outdoor tile is revealed, roll 1d6. On a 5+, 1 Gor immediately enters from the tile edge.',
+      'Blood Frenzy: Beastmen who wound a hero gain the Frenzied condition (+1 Attack, cannot Flee) until end of the round.',
+      'Minotaur Charge: if the Minotaur is more than 3 squares from any hero at turn start, it charges the nearest hero immediately.',
+      'Shaman\'s Curse: each round, the Shaman casts a random curse (1d6): 1-2 one hero loses 1 Move; 3-4 one hero rerolls one die; 5-6 no effect.'
+    ],
+    questEnds: [
+      'Victory: all totems destroyed, heroes escape. Defeat: totems remain — the herd follows the trail to the nearest village.',
+      'Victory: Shaman slain before Turn 8. Defeat: ritual completed — all Beastmen gain a permanent buff.',
+      'Victory: sanctum reached and cleared. Defeat: Bestigor hold the line and the shaman escapes.',
+      'Victory: herdstone destroyed. Defeat: all heroes eliminated. The forest closes in.'
+    ],
+    rewards: [
+      '40 gold per hero. Heroes gain 1 XP for each totem destroyed personally.',
+      '70 gold per hero. The Shaman\'s staff is a magic weapon (1 use: auto-success on any one test).',
+      '85 gold per hero. Bestigor armour recovered — one hero may take it as heavy armour (Relic quality).',
+      '120 gold + 3 XP per hero. The forest roads are safe. One hero draws from the Magic Objects deck.'
+    ]
+  },
+  darkelf: {
+    factions: ['Corsair Raiders','Witch Elf Coven','Cold One Riders','Assassins of Khaine','Sorceress Guard'],
+    titles: ['Black Sails at Dawn','The Slave Coast','Khaine\'s Chosen','Dark Mirror','The Sorceress\'s Web'],
+    missionNames: [
+      ['Night Raid','The Slave Pens','Corsair\'s Landing','Dark Bargain'],
+      ['Witch Elf Rites','Cold One Stables','Assassin\'s Contract','Hidden Blades'],
+      ['Black Ark Approach','The Sorceress\'s Tower','Ritual of Khaine','Chosen of the Murder God'],
+      ['The Dark Council','Final Sacrifice','Blood and Shadow','Where Darkness Reigns']
+    ],
+    icons: ['\u{1F5E1}','\u{1F987}','\u{1F319}','\u26A1','\u{1F577}'],
+    tiles: ['dungeon','civilised','sewer'],
+    settings: [['outdoor'],['dungeon'],['civilised','dungeon'],['dungeon']],
+    furniture: [['Slave cage x2','Whipping post x1'],['Altar of Khaine x1','Statue x1'],['Dark throne x1','Tapestry x2'],['Sacrifice altar x1','Great statue x1']],
+    specialElements: [['Slave manifest x1','Dark elf seal x1'],['Ritual blade x1 (Token 1)'],['Sorceress scroll x1','Dark rune x2'],['Heart of Khaine x1']],
+    narratives: [
+      'They came with the tide, black ships running dark against the moonless sea. By dawn they were gone — and so were forty-seven people from the coastal village. Someone must go after them.',
+      'The Witch Elves dance in the temple courtyard, their laughter sharp as blades. Their high priestess has called for a sacrifice. The ritual begins at midnight.',
+      'The Black Ark looms off the coast, a city of cruelty and dark sorcery. Its mistress, the Sorceress, has chosen this coast for reasons she has not shared. The heroes must reach her tower in time.',
+      'The Dark Council convenes in the deepest chamber — five Highborn of Naggaroth, debating the fates of thousands. They did not expect to be interrupted.'
+    ],
+    goals: [
+      'Rescue the captives from the slave pens before the corsairs ship out at dawn.',
+      'Prevent the sacrifice by slaying the Witch Elf Priestess before the ritual completes.',
+      'Reach the Sorceress\'s tower and destroy her scrying mirror before she uses it.',
+      'Slay the leader of the Dark Council and scatter their alliance.'
+    ],
+    setups: [
+      'Captives (Tokens 1-4) are in rooms 2, 4, 5, and the boss room. Each rescued captive removes 1 Dark Player reserve point.',
+      'The Priestess is in the boss room. At Turn 6, if alive, the sacrifice is made — permanent negative campaign effect.',
+      'The Sorceress has magical wards — the first time each hero enters a new room, roll 1d6. On a 1, they are Stunned (lose 1 action).',
+      'The five Council members are mini-bosses spread through the dungeon. The Council Leader cannot be targeted until at least 2 others are slain.'
+    ],
+    specialRules: [
+      'Swift and Deadly: Dark Elf Warriors may make a free disengage move after attacking, if they wound their target.',
+      'Khaine\'s Blessing: Witch Elves that roll maximum damage immediately make one additional attack against the same target.',
+      'Poison Blades: heroes wounded by Dark Elf Assassins must pass an Endurance test or gain the Poisoned condition.',
+      'Dark Magic: the Sorceress casts one spell per round free: 1-2 Blinding Light; 3-4 Soul Drain; 5-6 Dark Bolt (2d6 wounds to one hero).'
+    ],
+    questEnds: [
+      'Victory: 3+ captives rescued and heroes escape. Defeat: fewer than 3 rescued — those remaining are enslaved.',
+      'Victory: Priestess slain before Turn 6. Defeat: sacrifice made — all future Dark Player draws gain +1 card.',
+      'Victory: mirror destroyed. Defeat: the Dark Elves know everywhere the heroes plan to go.',
+      'Victory: Council Leader slain. Defeat: council escapes, better prepared for the next encounter.'
+    ],
+    rewards: [
+      '50 gold per hero, +15 gold per captive rescued.',
+      '75 gold per hero. Ritual blade recovered — Magic Weapon (Relic quality).',
+      '90 gold per hero. The Sorceress\'s grimoire yields 1 free Spell card per hero who can use magic.',
+      '140 gold + 3 XP per hero. The Dark Council is broken. Draw from the Relic deck.'
+    ]
+  },
+  vampire: {
+    factions: ['Vampire Thralls','Blood Knights','Necromantic Servants','Ghoul Court','The Ancient Bloodline'],
+    titles: ['Blood Debts','The Eternal Night','A Curse of Generations','Red Thirst','The Last of the Bloodline'],
+    missionNames: [
+      ['Strange Disappearances','Night Visitor','Pale Travellers','The Coffin Road'],
+      ['Thrall Hunt','Blood Knight\'s Challenge','Ghoul Warren','The Feeding Ground'],
+      ['Castle Approach','The Count\'s Invitation','Within the Walls','Crypt Below'],
+      ['The Ancient\'s Chamber','Blood and Dust','End of the Line','Eternal Sleep']
+    ],
+    icons: ['\u{1F987}','\u{1FA78}','\u{1F56F}','\u26B0','\u{1F319}'],
+    tiles: ['crypt','dungeon','civilised'],
+    settings: [['outdoor','civilised'],['dungeon'],['civilised'],['crypt','dungeon']],
+    furniture: [['Coffin x2','Candelabra x2'],['Blood font x1','Tapestry x2'],['Vampire throne x1','Portrait x2'],['Ancient sarcophagus x1','Altar x1']],
+    specialElements: [['Stake x2 (items)','Holy water x1'],['Blood Knight standard x1'],['Vampire seal x1','Ancient tome x1'],['Heart vessel x1 (phylactery)']],
+    narratives: [
+      'Three travellers have gone missing on the road. The innkeeper\'s daughter swears she saw a pale figure watching from the treeline at dusk. There is an old castle on the hill that no one talks about any more.',
+      'The blood knights ride without sound, their armour black as the moonless sky. They have been sent to find the heroes. They do not fail to find things.',
+      'The castle doors stand open. Inside, the Count awaits — he has been expecting them. He is very old, very powerful, and he finds this entire situation genuinely amusing.',
+      'Below the castle, older than the castle itself, the ancient one rests in her sealed chamber. The Count kept her sleeping. The heroes have just broken the seal.'
+    ],
+    goals: [
+      'Find evidence of the Vampire\'s existence and stake his resting place before dawn.',
+      'Defeat the Blood Knight champion and recover the stolen holy relic.',
+      'Confront the Vampire Count in his throne room and destroy him.',
+      'Destroy the ancient one\'s phylactery and end the bloodline forever.'
+    ],
+    setups: [
+      'Thralls patrol the village outskirts. The Vampire\'s coffin (Token 1) is in the boss room. Heroes must find a stake (Token 2) in room 2 first.',
+      'The Blood Knight Champion is in the boss room holding the relic (Token 1). Holy water (Token 2) in room 3 gives +2 damage against undead.',
+      'The Count begins in human guise — revealed as a Vampire only when a hero reaches the boss room or attacks him (then doubles wounds).',
+      'The phylactery (Token 1) is in the innermost crypt. The ancient one activates when that room is entered. She regenerates 2 wounds per turn.'
+    ],
+    specialRules: [
+      'Thrall Bond: when the Vampire is within 6 squares of Thralls, they gain +1 combat. Killing the Vampire causes all Thralls to immediately flee.',
+      'Blood Drain: if the Vampire wounds a hero, roll 1d6. On a 4+, the Vampire regains 1 wound.',
+      'The Count\'s Charm: once per game, the Count may charm one hero (Willpower test). On failure, that hero cannot attack the Count for 1 round.',
+      'Ancient Power: the ancient one is immune to fear, cannot be Stunned, and her attacks ignore armour on a to-wound roll of 6.'
+    ],
+    questEnds: [
+      'Victory: Vampire staked. Defeat: dawn arrives and he flees — the curse continues into the next mission.',
+      'Victory: Blood Knight Champion defeated, relic recovered. Defeat: Champion escapes with +2 wounds for next encounter.',
+      'Victory: Count destroyed. Defeat: Count escapes and locks the castle — double guards on exit.',
+      'Victory: phylactery destroyed, ancient one slain. Defeat: all heroes eliminated. The bloodline is eternal.'
+    ],
+    rewards: [
+      '55 gold per hero. One hero gains a unique vampire-hunting tool.',
+      '70 gold per hero. The holy relic grants the Blessed condition to all heroes for the next mission.',
+      '95 gold per hero. The Count\'s treasury yields 1 Magic Object card per hero.',
+      '150 gold + 4 XP per hero. The bloodline ends. Draw from the Relic deck. Campaign won.'
+    ]
+  },
+  dwarf: {
+    factions: ['Goblin Squatters','Skaven Infestation','Chaos Dwarfs','Rogue Mercenaries','The Grudge-Keeper'],
+    titles: ['Oathstone','The Long Grudge','Blood of Ancestors','Deep Hold','Axes of the Ancestors'],
+    missionNames: [
+      ['The Desecrated Hold','First Descent','Ancestral Tombs','The Grudge Begins'],
+      ['Goblin Warrens','Skaven Tunnels','Fallen Gate','Ancestral Armoury'],
+      ['Heart of the Hold','The Forge Eternal','Chamber of Grudges','Iron Throne Room'],
+      ['Reckoning Day','The Grudge Settled','Honour Restored','Rest of the Ancestors']
+    ],
+    icons: ['\u2692','\u{1FAA8}','\u{1F6E1}','\u2694','\u{1F525}'],
+    tiles: ['dungeon','cave','crypt'],
+    settings: [['dungeon'],['dungeon','cave'],['dungeon'],['dungeon']],
+    furniture: [['Forge x1','Anvil x1'],['Great door x1','Trophy wall x2'],['Ancestor statue x2','Rune stone x1'],['High throne x1','Grudge book x1']],
+    specialElements: [['Grudge token x1','Ancestor rune x2'],['Ancient weapon x1 (Token 1)'],['Clan banner x1','Runic key x1'],['Grudge stone x1 (must be recovered)']],
+    narratives: [
+      'The hold was abandoned three generations ago when the lower deeps were overrun. It has been in the Grudge Book ever since. Now the heirs have come to settle the score.',
+      'The lower levels swarm with the enemy — goblins nesting in the forges, rats gnawing the ancestor stones. Each insult to the hold will be repaid in full.',
+      'The great forge at the heart of the hold has been cold for a hundred years. Relight it and the hold can be reclaimed. But something large has made the forge chamber its lair.',
+      'The grudge stone rests on the high throne. To restore it to its rightful place is to end the grudge. Every ancestor is watching.'
+    ],
+    goals: [
+      'Clear the first three levels and recover the ancestral banner.',
+      'Drive out the infestation from the lower deeps and destroy their nesting grounds.',
+      'Relight the great forge and slay whatever guards it.',
+      'Recover the grudge stone and place it on the high throne, ending the grudge.'
+    ],
+    setups: [
+      'The hold\'s corridors are trapped (Perception tests to spot). The banner (Token 1) is in room 4. Dark Player draws 1 fewer card per turn.',
+      'The nesting grounds (Token 1) are in the boss room. Destroying them reduces Dark Player reserve by 2 permanently.',
+      'The forge (Token 1) requires 3 consecutive activations to relight (1 hero must stay adjacent). The guardian activates when the forge first flames.',
+      'The grudge stone (Token 1) is in the boss room, guarded by the Grudge-Keeper who knows every passage in the hold.'
+    ],
+    specialRules: [
+      'Ancestral Ground: dwarf heroes gain +1 to all combat rolls while inside the hold.',
+      'Grudge Rage: when a hero is Knocked Out, all remaining heroes gain +1 Attack until end of the next round.',
+      'Ancient Traps: before entering unexplored rooms, one hero must pass a Perception test or trigger a trap (1d6 wounds).',
+      'The Grudge-Keeper: on first wound, he enters a frenzy — double movement and attacks. He also knows the location of all heroes.'
+    ],
+    questEnds: [
+      'Victory: banner recovered and heroes escape. Defeat: banner destroyed — the grudge worsens.',
+      'Victory: nesting grounds destroyed, enemies driven out. Defeat: infestation holds and breaches further into the hold.',
+      'Victory: forge relit, guardian slain. Defeat: forge cannot be relit — heroes must return next mission.',
+      'Victory: grudge stone placed on high throne. GRUDGE SETTLED. Defeat: all heroes eliminated. The grudge is never settled.'
+    ],
+    rewards: [
+      '60 gold per hero. One hero may upgrade their armour by 1 tier for free.',
+      '80 gold per hero. Ancestral coin hoards yield +40 gold each.',
+      '100 gold per hero. The forge produces 1 Master-crafted weapon (Relic quality) for the hero who relit it.',
+      '160 gold + 4 XP per hero. The hold is reclaimed. Every hero gains the Honoured by the Ancestors trait.'
+    ]
+  }
+};
+
+var ARASCA_CITIES = [
+  {name:'Urakul',x:0.08,y:0.45},{name:'Breten',x:0.10,y:0.52},{name:'Kamhul',x:0.11,y:0.38},
+  {name:'Toulounne',x:0.13,y:0.55},{name:'Raazkund',x:0.16,y:0.44},{name:'Aurion',x:0.16,y:0.52},
+  {name:'Varinn',x:0.22,y:0.42},{name:'Canmor',x:0.21,y:0.53},{name:'Ridley',x:0.26,y:0.50},
+  {name:'Shanain',x:0.32,y:0.53},{name:'Bercy',x:0.36,y:0.55},{name:'Conor',x:0.42,y:0.58},
+  {name:'Larkfall',x:0.52,y:0.38},{name:'Doren',x:0.54,y:0.42},{name:'Thorzul',x:0.57,y:0.46},
+  {name:'Barrock',x:0.60,y:0.47},{name:'Verneck',x:0.62,y:0.45},{name:'Carrick',x:0.63,y:0.46},
+  {name:'Menon',x:0.65,y:0.52},{name:'Drunn',x:0.70,y:0.52},{name:'Krazmor',x:0.72,y:0.55},
+  {name:'Adramor',x:0.75,y:0.50},{name:'Maramor',x:0.76,y:0.52},{name:'Kirfall',x:0.78,y:0.54}
+];
+
+function _pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function _pickN(arr, n) {
+  var copy = arr.slice(), out = [];
+  for (var i = 0; i < n && copy.length; i++) {
+    var idx = Math.floor(Math.random() * copy.length);
+    out.push(copy.splice(idx, 1)[0]);
+  }
+  return out;
+}
+
+function _buildMission(id, themeData, index, total, city) {
+  var namePool = themeData.missionNames[Math.min(index, themeData.missionNames.length - 1)];
+  return {
+    id: id,
+    name: _pick(namePool),
+    icon: _pick(themeData.icons),
+    narrative: themeData.narratives[Math.min(index, themeData.narratives.length - 1)],
+    goal: themeData.goals[Math.min(index, themeData.goals.length - 1)],
+    faction: _pick(themeData.factions),
+    setup: themeData.setups[Math.min(index, themeData.setups.length - 1)],
+    specialRules: themeData.specialRules[Math.min(index, themeData.specialRules.length - 1)],
+    specialElements: themeData.specialElements[Math.min(index, themeData.specialElements.length - 1)].slice(),
+    furniture: themeData.furniture[Math.min(index, themeData.furniture.length - 1)].slice(),
+    otherElements: [],
+    questEnd: themeData.questEnds[Math.min(index, themeData.questEnds.length - 1)],
+    rewards: themeData.rewards[Math.min(index, themeData.rewards.length - 1)],
+    tiles: _pick(themeData.tiles),
+    settings: _pick(themeData.settings),
+    turnLimit: (index === total - 1) ? (10 + Math.floor(Math.random() * 5)) : (index > 0 && Math.random() < 0.4 ? (8 + Math.floor(Math.random() * 5)) : null),
+    region: city ? city.name : '',
+    mapPin: city ? { x: city.x, y: city.y } : null
+  };
+}
+
+function _buildConnections(missions, count) {
+  var connections = [];
+  for (var i = 0; i < missions.length - 1; i++) {
+    connections.push({ from: missions[i].id, to: missions[i + 1].id, outcome: 'victory', label: '' });
+  }
+  if (count >= 3) {
+    connections.push({ from: missions[0].id, to: missions[1].id, outcome: 'defeat', label: 'Barely escaped' });
+  }
+  if (count >= 4) {
+    var defeatTarget = missions[Math.min(3, missions.length - 1)];
+    connections.push({ from: missions[1].id, to: defeatTarget.id, outcome: 'defeat', label: 'Forced retreat' });
+  }
+  if (count >= 5) {
+    connections.push({ from: missions[2].id, to: missions[1].id, outcome: 'defeat', label: 'Return for aid' });
+  }
+  return connections;
+}
+
+function runAIGenerate() {
   if (!aiState.theme) { alert('Please select a theme first.'); return; }
 
   var theme = AI_THEMES.find(function(t){ return t.id === aiState.theme; });
   var btn = document.getElementById('ai-gen-btn');
   btn.disabled = true;
-  btn.textContent = '⟳ Generating…';
+  btn.textContent = '\u27F3 Generating\u2026';
 
-  var notes = document.getElementById('ai-notes').value.trim();
-  var levelLabel = {1:'1-2', 3:'3-4', 5:'5-6'}[aiState.level] || '1-2';
+  setAIStatus('Consulting the tomes\u2026', true);
 
-  var systemPrompt = `You are a dungeon campaign designer for the board game Dungeon Universalis (DUN), inspired by Advanced HeroQuest and Warhammer Fantasy Roleplay. You create dramatic, atmospheric campaigns with branching outcomes.
+  setTimeout(function() {
+    try {
+      var themeData = GEN_DATA[aiState.theme];
+      if (!themeData) throw new Error('Unknown theme: ' + aiState.theme);
 
-DUN RULES YOU MUST FOLLOW:
-- Each mission has: name, icon (emoji), narrative (flavour text), goal, faction, setup, specialRules, specialElements (array of strings), furniture (array), otherElements (array), questEnd, rewards, tiles, settings (array: dungeon/civilised/outdoor), turnLimit (number or null)
-- Missions link via connections: each connection has from/to (mission id) and outcome (victory/defeat/custom) and optional label
-- Every campaign must have exactly one starting mission (first in the array, no incoming connections)
-- Victory and defeat paths should lead to meaningfully different missions — not just repeat
-- The final mission should have no outgoing connections or only a victory end
+      var count = aiState.missions || 3;
+      var cities = _pickN(ARASCA_CITIES, count);
+      var missions = [];
+      for (var i = 0; i < count; i++) {
+        missions.push(_buildMission('m' + (i + 1), themeData, i, count, cities[i] || null));
+      }
 
-WORLD OF ARASCA REGIONS (use these for map pin locations, give normalised x/y 0-1 across the map image):
-West map cities and approximate positions:
-Urakul(0.08,0.45), Breten(0.10,0.52), Kamhul(0.11,0.38), Toulounne(0.13,0.55), Casa del oso(0.12,0.48), Raazkund(0.16,0.44), Aurion(0.16,0.52), Nigazul(0.17,0.47), Varinn(0.22,0.42), Canmor(0.21,0.53), Besalar(0.21,0.58), Ridley(0.26,0.50), Lamparshion(0.28,0.55), Alcoy(0.29,0.60), Larche(0.30,0.58), Lausan(0.31,0.57), Shanain(0.32,0.53), Salzor(0.34,0.57), Tesara(0.34,0.62), Caboalto(0.36,0.60), Monteazul(0.38,0.65), Bercy(0.36,0.55), Conor(0.42,0.58), Castro(0.42,0.62)
-East map cities and approximate positions:
-Larkfall(0.52,0.38), Doren(0.54,0.42), Asthal(0.55,0.40), Orkhuz(0.57,0.42), Thorzul(0.57,0.46), Varzul(0.57,0.50), Rizul(0.58,0.48), Bibal(0.59,0.52), Vallacl(0.60,0.51), Barrock(0.60,0.47), Aitania(0.61,0.46), Verneck(0.62,0.45), Sudfall(0.62,0.52), Carrick(0.63,0.46), Norkfall(0.64,0.50), Menon(0.65,0.52), Issi-thai(0.66,0.55), Aris-Thai(0.66,0.48), Thamor(0.68,0.58), Thamey(0.68,0.60), Shion-Thai(0.69,0.56), Drunn(0.70,0.52), Krazmor(0.72,0.55), Bandmor(0.73,0.53), Thoronbur(0.74,0.57), Adramor(0.75,0.50), Maramor(0.76,0.52), Vulgrabur(0.77,0.58), Kirfall(0.78,0.54)
+      var generated = {
+        title: _pick(themeData.titles),
+        description: theme.label + ': ' + theme.desc,
+        missions: missions,
+        connections: _buildConnections(missions, count)
+      };
 
-DUNGEON THEMES for tiles field: dungeon, sewer, crypt, cave, civilised, outdoor, forest
+      applyGeneratedCampaign(generated);
 
-OUTPUT: Respond with ONLY a valid JSON object, no markdown, no explanation:
-{
-  "title": "Campaign Title",
-  "description": "One sentence campaign hook",
-  "missions": [
-    {
-      "id": "m1",
-      "name": "Mission Name",
-      "icon": "⚔",
-      "narrative": "Atmospheric flavour paragraph (2-3 sentences)",
-      "goal": "One sentence win condition",
-      "faction": "Enemy faction name",
-      "setup": "Setup instructions",
-      "specialRules": "Any special rules",
-      "specialElements": ["Element x1", "Token x2"],
-      "furniture": ["Throne x1"],
-      "otherElements": [],
-      "questEnd": "Win/lose conditions",
-      "rewards": "What heroes gain",
-      "tiles": "dungeon",
-      "settings": ["dungeon"],
-      "turnLimit": null,
-      "region": "City name",
-      "mapPin": {"x": 0.55, "y": 0.45}
+    } catch(err) {
+      setAIStatus('\u2717 Generation failed: ' + err.message, false);
+      btn.disabled = false;
+      btn.textContent = '\u2746 Generate Campaign';
     }
-  ],
-  "connections": [
-    {"from": "m1", "to": "m2", "outcome": "victory", "label": ""},
-    {"from": "m1", "to": "m3", "outcome": "defeat", "label": "Barely escaped"}
-  ]
-}`;
-
-  var userPrompt = 'Generate a ' + aiState.missions + '-mission campaign for hero level ' + levelLabel + '.\n' +
-    'Theme: ' + theme.label + ' — ' + theme.desc + '\n' +
-    (notes ? 'Additional notes: ' + notes + '\n' : '') +
-    'Make it dramatic with branching outcomes. Ensure victory and defeat paths feel meaningfully different. Use AHQ/WHFB tone — grim, dangerous, rewarding.';
-
-  try {
-    setAIStatus('Contacting the Oracle…', true);
-
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }]
-      })
-    });
-
-    var data = await response.json();
-    var text = data.content && data.content[0] && data.content[0].text;
-    if (!text) throw new Error('No response from API');
-
-    setAIStatus('Parsing campaign…', true);
-
-    // Strip any markdown fences
-    text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/,'').trim();
-    var generated = JSON.parse(text);
-
-    setAIStatus('Building campaign…', true);
-    applyGeneratedCampaign(generated);
-
-  } catch(err) {
-    setAIStatus('✗ Generation failed: ' + err.message, false);
-    btn.disabled = false;
-    btn.textContent = '✦ Generate Campaign';
-  }
+  }, 50);
 }
+
 
 function applyGeneratedCampaign(gen) {
   // Build custom mission objects from generated data
