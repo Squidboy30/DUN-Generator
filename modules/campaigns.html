@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dungeon Universalis — Campaign Designer</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap');
 
@@ -1102,6 +1103,39 @@ body {
 .outcome-btn.selected-victory { border-color: #a07820; color: #e0b840; background: rgba(160,120,32,0.15); }
 .outcome-btn.selected-defeat  { border-color: #8b1a1a; color: #e06060; background: rgba(139,26,26,0.15); }
 .outcome-btn.selected-custom  { border-color: #4a5a6e; color: #8aaabe; background: rgba(74,90,110,0.15); }
+
+/* ─── AUTH UI ─────────────────────────────────────────────── */
+.auth-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+.auth-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
+.auth-btn.signed-in { border-color: #3a7a3a; color: #7aaa7a; }
+.auth-status {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-email {
+  color: var(--gold-light);
+  font-size: 9px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -1115,6 +1149,10 @@ body {
       <button class="tab-btn active" onclick="switchTab('designer')">Campaign Designer</button>
       <button class="tab-btn" onclick="switchTab('campaigns')">My Campaigns</button>
       <button class="tab-btn" id="tab-btn-map" onclick="switchTab('map')">🗺 World Map</button>
+    </div>
+    <div class="auth-status" id="auth-header">
+      <span class="auth-email" id="auth-user-email" style="display:none"></span>
+      <button class="auth-btn" id="auth-header-btn" onclick="handleAuthBtn()">Sign In</button>
     </div>
     <div style="display:flex;gap:6px">
       <button class="tool-btn" style="border-color:var(--border-gold);color:var(--gold-light);" onclick="openAIGenerate()">✦ AI Campaign</button>
@@ -1401,6 +1439,156 @@ var connectingFrom = null;
 var nodeDrag = null;
 var tempLine = null;
 
+
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE — AUTH & PERSISTENCE
+// ═══════════════════════════════════════════════════════════════
+// Replace these two values with your Supabase project credentials:
+// Project Settings → API → Project URL and anon/public key
+
+var SUPABASE_URL = 'YOUR_SUPABASE_URL';
+var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+var _sb = null;
+var _sbUser = null;
+
+function sbClient() {
+  if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return _sb;
+}
+
+async function sbInit() {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') return; // not configured yet
+  try {
+    var sb = sbClient();
+    // Handle magic link redirect
+    var { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      _sbUser = session.user;
+      updateAuthUI(session.user);
+      await loadFromSupabase();
+    }
+    // Listen for auth state changes (magic link callback)
+    sb.auth.onAuthStateChange(async function(event, session) {
+      if (event === 'SIGNED_IN' && session) {
+        _sbUser = session.user;
+        updateAuthUI(session.user);
+        await loadFromSupabase();
+        closeModal('modal-auth');
+      } else if (event === 'SIGNED_OUT') {
+        _sbUser = null;
+        updateAuthUI(null);
+      }
+    });
+  } catch(e) {
+    console.warn('Supabase init error:', e);
+  }
+}
+
+function updateAuthUI(user) {
+  var emailEl = document.getElementById('auth-user-email');
+  var btnEl = document.getElementById('auth-header-btn');
+  if (user) {
+    emailEl.textContent = user.email;
+    emailEl.style.display = 'block';
+    btnEl.textContent = 'Sign Out';
+    btnEl.classList.add('signed-in');
+  } else {
+    emailEl.style.display = 'none';
+    btnEl.textContent = 'Sign In';
+    btnEl.classList.remove('signed-in');
+  }
+}
+
+function handleAuthBtn() {
+  if (_sbUser) {
+    sbClient().auth.signOut();
+  } else {
+    openAuthModal();
+  }
+}
+
+function openAuthModal() {
+  document.getElementById('auth-form').style.display = 'block';
+  document.getElementById('auth-sent').style.display = 'none';
+  document.getElementById('auth-status-msg').style.display = 'none';
+  document.getElementById('auth-email-input').value = '';
+  document.getElementById('modal-auth').classList.add('open');
+  setTimeout(function(){ document.getElementById('auth-email-input').focus(); }, 100);
+}
+
+function closeAuthOnBackdrop(e) {
+  if (e.target === document.getElementById('modal-auth')) closeModal('modal-auth');
+}
+
+async function sendMagicLink() {
+  var email = document.getElementById('auth-email-input').value.trim();
+  if (!email) return;
+  var statusEl = document.getElementById('auth-status-msg');
+  statusEl.style.display = 'none';
+  try {
+    var { error } = await sbClient().auth.signInWithOtp({
+      email: email,
+      options: { emailRedirectTo: window.location.href }
+    });
+    if (error) throw error;
+    document.getElementById('auth-form').style.display = 'none';
+    document.getElementById('auth-sent').style.display = 'block';
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#e06060';
+  }
+}
+
+// ─── SUPABASE DATA ────────────────────────────────────────────
+
+async function saveToSupabase() {
+  if (!_sbUser) return false;
+  try {
+    var sb = sbClient();
+    var payload = {
+      user_id: _sbUser.id,
+      custom_missions: JSON.stringify(customMissions),
+      campaigns: JSON.stringify(campaigns),
+      active_campaign: JSON.stringify(activeCampaign),
+      updated_at: new Date().toISOString()
+    };
+    var { error } = await sb.from('dun_saves').upsert(payload, { onConflict: 'user_id' });
+    if (error) throw error;
+    return true;
+  } catch(e) {
+    console.warn('Supabase save error:', e);
+    return false;
+  }
+}
+
+async function loadFromSupabase() {
+  if (!_sbUser) return false;
+  try {
+    var sb = sbClient();
+    var { data, error } = await sb.from('dun_saves')
+      .select('*')
+      .eq('user_id', _sbUser.id)
+      .single();
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    if (!data) return false;
+    if (data.custom_missions) customMissions = JSON.parse(data.custom_missions);
+    if (data.campaigns) campaigns = JSON.parse(data.campaigns);
+    if (data.active_campaign) {
+      activeCampaign = JSON.parse(data.active_campaign);
+      document.getElementById('campaign-name').value = activeCampaign.name || '';
+    }
+    renderSidebar();
+    renderCampaigns();
+    renderNodes();
+    return true;
+  } catch(e) {
+    console.warn('Supabase load error:', e);
+    return false;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
@@ -1409,6 +1597,7 @@ function init() {
   loadLocal();
   renderSidebar();
   renderCampaigns();
+  sbInit();
 }
 
 function loadLocal() {
@@ -1430,6 +1619,7 @@ function saveLocal() {
   localStorage.setItem('dun_campaigns', JSON.stringify(campaigns));
   activeCampaign.name = document.getElementById('campaign-name').value;
   localStorage.setItem('dun_active_campaign', JSON.stringify(activeCampaign));
+  saveToSupabase(); // sync to cloud if signed in
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3173,5 +3363,29 @@ if (_mapImg) {
   if (_mapImg.complete) { initMapInteraction(); renderMapPins(); }
 }
 </script>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="modal-auth" onclick="closeAuthOnBackdrop(event)">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-title" id="auth-modal-title">Sign In</div>
+    <div style="font-family:'IM Fell English',serif;font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;" id="auth-modal-desc">
+      Enter your email and we'll send you a magic link — no password needed.
+    </div>
+    <div id="auth-form">
+      <input type="email" id="auth-email-input" placeholder="your@email.com"
+        style="width:100%;padding:10px 12px;background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;margin-bottom:12px;"
+        onkeydown="if(event.key==='Enter')sendMagicLink()">
+      <button class="tool-btn primary" style="width:100%;padding:10px;" onclick="sendMagicLink()">Send Magic Link</button>
+    </div>
+    <div id="auth-sent" style="display:none;text-align:center;">
+      <div style="font-size:32px;margin-bottom:12px;">✉</div>
+      <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-light);letter-spacing:1px;">Magic link sent!</div>
+      <div style="font-family:'IM Fell English',serif;font-size:12px;color:var(--text-muted);margin-top:8px;">Check your email and click the link to sign in.</div>
+    </div>
+    <div id="auth-status-msg" style="display:none;font-family:'Cinzel',serif;font-size:10px;margin-top:12px;text-align:center;"></div>
+    <button class="tool-btn" style="margin-top:16px;width:100%;" onclick="closeModal('modal-auth')">Cancel</button>
+  </div>
+</div>
+
 </body>
 </html>
