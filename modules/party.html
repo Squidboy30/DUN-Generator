@@ -973,7 +973,7 @@ let creatorState = null;
 let creatorStep = 0;
 let editingHeroId = null;
 
-const CREATOR_STEPS = ["Name", "Race", "Class", "Attributes", "Review"];
+const CREATOR_STEPS = ["Name", "Race", "Class", "Attributes", "Skills", "Review"];
 
 // ═══════════════════════════════════════════════════════════════
 // PERSISTENCE
@@ -1113,7 +1113,8 @@ function renderCreatorStep() {
     case 1: body.innerHTML = renderStepRace(); attachRaceEvents(); break;
     case 2: body.innerHTML = renderStepClass(); attachClassEvents(); break;
     case 3: body.innerHTML = renderStepAttrs(); attachAttrEvents(); break;
-    case 4: body.innerHTML = renderStepReview(); break;
+    case 4: body.innerHTML = renderStepSkills(); break;
+    case 5: body.innerHTML = renderStepReview(); break;
   }
 }
 
@@ -1323,7 +1324,179 @@ function changeAttr(key, delta) {
 
 function attachAttrEvents() {}
 
-// ─── Step 4: Review ────────────────────────────────────────────
+// ─── Step 4: Skills ────────────────────────────────────────────
+const SKILL_DB = [
+  // COMBAT
+  {id:17,name:"Accurate shooting",type:"combat"},{id:11,name:"Aiming",type:"combat"},
+  {id:154,name:"Axe Skills",type:"combat"},{id:6,name:"Berserker",type:"combat"},
+  {id:7,name:"Blocking",type:"combat"},{id:152,name:"Blocking with two Axes",type:"combat"},
+  {id:21,name:"Bodyguard",type:"combat"},{id:23,name:"Brutal blow",type:"combat"},
+  {id:29,name:"Combat master",type:"combat"},{id:12,name:"Cruel",type:"combat"},
+  {id:14,name:"Dance battler",type:"combat"},{id:37,name:"Defeating roar",type:"combat"},
+  {id:34,name:"Dirty fighter",type:"combat"},{id:159,name:"Door Breaking",type:"combat"},
+  {id:155,name:"Duelist",type:"combat"},{id:19,name:"Elite",type:"combat"},
+  {id:3,name:"Expert archer",type:"combat"},{id:39,name:"Expert shooter",type:"combat"},
+  {id:28,name:"Expert thrower",type:"combat"},{id:5,name:"Fast attacks",type:"combat"},
+  {id:40,name:"Fast shooting",type:"combat"},{id:2,name:"Foresight",type:"combat"},
+  {id:156,name:"Furious",type:"combat"},{id:31,name:"Giant killer",type:"combat"},
+  {id:1,name:"Hardy",type:"combat"},{id:13,name:"Hardened",type:"combat"},
+  {id:32,name:"Hatred towards",type:"combat"},{id:33,name:"Hatred towards the underworld",type:"combat"},
+  {id:153,name:"Headbutt",type:"combat"},{id:16,name:"Heart seeker",type:"combat"},
+  {id:18,name:"Lethal shot",type:"combat"},{id:24,name:"Lethal blow",type:"combat"},
+  {id:157,name:"Mace Skills",type:"combat"},{id:4,name:"Martial arts",type:"combat"},
+  {id:25,name:"Mighty blow",type:"combat"},{id:150,name:"Opportunity Action",type:"combat"},
+  {id:26,name:"Powerful blow",type:"combat"},{id:35,name:"Quick reloading",type:"combat"},
+  {id:158,name:"Repositioning",type:"combat"},{id:151,name:"Seize",type:"combat"},
+  {id:20,name:"Shield onslaught",type:"combat"},{id:27,name:"Spinning blow",type:"combat"},
+  {id:22,name:"Strong",type:"combat"},{id:147,name:"Swift brawling",type:"combat"},
+  {id:30,name:"Sword master",type:"combat"},{id:36,name:"Tough",type:"combat"},
+  {id:9,name:"Trick fighter",type:"combat"},{id:10,name:"Two-weapon fighting",type:"combat"},
+  {id:146,name:"Unstoppable charge",type:"combat"},{id:38,name:"Used to armors",type:"combat"},
+  // EXPLORATION
+  {id:66,name:"Acrobat",type:"exploration"},{id:71,name:"Ambush",type:"exploration"},
+  {id:76,name:"Cat reflexes",type:"exploration"},{id:67,name:"Cautious trapper",type:"exploration"},
+  {id:73,name:"Climber",type:"exploration"},{id:90,name:"Eagle eye",type:"exploration"},
+  {id:176,name:"Escapist",type:"exploration"},{id:78,name:"Expert rider",type:"exploration"},
+  {id:79,name:"Expert trapper",type:"exploration"},{id:178,name:"Explore terrain",type:"exploration"},
+  {id:89,name:"Fast",type:"exploration"},{id:65,name:"Fleet footed",type:"exploration"},
+  {id:69,name:"Hide",type:"exploration"},{id:177,name:"Infiltrator",type:"exploration"},
+  {id:83,name:"Initiative",type:"exploration"},{id:88,name:"Jumping",type:"exploration"},
+  {id:174,name:"Light footed",type:"exploration"},{id:85,name:"Lock picking",type:"exploration"},
+  {id:84,name:"Lost in the Dark",type:"exploration"},{id:175,name:"Lycanthropy",type:"exploration"},
+  {id:70,name:"Pathfinder",type:"exploration"},{id:87,name:"Pickpocket",type:"exploration"},
+  {id:68,name:"Poisoner",type:"exploration"},{id:81,name:"Precise shot",type:"exploration"},
+  {id:77,name:"Rider",type:"exploration"},{id:72,name:"Rope mastery",type:"exploration"},
+  {id:86,name:"Sailor",type:"exploration"},{id:64,name:"Sharp Senses",type:"exploration"},
+  {id:74,name:"Slippery",type:"exploration"},{id:80,name:"Stealthy shot",type:"exploration"},
+  {id:63,name:"Stealth",type:"exploration"},{id:75,name:"Swimmer",type:"exploration"},
+  {id:82,name:"Tracker",type:"exploration"},{id:91,name:"Trap mastery",type:"exploration"},
+  {id:173,name:"Underworld",type:"exploration"},
+  // SCHOLARLY
+  {id:107,name:"Alchemist",type:"scholarly"},{id:115,name:"Battle wizard",type:"scholarly"},
+  {id:105,name:"Blacksmithing",type:"scholarly"},{id:128,name:"Blood for the Gods",type:"scholarly"},
+  {id:120,name:"Bounty hunter",type:"scholarly"},{id:93,name:"Charismatic leader",type:"scholarly"},
+  {id:98,name:"Channeling",type:"scholarly"},{id:131,name:"Curse",type:"scholarly"},
+  {id:127,name:"Detect evil",type:"scholarly"},{id:119,name:"Dispelling",type:"scholarly"},
+  {id:110,name:"Divine protection",type:"scholarly"},{id:126,name:"Dreaded presence",type:"scholarly"},
+  {id:99,name:"Efficient casting",type:"scholarly"},{id:130,name:"Encouraging shout",type:"scholarly"},
+  {id:116,name:"Endurance",type:"scholarly"},{id:111,name:"Expert enchanter",type:"scholarly"},
+  {id:118,name:"Fast casting",type:"scholarly"},{id:109,name:"Healing",type:"scholarly"},
+  {id:95,name:"Herbalism",type:"scholarly"},{id:106,name:"History knowledge",type:"scholarly"},
+  {id:94,name:"Inspiring",type:"scholarly"},{id:125,name:"Interrogator",type:"scholarly"},
+  {id:103,name:"Languages",type:"scholarly"},{id:132,name:"Magic lore",type:"scholarly"},
+  {id:121,name:"Magic resistance",type:"scholarly"},{id:114,name:"Mercenary leader",type:"scholarly"},
+  {id:96,name:"Merchant",type:"scholarly"},{id:97,name:"Nature knowledge",type:"scholarly"},
+  {id:113,name:"Necromancy",type:"scholarly"},{id:112,name:"Object identification",type:"scholarly"},
+  {id:102,name:"Onslaught",type:"scholarly"},{id:117,name:"Potion knowledge",type:"scholarly"},
+  {id:108,name:"Regeneration",type:"scholarly"},{id:104,name:"Rune mastery",type:"scholarly"},
+  {id:92,name:"Skilled hands",type:"scholarly"},{id:129,name:"Sorcerer hunter",type:"scholarly"},
+  {id:100,name:"Spell focus",type:"scholarly"},{id:101,name:"Spell shield",type:"scholarly"},
+  {id:122,name:"Strategy",type:"scholarly"},{id:123,name:"Survival",type:"scholarly"},
+  // NATURE
+  {id:138,name:"Breath",type:"nature"},{id:148,name:"Brutal",type:"nature"},
+  {id:143,name:"Clumsy hands",type:"nature"},{id:140,name:"Corrosive vomit",type:"nature"},
+  {id:133,name:"Fearsome",type:"nature"},{id:135,name:"Flying",type:"nature"},
+  {id:141,name:"Huge",type:"nature"},{id:136,name:"Invulnerable",type:"nature"},
+  {id:134,name:"Large",type:"nature"},{id:163,name:"Sharp Senses",type:"nature"},
+  {id:164,name:"Small",type:"nature"},{id:165,name:"Small Size",type:"nature"},
+  {id:166,name:"Slippery",type:"nature"},{id:167,name:"Stupid",type:"nature"},
+  {id:168,name:"Sweep",type:"nature"},{id:169,name:"Tough",type:"nature"},
+  {id:170,name:"Tracker",type:"nature"},{id:171,name:"Undead",type:"nature"},
+  {id:137,name:"Poisonous",type:"nature"},{id:142,name:"Regeneration",type:"nature"},
+  {id:139,name:"Paralyzing touch",type:"nature"},{id:144,name:"Pathfinder",type:"nature"},
+  {id:145,name:"Monstrous",type:"nature"},{id:149,name:"Lycanthropy",type:"nature"},
+];
+
+// Class → learnable skill types (rulebook p.77-78)
+const CLASS_SKILL_TYPES = {
+  warrior:['combat','exploration'], barbarian:['combat'], knight:['combat','scholarly'],
+  paladin:['combat','scholarly'], gladiator:['combat'], battle_dancer:['combat','exploration'],
+  warrior_monk:['combat','scholarly'], scout:['combat','exploration'], ranger:['exploration','nature'],
+  rogue:['exploration'], assassin:['combat','exploration'], bard:['scholarly','exploration'],
+  forester:['exploration','nature'], sorcerer_hunter:['combat','exploration'],
+  wizard:['scholarly'], sorcerer:['combat','scholarly'], animist:['scholarly','nature'],
+  necromancer:['scholarly'], runic_master:['scholarly','nature'], battle_wizard:['combat','scholarly'],
+};
+
+const TYPE_LABELS = { combat:'Combat', exploration:'Exploration & Subterfuge', scholarly:'Scholarly & Leadership', nature:'Nature' };
+const TYPE_COLORS = { combat:'#c04020', exploration:'#206040', scholarly:'#4020a0', nature:'#406020' };
+
+function renderStepSkills() {
+  if (!creatorState.classId) return '<p style="color:var(--text-muted)">Please select a class first.</p>';
+  const race = RACE_DB.find(r => r.id === creatorState.raceId);
+  const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
+
+  const allowedTypes = CLASS_SKILL_TYPES[creatorState.classId] || ['combat'];
+  // Nature skills available if race card indicates it or class is ranger/animist/forester
+  const hasNature = allowedTypes.includes('nature');
+
+  // Max new professional skills = Intelligence × 2 (but at creation, 1 slot by default for most,
+  // some races/classes grant extras). Simplified: show picker, allow up to INT×2 total across campaign.
+  // At creation: 1 professional skill slot (from class starting skill, if defined, it's pre-filled).
+  const intVal = creatorState.attrs.intelligence || 3;
+  const maxProSkills = intVal * 2; // lifetime max, show as context
+
+  // Pre-selected: racial starting skills already on hero
+  const racialSkills = race ? race.startingSkills : [];
+
+  const selectedProSkills = creatorState.skills || [];
+
+  const sections = allowedTypes.map(type => {
+    const skills = SKILL_DB.filter(s => s.type === type);
+    const color = TYPE_COLORS[type];
+    const chips = skills.map(s => {
+      const isRacial = racialSkills.some(r => r.toLowerCase().includes(s.name.toLowerCase()));
+      const isSel = selectedProSkills.includes(s.name);
+      const style = isSel ? `border-color:${color};background:rgba(${type==='combat'?'192,64,32':'type'==='exploration'?'32,96,64':'64,32,160'},0.15)` : '';
+      const safeName = s.name.replace(/'/g, "\\'");
+      const clickHandler = isRacial ? '' : `onclick="toggleSkill('${safeName}')"`;
+      return `<div class="skill-opt ${isSel?'selected':''} ${isRacial?'disabled':''}"
+        style="${style}" ${clickHandler}
+        title="${isRacial?'Racial skill — already on hero sheet':''}">
+        <div class="skill-name">${s.name}${isRacial?' <em style="font-size:8px;color:var(--text-muted)">(racial)</em>':''}</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="margin-bottom:16px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;color:${color};
+        border-bottom:2px solid ${color};padding-bottom:4px;margin-bottom:8px;">
+        ${TYPE_LABELS[type]} (${skills.length})
+      </div>
+      <div class="skills-grid">${chips}</div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div style="margin-bottom:12px;background:var(--bg-dark);border:1px solid var(--border-gold);
+      padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted);">
+        Professional skills selected: <strong style="color:var(--gold-light)">${selectedProSkills.length}</strong>
+        <span style="font-size:9px;margin-left:8px;">(lifetime max: INT×2 = ${maxProSkills})</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);">Learnable types for ${cls.name}: 
+        ${allowedTypes.map(t => `<span style="color:${TYPE_COLORS[t]}">${TYPE_LABELS[t]}</span>`).join(', ')}
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-bottom:12px;">
+      Select your starting professional skill(s). Racial skills are pre-assigned. 
+      No two heroes may share the same professional skill.
+    </div>
+    ${sections}`;
+}
+
+function toggleSkill(name) {
+  if (!creatorState.skills) creatorState.skills = [];
+  const idx = creatorState.skills.indexOf(name);
+  if (idx >= 0) {
+    creatorState.skills.splice(idx, 1);
+  } else {
+    creatorState.skills.push(name);
+  }
+  // Re-render step
+  document.getElementById('creator-body').innerHTML = renderStepSkills();
+}
+
+// ─── Step 5: Review ────────────────────────────────────────────
 function renderStepReview() {
   const race = RACE_DB.find(r => r.id === creatorState.raceId) || { name:'?', alignment:'neutral', fortune:3, startingSkills:[] };
   const cls  = CLASS_DB.find(c => c.id === creatorState.classId) || { name:'?' };
@@ -1414,7 +1587,7 @@ function finaliseHero() {
     currentMana: cls.isCaster ? (cls.startMana || 6) : 0,
     fortune: race.fortune,
     currentFortune: race.fortune,
-    skills: [...race.startingSkills],
+    skills: [...race.startingSkills, ...(creatorState.skills || [])],
     equipment: { hands: [], body: [], backpack: [] },
     notes: ''
   };
@@ -1517,7 +1690,14 @@ function openDetail(id) {
         </div>
 
         <div class="sheet-section-title">Skills</div>
-        <div>${skillChips || '<em style="font-size:10px;color:var(--text-muted)">No skills</em>'}</div>
+        <div id="hero-skills-${h.id}">
+          ${renderHeroSkillChips(h)}
+        </div>
+        <div style="margin-top:6px;">
+          <button class="btn-secondary" style="font-size:9px;padding:4px 10px;"
+            onclick="toggleSkillPicker('${h.id}')">+ Add Skill</button>
+        </div>
+        <div id="skill-picker-${h.id}" style="display:none;margin-top:8px;"></div>
 
         <div class="sheet-section-title">Notes</div>
         <textarea style="width:100%;background:var(--bg-dark);border:1px solid var(--panel-border);color:var(--text-light);
@@ -1591,6 +1771,79 @@ function deleteHero(id) {
   heroes = heroes.filter(h => h.id !== id);
   save();
   renderRoster();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SKILL MANAGEMENT (hero detail)
+// ═══════════════════════════════════════════════════════════════
+function renderHeroSkillChips(h) {
+  if (!h.skills || !h.skills.length) return '<em style="font-size:10px;color:var(--text-muted)">No skills</em>';
+  return h.skills.map(s =>
+    `<span class="skill-chip" style="cursor:pointer" onclick="removeHeroSkill('${h.id}','${s.replace(/'/g,"\\'")}')">
+      ${s} <span style="color:#8a2020;font-size:9px">✕</span>
+    </span>`
+  ).join('');
+}
+
+function removeHeroSkill(heroId, skillName) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  h.skills = h.skills.filter(s => s !== skillName);
+  save();
+  const el = document.getElementById('hero-skills-' + heroId);
+  if (el) el.innerHTML = renderHeroSkillChips(h);
+}
+
+function toggleSkillPicker(heroId) {
+  const picker = document.getElementById('skill-picker-' + heroId);
+  if (!picker) return;
+  if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+
+  const h = heroes.find(h => h.id === heroId);
+  const cls = CLASS_DB.find(c => c.id === h?.classId);
+  const allowedTypes = CLASS_SKILL_TYPES[h?.classId] || ['combat','exploration','scholarly','nature'];
+
+  const sections = allowedTypes.map(type => {
+    const skills = SKILL_DB.filter(s => s.type === type && !(h.skills||[]).includes(s.name));
+    if (!skills.length) return '';
+    const color = TYPE_COLORS[type];
+    const chips = skills.map(s =>
+      `<span class="skill-chip" style="cursor:pointer;border-color:${color}"
+        onclick="addHeroSkill('${heroId}','${s.name.replace(/'/g,"\\'")}')">+ ${s.name}</span>`
+    ).join('');
+    return `<div style="margin-bottom:8px;">
+      <div style="font-size:8px;color:${color};letter-spacing:1px;font-family:'Cinzel',serif;margin-bottom:4px;">${TYPE_LABELS[type]}</div>
+      ${chips}
+    </div>`;
+  }).join('');
+
+  picker.innerHTML = `<div style="background:var(--bg-dark);border:1px solid var(--panel-border);padding:10px;max-height:200px;overflow-y:auto;">
+    <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;font-style:italic;">
+      Click a skill to add it. Each upgrade = +2 VP.
+    </div>
+    ${sections || '<em style="font-size:10px;color:var(--text-muted)">All available skills already learned.</em>'}
+  </div>`;
+  picker.style.display = 'block';
+}
+
+function addHeroSkill(heroId, skillName) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  if (!h.skills) h.skills = [];
+  if (!h.skills.includes(skillName)) {
+    h.skills.push(skillName);
+    h.vp += 2; // each skill learned = +2 VP
+  }
+  save();
+  const el = document.getElementById('hero-skills-' + heroId);
+  if (el) el.innerHTML = renderHeroSkillChips(h);
+  // Refresh vp display
+  document.querySelectorAll('.hero-vp-badge').forEach(b => {
+    // Re-render roster in background
+  });
+  // Close picker and refresh
+  toggleSkillPicker(heroId);
+  toggleSkillPicker(heroId);
 }
 
 // ═══════════════════════════════════════════════════════════════
