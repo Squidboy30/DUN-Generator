@@ -975,7 +975,7 @@ let creatorState = null;
 let creatorStep = 0;
 let editingHeroId = null;
 
-const CREATOR_STEPS = ["Name", "Race", "Class", "Attributes", "Skills", "Review"];
+const CREATOR_STEPS = ["Name", "Race", "Class", "Attributes", "Skills", "Spells", "Review"];
 
 // ═══════════════════════════════════════════════════════════════
 // PERSISTENCE
@@ -1116,7 +1116,8 @@ function renderCreatorStep() {
     case 2: body.innerHTML = renderStepClass(); attachClassEvents(); break;
     case 3: body.innerHTML = renderStepAttrs(); attachAttrEvents(); break;
     case 4: body.innerHTML = renderStepSkills(); break;
-    case 5: body.innerHTML = renderStepReview(); break;
+    case 5: body.innerHTML = renderStepSpells(); break;
+    case 6: body.innerHTML = renderStepReview(); break;
   }
 }
 
@@ -1702,6 +1703,264 @@ function toggleSkill(name) {
 }
 
 // ─── Step 5: Review ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// SPELL DATA (p.38-40)
+// ═══════════════════════════════════════════════════════════════
+const SPELL_DB = [
+  // WATER
+  {id:197,name:"Crushing Wave",lore:"Water",manaCost:1,cost:10},
+  {id:198,name:"Ice Arrows",lore:"Water",manaCost:1,cost:10},
+  {id:298,name:"Ice Bridge",lore:"Water",manaCost:1,cost:15},
+  {id:196,name:"Ice Wall",lore:"Water",manaCost:1,cost:15},
+  {id:194,name:"Treacherous Waters",lore:"Water",manaCost:2,cost:20},
+  {id:195,name:"Walking on Water",lore:"Water",manaCost:1,cost:10},
+  {id:199,name:"Water Elemental",lore:"Water",manaCost:2,cost:25},
+  {id:200,name:"Water of Life",lore:"Water",manaCost:1,cost:15},
+  {id:201,name:"Water Shield",lore:"Water",manaCost:1,cost:10},
+  {id:193,name:"Water Whip",lore:"Water",manaCost:1,cost:15},
+  // AIR
+  {id:210,name:"Burst of Speed",lore:"Air",manaCost:1,cost:10},
+  {id:211,name:"Choke",lore:"Air",manaCost:1,cost:10},
+  {id:212,name:"Sneaking",lore:"Air",manaCost:1,cost:10},
+  // CORRUPTION
+  {id:220,name:"Bleeding",lore:"Corruption",manaCost:1,cost:10},
+  {id:221,name:"Damage Mind",lore:"Corruption",manaCost:1,cost:10},
+  {id:222,name:"Entrail Blast",lore:"Corruption",manaCost:1,cost:15},
+  {id:223,name:"Great Tumors",lore:"Corruption",manaCost:2,cost:20},
+  {id:224,name:"Hunger",lore:"Corruption",manaCost:1,cost:10},
+  {id:225,name:"Inner Fire",lore:"Corruption",manaCost:1,cost:10},
+  {id:226,name:"Marshy Ground",lore:"Corruption",manaCost:1,cost:15},
+  {id:227,name:"Mind Corruption",lore:"Corruption",manaCost:2,cost:20},
+  {id:228,name:"Panic",lore:"Corruption",manaCost:1,cost:10},
+  {id:229,name:"Vile Vomit",lore:"Corruption",manaCost:1,cost:15},
+  // FIRE
+  {id:230,name:"Burning Fist",lore:"Fire",manaCost:1,cost:10},
+  {id:231,name:"Burning Ground",lore:"Fire",manaCost:1,cost:10},
+  {id:232,name:"Fire Elemental",lore:"Fire",manaCost:2,cost:25},
+  {id:233,name:"Fire Wall",lore:"Fire",manaCost:1,cost:15},
+  {id:234,name:"Fireball",lore:"Fire",manaCost:1,cost:15},
+  {id:235,name:"Firestorm",lore:"Fire",manaCost:2,cost:20},
+  {id:236,name:"Flamestrike",lore:"Fire",manaCost:1,cost:10},
+  {id:237,name:"Flaming Weapon",lore:"Fire",manaCost:1,cost:10},
+  {id:238,name:"Skin of Fire",lore:"Fire",manaCost:1,cost:10},
+  {id:239,name:"Wound Healing",lore:"Fire",manaCost:1,cost:15},
+  // UNDERWORLD
+  {id:240,name:"Deathtouch",lore:"Underworld",manaCost:2,cost:20},
+  {id:241,name:"Demonic Seduction",lore:"Underworld",manaCost:1,cost:15},
+  {id:242,name:"Favour of the Gods",lore:"Underworld",manaCost:1,cost:10},
+  {id:243,name:"Fire of Chaos",lore:"Underworld",manaCost:2,cost:20},
+  {id:244,name:"Fire Ring",lore:"Underworld",manaCost:1,cost:15},
+  {id:245,name:"Infernal Possession",lore:"Underworld",manaCost:2,cost:25},
+  {id:246,name:"Regeneration",lore:"Underworld",manaCost:1,cost:10},
+  {id:247,name:"Summon Demon",lore:"Underworld",manaCost:2,cost:25},
+  {id:248,name:"Summon Imps",lore:"Underworld",manaCost:1,cost:15},
+  {id:249,name:"Whip of Evil",lore:"Underworld",manaCost:1,cost:10},
+  // LIGHT
+  {id:250,name:"Blast of Light",lore:"Light",manaCost:1,cost:10},
+  {id:251,name:"Clairvoyance",lore:"Light",manaCost:1,cost:10},
+  {id:252,name:"Demon Bane",lore:"Light",manaCost:1,cost:15},
+  {id:253,name:"Flashing Weapon",lore:"Light",manaCost:1,cost:10},
+  {id:254,name:"Great Dispelling",lore:"Light",manaCost:1,cost:15},
+  {id:255,name:"Healing Light",lore:"Light",manaCost:1,cost:10},
+  {id:256,name:"Holy Light",lore:"Light",manaCost:1,cost:10},
+  {id:257,name:"Light Aura",lore:"Light",manaCost:1,cost:10},
+  {id:258,name:"Light Spear",lore:"Light",manaCost:1,cost:10},
+  {id:259,name:"Sheltering Light",lore:"Light",manaCost:1,cost:15},
+  // EARTH
+  {id:260,name:"Gravity Rocks",lore:"Earth",manaCost:1,cost:10},
+  {id:261,name:"Jade Arrows",lore:"Earth",manaCost:1,cost:10},
+  {id:262,name:"Mud",lore:"Earth",manaCost:1,cost:10},
+  {id:263,name:"Rain of Stones",lore:"Earth",manaCost:1,cost:15},
+  {id:264,name:"Restoring Earth",lore:"Earth",manaCost:1,cost:15},
+  {id:265,name:"Stone Bridge",lore:"Earth",manaCost:1,cost:10},
+  {id:266,name:"Stone Skin",lore:"Earth",manaCost:1,cost:10},
+  {id:267,name:"Summon Elemental",lore:"Earth",manaCost:2,cost:25},
+  {id:268,name:"Walkthrough",lore:"Earth",manaCost:1,cost:20},
+  {id:269,name:"Wall of Stone",lore:"Earth",manaCost:1,cost:15},
+  // NECROMANCY
+  {id:270,name:"Animate Dead",lore:"Necromancy",manaCost:2,cost:20},
+  {id:271,name:"Death Bolt",lore:"Necromancy",manaCost:1,cost:10},
+  {id:272,name:"Drain Life",lore:"Necromancy",manaCost:1,cost:15},
+  {id:273,name:"Fear",lore:"Necromancy",manaCost:1,cost:10},
+  {id:274,name:"Raise Skeleton",lore:"Necromancy",manaCost:2,cost:20},
+  {id:275,name:"Soul Trap",lore:"Necromancy",manaCost:1,cost:15},
+  // WITCHCRAFT
+  {id:280,name:"Curse of Weakness",lore:"Witchcraft",manaCost:1,cost:10},
+  {id:281,name:"Evil Eye",lore:"Witchcraft",manaCost:1,cost:10},
+  {id:282,name:"Hex",lore:"Witchcraft",manaCost:1,cost:10},
+  {id:283,name:"Polymorph",lore:"Witchcraft",manaCost:2,cost:20},
+  {id:284,name:"Spell of Binding",lore:"Witchcraft",manaCost:1,cost:15},
+  // BLESSINGS
+  {id:290,name:"Bless Weapon",lore:"Blessings",manaCost:1,cost:10},
+  {id:291,name:"Divine Shield",lore:"Blessings",manaCost:1,cost:10},
+  {id:292,name:"Holy Aura",lore:"Blessings",manaCost:1,cost:15},
+  {id:293,name:"Scourge of Evil",lore:"Blessings",manaCost:1,cost:10},
+  {id:294,name:"Smite",lore:"Blessings",manaCost:1,cost:10},
+  // RUNIC
+  {id:300,name:"Rune of Fortitude",lore:"Runic",manaCost:1,cost:10},
+  {id:301,name:"Rune of Power",lore:"Runic",manaCost:1,cost:10},
+  {id:302,name:"Rune of Speed",lore:"Runic",manaCost:1,cost:10},
+  {id:303,name:"Rune Shield",lore:"Runic",manaCost:1,cost:15},
+  {id:304,name:"Runic Blast",lore:"Runic",manaCost:1,cost:10},
+  // NATURE
+  {id:310,name:"Barkskin",lore:"Nature",manaCost:1,cost:10},
+  {id:311,name:"Entangle",lore:"Nature",manaCost:1,cost:10},
+  {id:312,name:"Healing Berries",lore:"Nature",manaCost:1,cost:10},
+  {id:313,name:"Speak with Animals",lore:"Nature",manaCost:1,cost:10},
+  {id:314,name:"Summon Beast",lore:"Nature",manaCost:2,cost:20},
+  {id:315,name:"Thornwall",lore:"Nature",manaCost:1,cost:15},
+  // TRIBAL
+  {id:320,name:"Battle Cry",lore:"Tribal",manaCost:1,cost:10},
+  {id:321,name:"Blood Frenzy",lore:"Tribal",manaCost:1,cost:10},
+  {id:322,name:"Curse of Cowardice",lore:"Tribal",manaCost:1,cost:10},
+  {id:323,name:"Hex of Pain",lore:"Tribal",manaCost:1,cost:10},
+  {id:324,name:"Spirit Shield",lore:"Tribal",manaCost:1,cost:15},
+  // CHANNELING
+  {id:330,name:"Channel Energy",lore:"Channeling",manaCost:1,cost:10},
+  {id:331,name:"Dispel Magic",lore:"Channeling",manaCost:1,cost:15},
+  {id:332,name:"Mana Shield",lore:"Channeling",manaCost:1,cost:10},
+  {id:333,name:"Telekinesis",lore:"Channeling",manaCost:1,cost:15},
+  // ANIMISM
+  {id:340,name:"Animal Form",lore:"Animism",manaCost:2,cost:20},
+  {id:341,name:"Call of the Wild",lore:"Animism",manaCost:1,cost:10},
+  {id:342,name:"Spirit Walk",lore:"Animism",manaCost:1,cost:15},
+  {id:343,name:"Totemic Ward",lore:"Animism",manaCost:1,cost:10},
+  // MUSIC
+  {id:350,name:"Battle Hymn",lore:"Music",manaCost:1,cost:10},
+  {id:351,name:"Lullaby",lore:"Music",manaCost:1,cost:10},
+  {id:352,name:"Song of Courage",lore:"Music",manaCost:1,cost:10},
+  {id:353,name:"Song of Healing",lore:"Music",manaCost:1,cost:15},
+];
+
+const SPELL_BY_ID  = Object.fromEntries(SPELL_DB.map(s => [s.id, s]));
+const SPELLS_BY_LORE = {};
+SPELL_DB.forEach(s => { (SPELLS_BY_LORE[s.lore]=SPELLS_BY_LORE[s.lore]||[]).push(s); });
+
+// Which lores are accessible per class
+const CLASS_LORES = {
+  wizard:        ['Fire','Earth','Air','Water','Light','Blessings'],
+  sorcerer:      ['Fire','Tribal','Corruption','Underworld','Witchcraft'],
+  animist:       ['Nature','Animism','Channeling'],
+  necromancer:   ['Necromancy','Underworld','Corruption'],
+  runic_master:  ['Runic','Earth','Light'],
+  battle_wizard: ['Fire','Air','Light'],
+  bard:          ['Music'],
+  paladin:       ['Blessings','Light'],
+};
+
+const LORE_COLORS = {
+  Fire:'#c04020',Earth:'#806030',Air:'#40a040',Water:'#2060a0',
+  Light:'#c0a020',Blessings:'#80c080',Runic:'#6040a0',Music:'#a06080',
+  Necromancy:'#5020a0',Witchcraft:'#802080',Underworld:'#402060',Corruption:'#5a1e3a',
+  Nature:'#206040',Tribal:'#804030',Channeling:'#305080',Animism:'#407060',
+};
+
+// Race lore bans
+const RACE_LORE_BANS = {
+  'Elves':['Corruption','Underworld'],
+  'Amphibians':['Corruption','Underworld'],
+  'Reptilians':['Corruption','Underworld'],
+  'Fairies':['Fire','Earth','Corruption','Underworld','Necromancy','Witchcraft'],
+};
+
+function getAvailableSpells(classId, raceName) {
+  const lores = CLASS_LORES[classId] || [];
+  const bans = RACE_LORE_BANS[raceName] || [];
+  return SPELL_DB.filter(s => lores.includes(s.lore) && !bans.includes(s.lore));
+}
+
+function calcManaPool(intVal, spellCount) {
+  return Math.min(spellCount * 2, intVal * 3);
+}
+
+function sorceryLevel(vp) {
+  if (vp >= 30) return 'Archmage';
+  if (vp >= 15) return 'Journeyman';
+  return 'Apprentice';
+}
+
+// ─── Step 5: Spells ────────────────────────────────────────────
+function renderStepSpells() {
+  const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
+  const race = RACE_DB.find(r => r.id === creatorState.raceId);
+
+  if (!cls?.isCaster) {
+    return `<div style="text-align:center;padding:40px;color:var(--text-muted);font-style:italic;">
+      <div style="font-size:48px;margin-bottom:12px;">🗡</div>
+      ${cls?.name || 'This class'} is not a spellcaster — no spells to choose.
+      <div style="font-size:10px;margin-top:8px;">Click Next to continue to Review.</div>
+    </div>`;
+  }
+
+  const available = getAvailableSpells(creatorState.classId, race?.name);
+  const selected  = creatorState.spells || [];
+  const intVal    = creatorState.attrs?.intelligence || 3;
+  const manaPool  = calcManaPool(intVal, selected.length);
+  const manaMax   = intVal * 3;
+  const startMana = cls.startMana || 6;
+
+  // Group by lore
+  const byLore = {};
+  available.forEach(s => { (byLore[s.lore]=byLore[s.lore]||[]).push(s); });
+
+  const sections = Object.entries(byLore).map(([lore, spells]) => {
+    const color = LORE_COLORS[lore] || '#888';
+    const chips = spells.map(s => {
+      const isSel = selected.includes(s.name);
+      const safeName = s.name.replace(/'/g,"\\'");
+      const manaTag = s.manaCost > 1
+        ? `<span style="color:${color};font-size:8px;margin-left:4px;">superior (${s.manaCost}✨)</span>`
+        : `<span style="color:var(--text-muted);font-size:8px;margin-left:4px;">${s.manaCost}✨</span>`;
+      return `<div class="skill-opt ${isSel?'selected':''}"
+        style="${isSel?`border-color:${color};background:rgba(0,0,0,.2)`:''}"
+        onclick="toggleSpell('${safeName}')">
+        <div class="skill-name">${s.name} ${manaTag}</div>
+        <div class="skill-type-badge">${s.cost} gp to learn</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="margin-bottom:14px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;
+        color:${color};border-bottom:2px solid ${color};padding-bottom:4px;margin-bottom:8px;">
+        ${lore} Lore (${spells.length} spells)
+      </div>
+      <div class="skills-grid">${chips}</div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div style="background:var(--bg-dark);border:1px solid var(--border-gold);
+      padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <span style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted);">
+          Spells known: <strong style="color:var(--gold-light)">${selected.length}</strong>
+        </span>
+        <span style="font-size:10px;color:var(--text-muted);margin-left:16px;">
+          Mana pool: <strong style="color:var(--gold-light)">${manaPool}</strong> / ${manaMax}
+          <span style="font-size:8px;">(INT×3 cap)</span>
+        </span>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);">
+        Sorcery level: <strong style="color:var(--gold-light)">${sorceryLevel(10)}</strong>
+        <span style="font-size:8px;"> (VP 10 at creation)</span>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-bottom:12px;">
+      Select starting spells. Each spell adds +2 mana to your pool (max INT×3).
+      Spells are learned at a School of Magic — you can add more between quests.
+      No two heroes may know the same spell.
+    </div>
+    ${sections}`;
+}
+
+function toggleSpell(name) {
+  if (!creatorState.spells) creatorState.spells = [];
+  const idx = creatorState.spells.indexOf(name);
+  if (idx >= 0) creatorState.spells.splice(idx, 1);
+  else creatorState.spells.push(name);
+  document.getElementById('creator-body').innerHTML = renderStepSpells();
+}
+
 function renderStepReview() {
   const race = RACE_DB.find(r => r.id === creatorState.raceId) || { name:'?', alignment:'neutral', fortune:3, startingSkills:[] };
   const cls  = CLASS_DB.find(c => c.id === creatorState.classId) || { name:'?' };
@@ -1795,7 +2054,12 @@ function finaliseHero() {
     weightCurrent: 0,
     // Quest-state (reset per quest)
     currentVitality: creatorState.attrs.vitality,
-    currentMana: cls.isCaster ? (cls.startMana || 6) : 0,
+    // Spells known (spellcasters only). Each +2 mana, +2 VP.
+    knownSpells: cls.isCaster ? (creatorState.spells || []) : [],
+    currentMana: cls.isCaster
+      ? Math.min((creatorState.spells||[]).length * 2 || cls.startMana || 6,
+                 (creatorState.attrs.intelligence || 3) * 3)
+      : 0,
     fortune: race.fortune,       // current max (can grow +2 above fortuneBase)
     fortuneBase: race.fortune,   // racial base, for reference
     currentFortune: race.fortune,
@@ -1821,6 +2085,7 @@ function openDetail(id) {
   if (h.attrs.perception == null) h.attrs.perception = 0;
   if (h.fortuneBase == null) h.fortuneBase = h.fortune;
   if (!h.equippedItems) h.equippedItems = [];
+  if (!h.knownSpells) h.knownSpells = [];
   if (h.weightCurrent == null) h.weightCurrent = 0;
   if (h.xpSpent == null) h.xpSpent = 0;
 
@@ -2010,6 +2275,8 @@ function openDetail(id) {
         </div>
         <div id="skill-picker-${h.id}" style="display:none;margin-top:8px;"></div>
 
+        ${cls.isCaster ? renderSpellSection(h, race, cls) : ''}
+
         <div class="sheet-section-title">Equipment</div>
         <div id="hero-equip-${h.id}">
           ${renderEquipSlots(h)}
@@ -2104,7 +2371,13 @@ function restHero(id) {
   if (!h) return;
   const cls = CLASS_DB.find(c => c.id === h.classId);
   h.currentVitality = h.attrs.vitality;
-  h.currentMana = cls?.isCaster ? (cls.startMana || 6) : 0;
+  // Mana restored to full pool (spells×2, capped at INT×3)
+  if (cls?.isCaster) {
+    const intVal = h.attrs.intelligence || 3;
+    h.currentMana = Math.min((h.knownSpells||[]).length * 2 || cls.startMana || 6, intVal * 3);
+  } else {
+    h.currentMana = 0;
+  }
   h.currentFortune = h.fortune;
   save();
   renderRoster();
@@ -2188,6 +2461,131 @@ function addHeroSkill(heroId, skillName) {
   // Close picker and refresh
   toggleSkillPicker(heroId);
   toggleSkillPicker(heroId);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPELL MANAGEMENT (hero detail)
+// ═══════════════════════════════════════════════════════════════
+function renderSpellSection(h, race, cls) {
+  if (!h.knownSpells) h.knownSpells = [];
+  const intVal   = h.attrs.intelligence || 3;
+  const manaPool = calcManaPool(intVal, h.knownSpells.length);
+  const manaMax  = intVal * 3;
+  const level    = sorceryLevel(h.vp);
+  const levelColor = level==='Archmage'?'#c0a020':level==='Journeyman'?'#80a0c0':'#c8a060';
+
+  // Group known spells by lore
+  const byLore = {};
+  h.knownSpells.forEach(name => {
+    const sp = SPELL_DB.find(s => s.name === name);
+    if (sp) (byLore[sp.lore]=byLore[sp.lore]||[]).push(sp);
+    else     (byLore['Unknown']=byLore['Unknown']||[]).push({name,lore:'Unknown',manaCost:1});
+  });
+
+  const spellChips = Object.entries(byLore).map(([lore, spells]) => {
+    const color = LORE_COLORS[lore] || '#888';
+    return `<div style="margin-bottom:6px;">
+      <span style="font-size:8px;color:${color};font-family:'Cinzel',serif;letter-spacing:1px;">${lore}</span><br>
+      ${spells.map(s => {
+        const safeName = s.name.replace(/'/g,"\\'");
+        return `<span class="skill-chip" style="cursor:pointer;border-color:${color}"
+          onclick="removeHeroSpell('${h.id}','${safeName}')">
+          ${s.name} <span style="color:var(--text-muted);font-size:8px;">${s.manaCost}✨</span>
+          <span style="color:#8a2020;font-size:9px;"> ✕</span>
+        </span>`;
+      }).join('')}
+    </div>`;
+  }).join('') || '<em style="font-size:10px;color:var(--text-muted)">No spells known</em>';
+
+  return `
+    <div class="sheet-section-title">
+      Magic
+      <span style="font-size:8px;color:${levelColor};margin-left:8px;">${level}</span>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:8px;font-size:10px;color:var(--text-muted);">
+      <span>Mana pool: <strong style="color:var(--gold-light)">${manaPool}</strong>/${manaMax}</span>
+      <span>Spells known: <strong style="color:var(--gold-light)">${h.knownSpells.length}</strong></span>
+      <span>Each spell: +2 mana, +2 VP</span>
+    </div>
+    <div id="hero-spells-${h.id}">${spellChips}</div>
+    <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
+      <button class="btn-secondary" style="font-size:9px;padding:4px 10px;"
+        onclick="toggleSpellPicker('${h.id}')">+ Learn Spell</button>
+      <span style="font-size:9px;color:var(--text-muted);font-style:italic;">
+        Requires School of Magic visit + gold
+      </span>
+    </div>
+    <div id="spell-picker-${h.id}" style="display:none;margin-top:8px;"></div>`;
+}
+
+function removeHeroSpell(heroId, spellName) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  h.knownSpells = (h.knownSpells||[]).filter(s => s !== spellName);
+  // Remove +2 mana and +2 VP
+  h.vp = Math.max(10, (h.vp||10) - 2);
+  // Recalculate current mana
+  const intVal = h.attrs.intelligence || 3;
+  h.currentMana = Math.min(h.knownSpells.length * 2, intVal * 3);
+  save();
+  openDetail(heroId);
+}
+
+function toggleSpellPicker(heroId) {
+  const picker = document.getElementById('spell-picker-' + heroId);
+  if (!picker) return;
+  if (picker.style.display !== 'none') { picker.style.display='none'; return; }
+
+  const h = heroes.find(h => h.id === heroId);
+  const race = RACE_DB.find(r => r.id === h?.raceId);
+  const cls  = CLASS_DB.find(c => c.id === h?.classId);
+  const known = new Set(h?.knownSpells || []);
+  const available = getAvailableSpells(h?.classId, race?.name)
+    .filter(s => !known.has(s.name));
+
+  const byLore = {};
+  available.forEach(s => { (byLore[s.lore]=byLore[s.lore]||[]).push(s); });
+
+  const sections = Object.entries(byLore).map(([lore, spells]) => {
+    const color = LORE_COLORS[lore] || '#888';
+    const chips = spells.map(s => {
+      const safeName = s.name.replace(/'/g,"\\'");
+      const manaTag = s.manaCost > 1 ? ' ★' : '';
+      return `<span class="skill-chip" style="cursor:pointer;border-color:${color};margin:2px;"
+        onclick="learnSpell('${heroId}','${safeName}')">
+        + ${s.name}${manaTag}
+        <span style="font-size:8px;color:var(--text-muted);"> ${s.cost}gp</span>
+      </span>`;
+    }).join('');
+    return `<div style="margin-bottom:8px;">
+      <div style="font-size:8px;color:${color};font-family:'Cinzel',serif;letter-spacing:1px;margin-bottom:4px;">${lore}</div>
+      ${chips}
+    </div>`;
+  }).join('');
+
+  picker.innerHTML = `<div style="background:var(--bg-dark);border:1px solid var(--panel-border);
+    padding:10px;max-height:240px;overflow-y:auto;">
+    <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;font-style:italic;">
+      ★ = Superior spell (2 mana, cannot combine with move).
+      Each spell learned: +2 mana pool, +2 VP.
+    </div>
+    ${sections || '<em style="color:var(--text-muted);font-size:10px;">All available spells already learned.</em>'}
+  </div>`;
+  picker.style.display = 'block';
+}
+
+function learnSpell(heroId, spellName) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  if (!h.knownSpells) h.knownSpells = [];
+  if (!h.knownSpells.includes(spellName)) {
+    h.knownSpells.push(spellName);
+    h.vp = (h.vp||10) + 2;           // +2 VP per spell learned (p.80)
+    const intVal = h.attrs.intelligence || 3;
+    h.currentMana = Math.min(h.knownSpells.length * 2, intVal * 3);
+  }
+  save();
+  openDetail(heroId);
 }
 
 // ═══════════════════════════════════════════════════════════════
