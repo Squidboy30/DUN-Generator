@@ -191,6 +191,8 @@ body {
   letter-spacing: 0.5px;
   font-family: 'Cinzel', serif;
 }
+/* Italic + slightly dimmed when equipment has reduced a stat */
+.hero-stat-val.stat-modified { color: #c05050; }
 
 .hero-card-footer {
   border-top: 1px solid var(--panel-border);
@@ -1117,6 +1119,7 @@ function renderRoster() {
     const alignIcon = race.alignment === 'good' ? '☀' : race.alignment === 'evil' ? '☠' : '⚖';
     const alignClass = race.alignment || 'neutral';
     const groupClass = cls.group === 'fighter' ? 'fighter-card' : cls.group === 'explorer' ? 'explorer-card' : 'caster-card';
+    const cur = calcCurrentAttrs(h.attrs, h.equippedItems || []);
 
     return `<div class="hero-card ${groupClass}" onclick="openDetail('${h.id}')">
       <div class="hero-card-header">
@@ -1135,12 +1138,12 @@ function renderRoster() {
         <span>${h.currentVitality}/${h.attrs.vitality}</span>
       </div>
       <div class="hero-stats-row">
-        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.movement}</div><div class="hero-stat-lbl">MOV</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.combatSkill}</div><div class="hero-stat-lbl">CS</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.strength}</div><div class="hero-stat-lbl">STR</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.agility}</div><div class="hero-stat-lbl">AGI</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.intelligence}</div><div class="hero-stat-lbl">INT</div></div>
-        <div class="hero-stat"><div class="hero-stat-val">${h.fortune}</div><div class="hero-stat-lbl">FOR</div></div>
+        <div class="hero-stat"><div class="hero-stat-val ${cur.movement !== h.attrs.movement ? 'stat-modified' : ''}">${cur.movement}</div><div class="hero-stat-lbl">MOV</div></div>
+        <div class="hero-stat"><div class="hero-stat-val ${cur.combatSkill !== h.attrs.combatSkill ? 'stat-modified' : ''}">${cur.combatSkill}</div><div class="hero-stat-lbl">CS</div></div>
+        <div class="hero-stat"><div class="hero-stat-val ${cur.strength !== h.attrs.strength ? 'stat-modified' : ''}">${cur.strength}</div><div class="hero-stat-lbl">STR</div></div>
+        <div class="hero-stat"><div class="hero-stat-val ${cur.agility !== h.attrs.agility ? 'stat-modified' : ''}">${cur.agility}</div><div class="hero-stat-lbl">AGI</div></div>
+        <div class="hero-stat"><div class="hero-stat-val ${cur.intelligence !== h.attrs.intelligence ? 'stat-modified' : ''}">${cur.intelligence}</div><div class="hero-stat-lbl">INT</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${h.currentFortune ?? h.fortune}</div><div class="hero-stat-lbl">FOR</div></div>
         ${h.attrs.mana != null ? `<div class="hero-stat"><div class="hero-stat-val">${h.currentMana}</div><div class="hero-stat-lbl">MAN</div></div>` : ''}
       </div>
       <div class="hero-card-footer">
