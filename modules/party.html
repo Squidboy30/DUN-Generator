@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dungeon Universalis — Party Manager</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&family=Press+Start+2P&display=swap');
+
+:root {
+  --parchment: #f5e6c8;
+  --parchment-mid: #ecdaab;
+  --parchment-dark: #d4be88;
+  --ink: #2a1a0a;
+  --ink-faded: #5c3d1e;
+  --border-red: #8b1a1a;
+  --border-gold: #a07820;
+  --accent-red: #6b0f0f;
+  --bg-dark: #1a1008;
+  --bg-panel: #221508;
+  --panel-border: #6a4a20;
+  --gold-light: #e0b840;
+  --text-light: #f5e8c0;
+  --text-muted: #c8a060;
+  --good: #4a8a4a;
+  --evil: #8a2020;
+  --neutral: #8a7020;
+  --fighter-color: #c04020;
+  --explorer-color: #206040;
+  --caster-color: #4020a0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-dark);
+  font-family: 'IM Fell English', Georgia, serif;
+  color: var(--text-light);
+  min-height: 100vh;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+.app-header {
+  background: var(--bg-panel);
+  border-bottom: 2px solid var(--border-gold);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 16px;
+  color: var(--gold-light);
+  letter-spacing: 2px;
+}
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab {
+  padding: 6px 16px;
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  transition: all .2s;
+}
+.nav-tab:hover { border-color: var(--border-gold); color: var(--text-light); }
+.nav-tab.active { background: var(--border-gold); color: var(--ink); border-color: var(--gold-light); }
+
+/* ─── MAIN VIEWS ──────────────────────────────────────────── */
+.view { display: none; padding: 20px; }
+.view.active { display: block; }
+
+/* ─── PARTY ROSTER ────────────────────────────────────────── */
+.party-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.party-vp-banner {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  padding: 8px 20px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--gold-light);
+}
+.party-vp-banner span { color: var(--text-light); font-size: 18px; font-weight: bold; margin-left: 8px; }
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.hero-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--panel-border);
+  border-top: 3px solid var(--border-gold);
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.hero-card:hover { border-color: var(--border-gold); }
+.hero-card.fighter-card { border-top-color: var(--fighter-color); }
+.hero-card.explorer-card { border-top-color: var(--explorer-color); }
+.hero-card.caster-card { border-top-color: var(--caster-color); }
+
+.hero-card-header {
+  padding: 12px 14px 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.hero-portrait {
+  width: 52px; height: 52px;
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.hero-identity { flex: 1; }
+.hero-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--gold-light);
+  margin-bottom: 3px;
+}
+.hero-race-class {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.hero-vp-badge {
+  background: var(--border-gold);
+  color: var(--ink);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  margin-left: auto;
+}
+
+.hero-vitality-track {
+  padding: 0 14px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.vitality-bar-bg {
+  flex: 1; height: 8px;
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.vitality-bar-fill {
+  height: 100%;
+  background: #8a2020;
+  transition: width .3s;
+}
+.vitality-bar-fill.full { background: #4a8a4a; }
+.vitality-bar-fill.low  { background: #c04020; }
+
+.hero-stats-row {
+  padding: 4px 14px 10px;
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--panel-border);
+}
+.hero-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.hero-stat-val { font-size: 14px; color: var(--text-light); font-family: 'Cinzel', serif; }
+
+.hero-card-footer {
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+}
+.hero-card-btn {
+  flex: 1; padding: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.hero-card-btn:hover { background: var(--border-gold); color: var(--ink); }
+.hero-card-btn:not(:last-child) { border-right: 1px solid var(--panel-border); }
+.hero-card-btn.danger:hover { background: var(--accent-red); color: var(--text-light); }
+
+.empty-party {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 16px;
+}
+
+/* ─── ADD HERO BUTTON ──────────────────────────────────────── */
+.btn-primary {
+  background: var(--border-gold);
+  color: var(--ink);
+  border: none;
+  padding: 8px 20px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background .2s;
+}
+.btn-primary:hover { background: var(--gold-light); }
+
+.btn-secondary {
+  background: none;
+  color: var(--text-muted);
+  border: 1px solid var(--panel-border);
+  padding: 7px 18px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-secondary:hover { border-color: var(--border-gold); color: var(--text-light); }
+
+/* ─── CHARACTER CREATOR MODAL ──────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.creator-modal {
+  background: var(--bg-panel);
+  border: 2px solid var(--border-gold);
+  width: min(860px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.creator-header {
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--panel-border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.creator-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 14px;
+  color: var(--gold-light);
+}
+.creator-close {
+  background: none; border: none;
+  color: var(--text-muted); font-size: 20px; cursor: pointer;
+}
+.creator-close:hover { color: var(--text-light); }
+
+/* ─── STEP INDICATOR ──────────────────────────────────────── */
+.step-indicator {
+  display: flex;
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--bg-dark);
+}
+.step-dot {
+  flex: 1;
+  padding: 8px 4px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  border-right: 1px solid var(--panel-border);
+  transition: all .2s;
+  position: relative;
+}
+.step-dot:last-child { border-right: none; }
+.step-dot.active { color: var(--gold-light); background: var(--bg-panel); }
+.step-dot.done { color: var(--text-muted); }
+.step-dot.done::after { content: ' ✓'; color: #4a8a4a; }
+
+/* ─── CREATOR BODY ────────────────────────────────────────── */
+.creator-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* ─── STEP: NAME ──────────────────────────────────────────── */
+.step-name-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.form-input {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  color: var(--text-light);
+  padding: 8px 10px;
+  font-family: 'IM Fell English', serif;
+  font-size: 15px;
+  width: 100%;
+  transition: border-color .2s;
+}
+.form-input:focus { outline: none; border-color: var(--border-gold); }
+
+.portrait-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.portrait-opt {
+  width: 44px; height: 44px;
+  background: var(--bg-dark);
+  border: 2px solid var(--panel-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.portrait-opt:hover, .portrait-opt.selected { border-color: var(--border-gold); }
+
+/* ─── STEP: RACE ──────────────────────────────────────────── */
+.race-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+.race-card {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  padding: 10px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.race-card:hover { border-color: var(--border-gold); }
+.race-card.selected { border-color: var(--gold-light); background: rgba(160,120,32,.1); }
+.race-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: var(--gold-light);
+  margin-bottom: 4px;
+}
+.race-align-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.align-good    { background: #1a3a1a; color: #6abf6a; }
+.align-evil    { background: #3a1a1a; color: #bf6a6a; }
+.align-neutral { background: #2a2a1a; color: #bfbf6a; }
+
+.race-stat-preview {
+  font-size: 9px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Race detail panel */
+.race-detail {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  padding: 16px;
+  margin-top: 16px;
+}
+.race-detail-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 14px;
+  color: var(--gold-light);
+  margin-bottom: 12px;
+}
+.attr-table {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 16px;
+  margin-bottom: 12px;
+}
+.attr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(106,74,32,.3);
+}
+.attr-name { color: var(--text-muted); }
+.attr-range { color: var(--text-light); font-family: 'Cinzel', serif; }
+.attr-cost  { color: var(--text-muted); font-size: 9px; }
+.attr-dots  { color: var(--border-gold); letter-spacing: -2px; }
+
+.race-skills-row {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.race-skills-row strong { color: var(--text-light); }
+.race-special {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* ─── STEP: CLASS ─────────────────────────────────────────── */
+.class-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.class-group-header {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 11px;
+  padding: 8px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.class-group-header.fighter  { color: var(--fighter-color);  border-bottom: 2px solid var(--fighter-color); }
+.class-group-header.explorer { color: var(--explorer-color); border-bottom: 2px solid var(--explorer-color); }
+.class-group-header.caster   { color: var(--caster-color);   border-bottom: 2px solid var(--caster-color); }
+
+.class-opt {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 6px;
+}
+.class-opt:hover { border-color: var(--border-gold); }
+.class-opt.selected { border-color: var(--gold-light); background: rgba(160,120,32,.1); }
+.class-opt.disabled { opacity: .35; cursor: not-allowed; }
+.class-opt-name {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 3px;
+}
+.class-opt-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ─── STEP: ATTRIBUTES ────────────────────────────────────── */
+.attr-builder {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.dev-points-banner {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-gold);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+}
+.dev-points-count {
+  font-size: 24px;
+  color: var(--gold-light);
+  font-weight: bold;
+}
+.dev-points-count.warn  { color: #c04020; }
+.dev-points-count.spent { color: var(--text-muted); }
+
+.attr-builder-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(106,74,32,.3);
+  gap: 10px;
+}
+.attr-builder-name {
+  width: 130px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.attr-builder-name em { font-size: 9px; display: block; color: #6a5030; font-style: normal; }
+.attr-builder-val {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  color: var(--gold-light);
+  width: 36px;
+  text-align: center;
+}
+.attr-builder-range {
+  font-size: 10px;
+  color: var(--text-muted);
+  width: 60px;
+  text-align: center;
+}
+.attr-btn {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  color: var(--text-light);
+  width: 28px; height: 28px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.attr-btn:hover:not(:disabled) { background: var(--border-gold); color: var(--ink); }
+.attr-btn:disabled { opacity: .3; cursor: not-allowed; }
+.attr-cost-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  width: 55px;
+}
+
+/* ─── STEP: SKILLS ────────────────────────────────────────── */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+.skill-opt {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.skill-opt:hover { border-color: var(--border-gold); }
+.skill-opt.selected { border-color: var(--gold-light); background: rgba(160,120,32,.1); }
+.skill-opt.disabled { opacity: .3; cursor: not-allowed; }
+.skill-name { font-size: 11px; color: var(--text-light); }
+.skill-type-badge {
+  font-size: 8px; letter-spacing: 1px;
+  color: var(--text-muted);
+  font-family: 'Cinzel', serif;
+  margin-top: 2px;
+}
+
+/* ─── CREATOR FOOTER ──────────────────────────────────────── */
+.creator-footer {
+  border-top: 1px solid var(--panel-border);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-dark);
+}
+
+/* ─── HERO DETAIL MODAL ───────────────────────────────────── */
+.hero-detail-modal {
+  background: var(--bg-panel);
+  border: 2px solid var(--border-gold);
+  width: min(720px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.hero-sheet {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+}
+.hero-sheet-left {
+  background: var(--bg-dark);
+  border-right: 1px solid var(--panel-border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.hero-sheet-portrait-lg {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg-panel);
+  border: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+}
+.hero-sheet-right { padding: 20px; }
+
+.sheet-section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  margin-top: 14px;
+}
+.sheet-section-title:first-child { margin-top: 0; }
+
+.attr-sheet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  margin-bottom: 12px;
+}
+.attr-sheet-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(106,74,32,.2);
+  font-size: 11px;
+}
+.attr-sheet-name { color: var(--text-muted); }
+.attr-sheet-val  { color: var(--text-light); font-family: 'Cinzel', serif; font-size: 14px; font-weight: bold; }
+.attr-sheet-max  { color: var(--text-muted); font-size: 9px; }
+
+.quest-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.quest-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.quest-ctrl-label { width: 80px; }
+.qty-btn {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  color: var(--text-light);
+  width: 24px; height: 24px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.qty-btn:hover { background: var(--border-gold); color: var(--ink); }
+.qty-display {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  color: var(--gold-light);
+  min-width: 30px;
+  text-align: center;
+}
+.fortune-pips {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.fortune-pip {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--border-gold);
+  border: 1px solid var(--gold-light);
+  cursor: pointer;
+  transition: all .15s;
+}
+.fortune-pip.spent {
+  background: var(--bg-dark);
+  border-color: var(--panel-border);
+}
+
+.xp-section { display: flex; flex-direction: column; gap: 6px; }
+.xp-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+.xp-input {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  color: var(--text-light);
+  padding: 4px 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  width: 70px;
+  text-align: center;
+}
+.xp-hint { font-size: 9px; color: #6a5030; font-style: italic; }
+
+.skill-chip {
+  display: inline-block;
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  font-size: 9px;
+  padding: 2px 7px;
+  color: var(--text-muted);
+  margin: 2px;
+}
+
+.coins-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.coins-input {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  color: var(--gold-light);
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  padding: 4px 8px;
+  width: 100px;
+  text-align: center;
+}
+
+/* ─── XP TABLE ────────────────────────────────────────────── */
+.xp-upgrade-table {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.xp-upgrade-table td { padding: 2px 6px; }
+
+/* ─── ALIGNMENT ICONS ─────────────────────────────────────── */
+.align-icon { font-size: 12px; margin-left: 4px; }
+.align-icon.good    { color: var(--good); }
+.align-icon.evil    { color: var(--evil); }
+.align-icon.neutral { color: var(--neutral); }
+
+/* ─── SCROLLBAR ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--panel-border); }
+
+/* ─── SECTION DIVIDER ─────────────────────────────────────── */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--panel-border);
+  margin: 16px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">⚔ DUN — Party Manager</div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('roster')">Party Roster</button>
+    <button class="nav-tab" onclick="showView('xp')">Experience</button>
+  </nav>
+</div>
+
+<!-- ─── ROSTER VIEW ──────────────────────────────────────────── -->
+<div id="view-roster" class="view active">
+  <div class="party-header">
+    <div class="party-vp-banner">
+      Party VP<span id="party-vp-total">0</span>
+      <span style="font-size:10px;color:var(--text-muted);margin-left:12px;" id="party-quest-hint"></span>
+    </div>
+    <button class="btn-primary" onclick="openCreator()">+ New Hero</button>
+  </div>
+  <div class="hero-grid" id="hero-grid">
+    <div class="empty-party" id="empty-party-msg">
+      No heroes yet. Create your first adventurer to begin.
+    </div>
+  </div>
+</div>
+
+<!-- ─── XP VIEW ──────────────────────────────────────────────── -->
+<div id="view-xp" class="view">
+  <div style="max-width:700px;">
+    <h2 style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold-light);margin-bottom:16px;">Post-Quest Experience</h2>
+    <div id="xp-award-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    <div style="margin-top:20px;padding:14px;background:var(--bg-panel);border:1px solid var(--panel-border);font-size:11px;color:var(--text-muted);">
+      <strong style="color:var(--text-light);font-family:'Cinzel',serif;">XP Rules:</strong> 
+      Every 3 XP = 1 Development Point. Each attribute increase = +2 VP. Each skill learned = +2 VP.
+      At most each attribute can be increased once through accumulated XP.
+    </div>
+  </div>
+</div>
+
+<!-- ─── CHARACTER CREATOR MODAL ──────────────────────────────── -->
+<div class="modal-overlay" id="creator-overlay">
+  <div class="creator-modal">
+    <div class="creator-header">
+      <div class="creator-title">Character Creation</div>
+      <button class="creator-close" onclick="closeCreator()">✕</button>
+    </div>
+
+    <div class="step-indicator" id="step-indicator"></div>
+
+    <div class="creator-body" id="creator-body"></div>
+
+    <div class="creator-footer">
+      <button class="btn-secondary" id="btn-prev" onclick="creatorPrev()">← Back</button>
+      <div style="font-size:10px;color:var(--text-muted);" id="creator-step-label"></div>
+      <button class="btn-primary" id="btn-next" onclick="creatorNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── HERO DETAIL MODAL ─────────────────────────────────────── -->
+<div class="modal-overlay" id="detail-overlay">
+  <div class="hero-detail-modal" id="detail-modal">
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// RACE DATA (extracted from worldofarasca.dungeonuniversalis.com)
+// ═══════════════════════════════════════════════════════════════
+const RACE_DB = [
+  { id:10, name:"Humans",          alignment:"neutral", size:"average", fortune:6,  cardRef:"RA 10/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:2}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
+    startingSkills:["Lost in the Dark"], special:"Versatile and balanced. Begin with 'Lost in the Dark' and one more skill of player's choice. May learn 'Lycanthropy' (lose 2 fortune).", allowedClasses:["all"] },
+  { id:11, name:"Elves",           alignment:"good",    size:"average", fortune:5,  cardRef:"RA 05/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:4,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:{min:0,max:2,dc:1}, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:5,dc:2} },
+    startingSkills:["Sharp Senses"], special:"Outstanding agility and speed. Skillful with melee and ranged. Great spellcasters. Cannot learn Corruption or Underworld spells.", allowedClasses:["warrior","paladin","gladiator","battle dancer","scout","ranger","bard","forester","wizard","animist"] },
+  { id:7,  name:"Dwarves",         alignment:"good",    size:"average", fortune:5,  cardRef:"RA 07/25",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:3}, agility:{min:2,max:5,dc:3}, intelligence:{min:4,max:5,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:5,max:7,dc:2} },
+    startingSkills:["Tough","Hatred towards Orcs and Goblins","Skilled Hands"], special:"Slow but loyal and very tough.", allowedClasses:["barbarian","warrior","gladiator","assassin","scout","rogue","ranger","bard","runic master"] },
+  { id:12, name:"Dark Elves",      alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 06/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:4,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:5,dc:2} },
+    startingSkills:["Sharp Senses","Cruel"], special:"Outstanding agility and speed. Skillful with weapons.", allowedClasses:["warrior","paladin","gladiator","battle dancer","assassin","scout","rogue","bard","wizard","animist","sorcerer"] },
+  { id:13, name:"Halflings",       alignment:"good",    size:"small",   fortune:8,  cardRef:"RA 13/25",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:2,max:3,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:4,dc:2} },
+    startingSkills:["Small","Lost in the Dark"], special:"Small though very lucky.", allowedClasses:["warrior","scout","rogue","ranger","bard","animist"] },
+  { id:14, name:"Orcs",            alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 14/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:4,max:6,dc:2}, shootingSkill:{min:3,max:4,dc:3}, agility:{min:3,max:4,dc:2}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:7,dc:2} },
+    startingSkills:["Onslaught"], special:"Strong and aggressive fighters.", allowedClasses:["barbarian","warrior","assassin","gladiator","scout","ranger","animist","sorcerer"] },
+  { id:9,  name:"Goblins",         alignment:"evil",    size:"small",   fortune:7,  cardRef:"RA 09/25",
+    attrs:{ movement:{min:4,max:5,dc:1}, combatSkill:{min:3,max:5,dc:3}, strength:{min:2,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:4,dc:1}, intelligence:{min:2,max:4,dc:2}, mana:null, courage:{min:2,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:4,dc:2} },
+    startingSkills:["Small","Stealth","Dirty Fighter"], special:"Small though expert in dirty fighting.", allowedClasses:["warrior","assassin","scout","rogue","animist","sorcerer"] },
+  { id:15, name:"Ratfolk",         alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 15/25",
+    attrs:{ movement:{min:5,max:6,dc:1}, combatSkill:{min:3,max:5,dc:2}, strength:{min:2,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:3,max:5,dc:2}, mana:null, courage:{min:2,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:5,dc:2} },
+    startingSkills:["Stealth","Dirty Fighter"], special:"Fast and sneaky. Expert at subterfuge.", allowedClasses:["warrior","assassin","scout","rogue","wizard","animist","sorcerer"] },
+  { id:8,  name:"Catfolk",         alignment:"neutral", size:"average", fortune:4,  cardRef:"RA 08/25",
+    attrs:{ movement:{min:5,max:6,dc:1}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:3,max:5,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
+    startingSkills:["Sharp Senses"], special:"Outstanding agility, high potential strength. May use 'Claws'.", allowedClasses:["warrior","assassin","scout","ranger","animist","warrior monk","sorcerer"] },
+  { id:2,  name:"Dogfolk",         alignment:"neutral", size:"average", fortune:5,  cardRef:"RA 02/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:4,dc:1}, intelligence:{min:3,max:5,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
+    startingSkills:["Sharp Senses","Tracker"], special:"Good sense of smell. Strong though not weapon-skillful. May use 'Fangs'.", allowedClasses:["warrior","scout","ranger","animist","sorcerer"] },
+  { id:1,  name:"Amphibians",      alignment:"neutral", size:"small",   fortune:7,  cardRef:"RA 01/25",
+    attrs:{ movement:{min:4,max:5,dc:1}, combatSkill:{min:3,max:4,dc:2}, strength:{min:2,max:3,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:4,max:5,dc:2}, intelligence:{min:2,max:5,dc:2}, mana:null, courage:{min:3,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:5,dc:2} },
+    startingSkills:["Stealth","Small","Pathfinder (forest/swamp)"], special:"Small, sneaky and stealthy.", allowedClasses:["warrior","scout","ranger","wizard","animist","sorcerer"] },
+  { id:20, name:"Celestials",      alignment:"good",    size:"average", fortune:3,  cardRef:"RA 20/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:2}, intelligence:{min:4,max:5,dc:2}, mana:{min:0,max:2,dc:1}, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
+    startingSkills:["Invulnerable"], special:"Blood of gods. May learn 'Flying (8)'. Cannot reach Intelligence 6.", allowedClasses:["warrior","paladin","scout","bard","runic master","wizard"] },
+  { id:17, name:"Centaurs",        alignment:"neutral", size:"large",   fortune:4,  cardRef:"RA 17/25",
+    attrs:{ movement:{min:7,max:8,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:4,dc:2}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:3,max:4,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:5,max:8,dc:2} },
+    startingSkills:["Large","Onslaught"], special:"Fast. +2 jumping/-2 climbing. Cannot use heavy armor.", allowedClasses:["warrior","scout","ranger","animist"] },
+  { id:19, name:"Treefolk",        alignment:"neutral", size:"large",   fortune:4,  cardRef:"RA 19/25",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:3,dc:3}, agility:{min:2,max:3,dc:3}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:5,max:5,dc:0}, vitality:{min:4,max:7,dc:2} },
+    startingSkills:["Vulnerable (fire)","Survival"], special:"Slow but tough. Cannot wear armor. May use 'Claws'.", allowedClasses:["warrior","scout","ranger","animist"] },
+  { id:21, name:"Cyclops",         alignment:"neutral", size:"large",   fortune:6,  cardRef:"RA 21/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:2,max:4,dc:2}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:5,max:8,dc:2} },
+    startingSkills:["Onslaught"], special:"Brave, strong and temperamental.", allowedClasses:["barbarian","warrior","gladiator","scout","animist","sorcerer","wizard"] },
+  { id:22, name:"Beastmen",        alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 22/25",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:4,dc:3}, agility:{min:3,max:4,dc:2}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:7,dc:2} },
+    startingSkills:["Onslaught"], special:"Not weapon-skillful but strong and hardy.", allowedClasses:["barbarian","warrior","scout","rogue","bard","forester","animist","sorcerer"] },
+  { id:23, name:"Infernals",       alignment:"evil",    size:"average", fortune:2,  cardRef:"RA 23/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:4,dc:3}, agility:{min:3,max:5,dc:2}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:7,dc:2} },
+    startingSkills:["Invulnerable","Underworld","Fearsome"], special:"Lethal, very tough. May learn 'Flying (8)'. Cannot wear heavy armor. Uses 'Claws'.", allowedClasses:["warrior","scout"] },
+  { id:24, name:"Birdfolk",        alignment:"neutral", size:"average", fortune:6,  cardRef:"RA 24/25",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:2,max:4,dc:2}, agility:{min:3,max:5,dc:2}, intelligence:{min:3,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
+    startingSkills:["Flying (10)","Eagle Eye"], special:"Masters of the skies.", allowedClasses:["warrior","assassin","scout","sorcerer","wizard"] },
+  { id:27, name:"Fairies",         alignment:"good",    size:"small",   fortune:7,  cardRef:"RA 27/35",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:2,max:3,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:2,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:4,dc:2} },
+    startingSkills:["Flying (8)"], special:"Magical. Spellcasters get +1 dispel. Spells: Light/Air/Water/Channeling only. May choose 'Small' for +2 fortune.", allowedClasses:["warrior","scout","ranger","wizard","animist","sorcerer"] },
+  { id:28, name:"Renegade Dwarves",alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 25/35",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:2}, shootingSkill:{min:3,max:5,dc:3}, agility:{min:2,max:3,dc:3}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:5,max:7,dc:2} },
+    startingSkills:["Tough","Cruel","Skilled Hands"], special:"Slow, dexterous, brave and very tough.", allowedClasses:["barbarian","warrior","paladin","gladiator","assassin","scout","rogue","ranger","bard","runic master","sorcerer"] },
+  { id:32, name:"Aranhaiks",       alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 28/35",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:3,max:5,dc:2}, mana:null, courage:{min:3,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
+    startingSkills:["Pathfinder (spiderwebs)","Climber","Poisonous (Fangs)"], special:"Spider-folk. May use 'Fangs'.", allowedClasses:["warrior","assassin","scout","ranger","animist"] },
+  { id:18, name:"Vampires",        alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 18/25",
+    attrs:{ movement:{min:5,max:6,dc:1}, combatSkill:{min:4,max:6,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:4,dc:3}, agility:{min:3,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:4,max:6,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:5,max:7,dc:2} },
+    startingSkills:["Fearsome","Undead","Regeneration"], special:"Undead warriors. Thirst for blood. Choose one of: Regeneration, Fearsome, Magic Resistance, Berserker.", allowedClasses:["warrior","knight","necromancer","sorcerer"] },
+  { id:33, name:"Kobolds",         alignment:"evil",    size:"small",   fortune:6,  cardRef:"RA 33/35",
+    attrs:{ movement:{min:4,max:5,dc:1}, combatSkill:{min:3,max:4,dc:2}, strength:{min:2,max:3,dc:3}, shootingSkill:{min:2,max:4,dc:2}, agility:{min:3,max:4,dc:1}, intelligence:{min:3,max:4,dc:2}, mana:null, courage:{min:2,max:4,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:3,max:4,dc:2} },
+    startingSkills:["Small","Stealth","Slippery"], special:"Small reptilian subterfuge experts.", allowedClasses:["warrior","assassin","scout","rogue","animist","sorcerer"] },
+  { id:34, name:"Zombies",         alignment:"evil",    size:"average", fortune:6,  cardRef:"RA 34/35",
+    attrs:{ movement:{min:3,max:5,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:1,max:3,dc:3}, agility:{min:1,max:3,dc:3}, intelligence:{min:2,max:3,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:5,max:7,dc:2} },
+    startingSkills:["Undead","Stupid"], special:"Decaying warriors. Searching corpses: recover 1 vitality per 2 coins found.", allowedClasses:["warrior","gladiator","scout","animist"] },
+  { id:35, name:"Iron Souls",      alignment:"neutral", size:"average", fortune:3,  cardRef:"RA 35/35",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:3,dc:2}, agility:{min:2,max:3,dc:2}, intelligence:{min:2,max:3,dc:2}, mana:null, courage:{min:3,max:5,dc:1}, naturalArmor:{min:5,max:5,dc:0}, vitality:{min:5,max:8,dc:1} },
+    startingSkills:["One Combat skill (class dependent)"], special:"Magic-forged beings. Cannot wear armor. Ignore 'Fearsome' from size ≤ self.", allowedClasses:["warrior","gladiator","scout","runic master"] },
+  { id:36, name:"Half-Elves",      alignment:"neutral", size:"average", fortune:5,  cardRef:"RA 32/35",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:2}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:5,dc:2} },
+    startingSkills:["One skill of player's choice"], special:"Partially elven. Begin with one class-appropriate skill of choice.", allowedClasses:["warrior","paladin","gladiator","scout","ranger","bard","wizard","animist","sorcerer"] },
+  { id:41, name:"The Soulless",    alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 26/35",
+    attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:3,dc:3}, agility:{min:1,max:3,dc:3}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
+    startingSkills:["Undead","Fearsome"], special:"Risen dead heroes. May learn 'Regeneration'. Cannot recover vitality with common objects. Mana Potion also restores all vitality.", allowedClasses:["warrior","knight","necromancer","sorcerer"] },
+  { id:37, name:"Ogres",           alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 16/25",
+    attrs:{ movement:{min:6,max:7,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:6,max:8,dc:2}, shootingSkill:{min:2,max:3,dc:3}, agility:{min:2,max:4,dc:3}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:8,max:12,dc:2} },
+    startingSkills:["Large","Fearsome","Onslaught"], special:"Mighty warriors. More versatile than similar Large creatures.", allowedClasses:["barbarian","warrior","gladiator","scout","ranger","animist","sorcerer"] },
+  { id:38, name:"Minotaurs",       alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 17/25",
+    attrs:{ movement:{min:6,max:7,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:6,max:8,dc:2}, shootingSkill:{min:1,max:2,dc:3}, agility:{min:2,max:3,dc:3}, intelligence:{min:2,max:3,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:8,max:14,dc:2} },
+    startingSkills:["Large","Fearsome","Onslaught","Clumsy Hands","Berserker"], special:"Huge and uncontrollable.", allowedClasses:["barbarian","warrior"] },
+  { id:30, name:"Mumaks",          alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 30/35",
+    attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:4,dc:3}, strength:{min:6,max:8,dc:2}, shootingSkill:{min:1,max:3,dc:3}, agility:{min:1,max:3,dc:3}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:8,max:12,dc:2} },
+    startingSkills:["Large","Sweep","Onslaught","Fearsome"], special:"Powerful fangs sweep enemies. Cannot reach Intelligence 6.", allowedClasses:["barbarian","warrior","gladiator","animist"] },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// CLASS DATA
+// ═══════════════════════════════════════════════════════════════
+const CLASS_DB = [
+  // FIGHTERS
+  { id:"warrior",       name:"Warrior",        group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"combatSkill", desc:"Standard melee combatant. -1 cost on first Combat Skill increase." },
+  { id:"barbarian",     name:"Barbarian",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"strength",    desc:"Savage power fighter. -1 cost on first Strength increase." },
+  { id:"knight",        name:"Knight",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:"courage",     desc:"Armoured warrior with leadership qualities." },
+  { id:"paladin",       name:"Paladin",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          desc:"Holy warrior. Good alignment only." },
+  { id:"gladiator",     name:"Gladiator",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"agility",     desc:"Arena fighter. -1 cost on first Agility increase." },
+  { id:"battle_dancer", name:"Battle Dancer",   group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"agility",     desc:"Acrobatic melee fighter. Elves and Dark Elves preferred." },
+  { id:"warrior_monk",  name:"Warrior Monk",    group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          desc:"Disciplined martial artist." },
+  // EXPLORERS
+  { id:"scout",         name:"Scout",           group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:"shootingSkill",desc:"Versatile skirmisher. -1 cost on first Shooting Skill increase." },
+  { id:"ranger",        name:"Ranger",          group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           desc:"Wilderness expert. Access to Nature skills." },
+  { id:"rogue",         name:"Rogue",           group:"explorer", isCaster:false, skillRange:[3],   bonusAttr:"agility",      desc:"Sneaky thief. -1 cost on first Agility increase." },
+  { id:"assassin",      name:"Assassin",        group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           desc:"Precision striker. Expert in stealth attacks." },
+  { id:"bard",          name:"Bard",            group:"explorer", isCaster:false, skillRange:[2,3], bonusAttr:null,           desc:"Jack of all trades. Leadership and exploration." },
+  { id:"forester",      name:"Forester",        group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           desc:"Deep wilderness specialist." },
+  { id:"sorcerer_hunter",name:"Sorcerer Hunter",group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           desc:"Specialist in hunting magic users." },
+  // SPELLCASTERS
+  { id:"wizard",        name:"Wizard",          group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:"intelligence", desc:"Scholarly magic user. -1 cost on first Intelligence increase.", startMana:8 },
+  { id:"sorcerer",      name:"Sorcerer",        group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           desc:"Innate magic user. Some races: Tribal magic only.", startMana:6 },
+  { id:"animist",       name:"Animist",         group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           desc:"Nature magic user. Access to Nature skills.", startMana:6 },
+  { id:"necromancer",   name:"Necromancer",     group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:null,           desc:"Death magic. Evil alignment. Humans become evil.", startMana:6 },
+  { id:"runic_master",  name:"Runic Master",    group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           desc:"Magic through runes. Dwarves preferred.", startMana:6 },
+  { id:"battle_wizard", name:"Battle Wizard",   group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           desc:"Combat-capable spellcaster.", startMana:5 },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// ATTRIBUTE CONFIG
+// ═══════════════════════════════════════════════════════════════
+const ATTR_META = [
+  { key:"movement",      label:"Movement",       icon:"🥾", note:"squares per turn" },
+  { key:"combatSkill",   label:"Combat Skill",   icon:"⚔",  note:"melee attacks" },
+  { key:"strength",      label:"Strength",       icon:"💪", note:"damage & carry" },
+  { key:"shootingSkill", label:"Shooting",       icon:"🎯", note:"ranged attacks" },
+  { key:"agility",       label:"Agility",        icon:"🌬", note:"dodge & jump" },
+  { key:"intelligence",  label:"Intelligence",   icon:"🧠", note:"spells & traps" },
+  { key:"mana",          label:"Mana",           icon:"✨", note:"spell power" },
+  { key:"courage",       label:"Courage",        icon:"🚩", note:"resist fear" },
+  { key:"naturalArmor",  label:"Natural Armor",  icon:"🛡", note:"fixed, skin toughness" },
+  { key:"vitality",      label:"Vitality",       icon:"❤",  note:"hit points" },
+];
+
+// Portrait emoji options
+const PORTRAITS = ["⚔","🗡","🪓","🏹","🪄","🔮","🐲","🦅","🐺","🦁","🐗","🧙","🛡","🏹","🗝","💀","🌿","⚡","🔥","❄","🌑"];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let heroes = [];
+let creatorState = null;
+let creatorStep = 0;
+let editingHeroId = null;
+
+const CREATOR_STEPS = ["Name", "Race", "Class", "Attributes", "Review"];
+
+// ═══════════════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════════════
+function save() {
+  localStorage.setItem('dun_heroes', JSON.stringify(heroes));
+}
+function load() {
+  try { heroes = JSON.parse(localStorage.getItem('dun_heroes') || '[]'); } catch(e) { heroes = []; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'xp') renderXpView();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PARTY VP
+// ═══════════════════════════════════════════════════════════════
+function calcPartyVP() {
+  return heroes.reduce((sum, h) => sum + (h.vp || 10), 0);
+}
+function questHint(vp) {
+  if (vp <= 10)  return "Quest Deck: Level 1-2";
+  if (vp <= 20)  return "Quest Deck: Level 1-2 / 3-4";
+  if (vp <= 35)  return "Quest Deck: Level 3-4";
+  if (vp <= 50)  return "Quest Deck: Level 3-4 / 5-6";
+  return "Quest Deck: Level 5-6";
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ROSTER RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderRoster() {
+  const totalVP = calcPartyVP();
+  document.getElementById('party-vp-total').textContent = totalVP;
+  document.getElementById('party-quest-hint').textContent = heroes.length ? questHint(totalVP) : '';
+
+  const grid = document.getElementById('hero-grid');
+  const emptyMsg = document.getElementById('empty-party-msg');
+
+  if (!heroes.length) {
+    emptyMsg.style.display = '';
+    grid.innerHTML = '';
+    grid.appendChild(emptyMsg);
+    return;
+  }
+  emptyMsg.style.display = 'none';
+
+  grid.innerHTML = heroes.map(h => {
+    const race = RACE_DB.find(r => r.id === h.raceId) || {};
+    const cls  = CLASS_DB.find(c => c.id === h.classId) || {};
+    const vitPct = Math.round((h.currentVitality / h.attrs.vitality) * 100);
+    const vitClass = vitPct >= 70 ? 'full' : vitPct >= 35 ? '' : 'low';
+    const alignIcon = race.alignment === 'good' ? '☀' : race.alignment === 'evil' ? '☠' : '⚖';
+    const alignClass = race.alignment || 'neutral';
+    const groupClass = cls.group === 'fighter' ? 'fighter-card' : cls.group === 'explorer' ? 'explorer-card' : 'caster-card';
+
+    return `<div class="hero-card ${groupClass}" onclick="openDetail('${h.id}')">
+      <div class="hero-card-header">
+        <div class="hero-portrait">${h.portrait || '⚔'}</div>
+        <div class="hero-identity">
+          <div class="hero-name">${h.name}</div>
+          <div class="hero-race-class">${race.name || '?'} · ${cls.name || '?'} <span class="align-icon ${alignClass}">${alignIcon}</span></div>
+        </div>
+        <div class="hero-vp-badge">VP ${h.vp || 10}</div>
+      </div>
+      <div class="hero-vitality-track">
+        <span>HP</span>
+        <div class="vitality-bar-bg">
+          <div class="vitality-bar-fill ${vitClass}" style="width:${vitPct}%"></div>
+        </div>
+        <span>${h.currentVitality}/${h.attrs.vitality}</span>
+      </div>
+      <div class="hero-stats-row">
+        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.movement}</div><div>MOV</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.combatSkill}</div><div>CS</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.strength}</div><div>STR</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.agility}</div><div>AGI</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${h.attrs.intelligence}</div><div>INT</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">${h.fortune}</div><div>FOR</div></div>
+        ${h.attrs.mana != null ? `<div class="hero-stat"><div class="hero-stat-val">${h.currentMana}</div><div>MAN</div></div>` : ''}
+      </div>
+      <div class="hero-card-footer">
+        <button class="hero-card-btn" onclick="event.stopPropagation();openDetail('${h.id}')">SHEET</button>
+        <button class="hero-card-btn" onclick="event.stopPropagation();restHero('${h.id}')">REST</button>
+        <button class="hero-card-btn danger" onclick="event.stopPropagation();deleteHero('${h.id}')">DELETE</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHARACTER CREATOR
+// ═══════════════════════════════════════════════════════════════
+function openCreator() {
+  const race = RACE_DB[0];
+  creatorState = {
+    name: '', portrait: '⚔',
+    raceId: null, classId: null,
+    devPointsTotal: 8, devPointsSpent: 0,
+    attrs: {},
+    skills: []
+  };
+  creatorStep = 0;
+  document.getElementById('creator-overlay').classList.add('open');
+  renderCreatorStep();
+}
+
+function closeCreator() {
+  document.getElementById('creator-overlay').classList.remove('open');
+  creatorState = null;
+}
+
+function renderStepIndicator() {
+  const el = document.getElementById('step-indicator');
+  el.innerHTML = CREATOR_STEPS.map((s, i) => {
+    let cls = i < creatorStep ? 'done' : i === creatorStep ? 'active' : '';
+    return `<div class="step-dot ${cls}">${s}</div>`;
+  }).join('');
+  document.getElementById('creator-step-label').textContent = `Step ${creatorStep + 1} of ${CREATOR_STEPS.length}`;
+  document.getElementById('btn-prev').style.visibility = creatorStep === 0 ? 'hidden' : 'visible';
+  document.getElementById('btn-next').textContent = creatorStep === CREATOR_STEPS.length - 1 ? 'Create Hero ✓' : 'Next →';
+}
+
+function renderCreatorStep() {
+  renderStepIndicator();
+  const body = document.getElementById('creator-body');
+  switch(creatorStep) {
+    case 0: body.innerHTML = renderStepName(); break;
+    case 1: body.innerHTML = renderStepRace(); attachRaceEvents(); break;
+    case 2: body.innerHTML = renderStepClass(); attachClassEvents(); break;
+    case 3: body.innerHTML = renderStepAttrs(); attachAttrEvents(); break;
+    case 4: body.innerHTML = renderStepReview(); break;
+  }
+}
+
+// ─── Step 0: Name & Portrait ──────────────────────────────────
+function renderStepName() {
+  const portraitOpts = PORTRAITS.map(p =>
+    `<div class="portrait-opt ${creatorState.portrait === p ? 'selected' : ''}" onclick="selectPortrait('${p}')">${p}</div>`
+  ).join('');
+  return `
+    <div class="step-name-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Hero Name</label>
+        <input class="form-input" id="inp-name" placeholder="Enter a name…" value="${creatorState.name}"
+          oninput="creatorState.name=this.value">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Portrait</label>
+        <div class="portrait-picker" id="portrait-picker">${portraitOpts}</div>
+      </div>
+    </div>`;
+}
+function selectPortrait(p) {
+  creatorState.portrait = p;
+  document.querySelectorAll('.portrait-opt').forEach(el => el.classList.toggle('selected', el.textContent === p));
+}
+
+// ─── Step 1: Race ──────────────────────────────────────────────
+function renderStepRace() {
+  const cards = RACE_DB.map(r => {
+    const alignLabel = r.alignment.charAt(0).toUpperCase() + r.alignment.slice(1);
+    return `<div class="race-card ${creatorState.raceId === r.id ? 'selected' : ''}"
+      data-race-id="${r.id}" onclick="selectRace(${r.id})">
+      <div class="race-card-name">${r.name}</div>
+      <span class="race-align-badge align-${r.alignment}">${alignLabel}</span>
+      <div class="race-stat-preview">
+        MOV ${r.attrs.movement.min}-${r.attrs.movement.max} · VIT ${r.attrs.vitality.min}-${r.attrs.vitality.max}<br>
+        Fortune ${r.fortune} · ${r.size}
+      </div>
+    </div>`;
+  }).join('');
+
+  const detail = creatorState.raceId ? renderRaceDetail(RACE_DB.find(r => r.id === creatorState.raceId)) : '<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;">Select a race to see details</div>';
+
+  return `<div class="race-grid">${cards}</div><div class="race-detail" id="race-detail">${detail}</div>`;
+}
+
+function renderRaceDetail(race) {
+  if (!race) return '';
+  const rows = ATTR_META.filter(a => a.key !== 'mana' || race.attrs.mana).map(a => {
+    const at = race.attrs[a.key];
+    if (!at) return '';
+    const dots = at.dc > 0 ? '●'.repeat(at.dc) : '—';
+    const range = at.min === at.max ? `${at.min}` : `${at.min} – ${at.max}`;
+    return `<div class="attr-row">
+      <span class="attr-name">${a.icon} ${a.label}</span>
+      <span class="attr-range">${range}</span>
+      <span class="attr-cost"><span class="attr-dots">${dots}</span></span>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="race-detail-title">${race.name} <span class="race-align-badge align-${race.alignment}">${race.alignment}</span></div>
+    <div class="attr-table">${rows}</div>
+    <div class="race-skills-row"><strong>Starting skills:</strong> ${race.startingSkills.join(', ') || 'None'}</div>
+    <div class="race-special">${race.special}</div>`;
+}
+
+function selectRace(id) {
+  creatorState.raceId = id;
+  document.querySelectorAll('.race-card').forEach(el =>
+    el.classList.toggle('selected', parseInt(el.dataset.raceId) === id)
+  );
+  document.getElementById('race-detail').innerHTML = renderRaceDetail(RACE_DB.find(r => r.id === id));
+  initAttrsFromRace();
+}
+
+function attachRaceEvents() {}
+
+function initAttrsFromRace() {
+  if (!creatorState.raceId) return;
+  const race = RACE_DB.find(r => r.id === creatorState.raceId);
+  creatorState.attrs = {};
+  ATTR_META.forEach(a => {
+    const at = race.attrs[a.key];
+    if (!at) { creatorState.attrs[a.key] = null; return; }
+    creatorState.attrs[a.key] = at.min;
+  });
+  creatorState.devPointsSpent = 0;
+}
+
+// ─── Step 2: Class ─────────────────────────────────────────────
+function renderStepClass() {
+  const race = RACE_DB.find(r => r.id === creatorState.raceId);
+  const allowed = race ? race.allowedClasses : [];
+  const isAllowed = (cid) => allowed.includes('all') || allowed.includes(cid) || allowed.includes(cid.replace('_',' '));
+
+  const groups = ['fighter','explorer','caster'];
+  const cols = groups.map(g => {
+    const classes = CLASS_DB.filter(c => c.group === g);
+    const header = `<div class="class-group-header ${g}">${g.toUpperCase()}S</div>`;
+    const opts = classes.map(c => {
+      const ok = isAllowed(c.id) || isAllowed(c.name.toLowerCase());
+      const sel = creatorState.classId === c.id ? 'selected' : '';
+      const dis = !ok ? 'disabled' : '';
+      return `<div class="class-opt ${sel} ${dis}" data-class-id="${c.id}"
+        onclick="${ok ? `selectClass('${c.id}')` : ''}">
+        <div class="class-opt-name">${c.name}${c.isCaster ? ' ✨' : ''}</div>
+        <div class="class-opt-desc">${c.desc}</div>
+      </div>`;
+    }).join('');
+    return `<div>${header}${opts}</div>`;
+  }).join('');
+
+  return `<div class="class-columns">${cols}</div>
+    <div style="margin-top:12px;font-size:10px;color:var(--text-muted);font-style:italic;">
+      Greyed out classes are not recommended for your race (but you can override this rule).
+      ✨ = Spellcaster (has Mana pool from creation).
+    </div>`;
+}
+
+function selectClass(id) {
+  creatorState.classId = id;
+  document.querySelectorAll('.class-opt').forEach(el =>
+    el.classList.toggle('selected', el.dataset.classId === id)
+  );
+}
+
+function attachClassEvents() {}
+
+// ─── Step 3: Attributes ────────────────────────────────────────
+function renderStepAttrs() {
+  if (!creatorState.raceId) return '<p style="color:var(--text-muted)">Please select a race first.</p>';
+  const race = RACE_DB.find(r => r.id === creatorState.raceId);
+  const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
+  const remaining = creatorState.devPointsTotal - creatorState.devPointsSpent;
+  const warnClass = remaining === 0 ? 'spent' : remaining <= 2 ? 'warn' : '';
+
+  const rows = ATTR_META.map(a => {
+    const at = race.attrs[a.key];
+    if (!at || a.key === 'naturalArmor') {
+      const val = creatorState.attrs[a.key] ?? at?.min ?? 0;
+      if (!at) return '';
+      return `<div class="attr-builder-row">
+        <div class="attr-builder-name">${a.icon} ${a.label}<em>${a.note}</em></div>
+        <div class="attr-builder-val" style="color:var(--text-muted)">${val}</div>
+        <div class="attr-builder-range">(fixed)</div>
+        <div class="attr-cost-label" style="font-size:9px;color:#6a5030">cannot change</div>
+      </div>`;
+    }
+    if (a.key === 'mana' && !at) return '';
+
+    const cur = creatorState.attrs[a.key] ?? at.min;
+    let dc = at.dc;
+    // Class bonus: first increase costs 1 less
+    if (cls && cls.bonusAttr === a.key && cur === at.min) dc = Math.max(1, dc - 1);
+    const canInc = cur < at.max && remaining >= dc;
+    const canDec = cur > at.min;
+
+    return `<div class="attr-builder-row">
+      <div class="attr-builder-name">${a.icon} ${a.label}<em>${a.note}</em></div>
+      <button class="attr-btn" ${canDec ? '' : 'disabled'} onclick="changeAttr('${a.key}',-1)">−</button>
+      <div class="attr-builder-val">${cur}</div>
+      <button class="attr-btn" ${canInc ? '' : 'disabled'} onclick="changeAttr('${a.key}',1)">+</button>
+      <div class="attr-builder-range">${at.min} – ${at.max}</div>
+      <div class="attr-cost-label">${dc > 0 ? dc + ' pt' + (dc > 1 ? 's' : '') + '/+1' : '—'}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="attr-builder">
+    <div class="dev-points-banner">
+      <span>Development Points Remaining</span>
+      <span class="dev-points-count ${warnClass}">${remaining}</span>
+    </div>
+    ${rows}
+    <div style="margin-top:12px;font-size:10px;color:var(--text-muted);font-style:italic;">
+      You have 8 development points to spend. Natural Armor and Fortune cannot be changed here.
+      ${cls && cls.bonusAttr ? `<br>${cls.name}s get a 1-point discount on the first ${cls.bonusAttr.replace(/([A-Z])/g,' $1')} increase.` : ''}
+    </div>
+  </div>`;
+}
+
+function changeAttr(key, delta) {
+  const race = RACE_DB.find(r => r.id === creatorState.raceId);
+  const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
+  const at = race.attrs[key];
+  if (!at) return;
+
+  const cur = creatorState.attrs[key] ?? at.min;
+  let dc = at.dc;
+  if (cls && cls.bonusAttr === key && cur === at.min && delta > 0) dc = Math.max(1, dc - 1);
+
+  if (delta > 0) {
+    if (cur >= at.max) return;
+    if (creatorState.devPointsSpent + dc > creatorState.devPointsTotal) return;
+    creatorState.attrs[key] = cur + 1;
+    creatorState.devPointsSpent += dc;
+  } else {
+    if (cur <= at.min) return;
+    let refundDc = at.dc;
+    if (cls && cls.bonusAttr === key && cur === at.min + 1) refundDc = Math.max(1, at.dc - 1);
+    creatorState.attrs[key] = cur - 1;
+    creatorState.devPointsSpent -= refundDc;
+  }
+
+  renderCreatorStep();
+}
+
+function attachAttrEvents() {}
+
+// ─── Step 4: Review ────────────────────────────────────────────
+function renderStepReview() {
+  const race = RACE_DB.find(r => r.id === creatorState.raceId) || { name:'?', alignment:'neutral', fortune:3, startingSkills:[] };
+  const cls  = CLASS_DB.find(c => c.id === creatorState.classId) || { name:'?' };
+
+  const attrRows = ATTR_META.map(a => {
+    const val = creatorState.attrs[a.key];
+    if (val == null) return '';
+    return `<div class="attr-row">
+      <span class="attr-name">${a.icon} ${a.label}</span>
+      <span class="attr-range" style="font-size:14px;color:var(--gold-light)">${val}</span>
+    </div>`;
+  }).join('');
+
+  const vp = 10; // base VP; upgrades will add on top
+
+  return `
+    <div style="max-width:600px;margin:0 auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+        <div>
+          <div class="sheet-section-title">Identity</div>
+          <div style="font-size:28px;margin-bottom:8px;">${creatorState.portrait}</div>
+          <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-light);margin-bottom:4px;">${creatorState.name || '(unnamed)'}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${race.name} · ${cls.name}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Alignment: ${race.alignment} · Fortune: ${race.fortune}</div>
+          <div style="font-size:11px;color:var(--text-muted);">Value Points: ${vp}</div>
+        </div>
+        <div>
+          <div class="sheet-section-title">Starting Skills</div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            ${[...race.startingSkills].map(s => `<span class="skill-chip">${s}</span>`).join('')}
+            ${!race.startingSkills.length ? '<em>None</em>' : ''}
+          </div>
+          <div class="sheet-section-title" style="margin-top:12px;">Carry Capacity</div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            Max weight: ${((creatorState.attrs.strength || 3) + (creatorState.attrs.vitality || 4)) * 2} 
+            <em>(STR + VIT × 2)</em>
+          </div>
+          ${cls.isCaster ? `<div class="sheet-section-title" style="margin-top:12px;">Mana</div>
+          <div style="font-size:11px;color:var(--text-muted);">Starting mana: ${cls.startMana || 6}</div>` : ''}
+        </div>
+      </div>
+      <div class="sheet-section-title">Attributes</div>
+      <div class="attr-table" style="margin-bottom:0;">${attrRows}</div>
+    </div>`;
+}
+
+// ─── Creator navigation ────────────────────────────────────────
+function creatorNext() {
+  // Validation
+  if (creatorStep === 0 && !creatorState.name.trim()) {
+    alert('Please enter a name for your hero.'); return;
+  }
+  if (creatorStep === 1 && !creatorState.raceId) {
+    alert('Please select a race.'); return;
+  }
+  if (creatorStep === 2 && !creatorState.classId) {
+    alert('Please select a class.'); return;
+  }
+
+  if (creatorStep === CREATOR_STEPS.length - 1) {
+    finaliseHero(); return;
+  }
+  creatorStep++;
+  renderCreatorStep();
+}
+
+function creatorPrev() {
+  if (creatorStep > 0) { creatorStep--; renderCreatorStep(); }
+}
+
+function finaliseHero() {
+  const race = RACE_DB.find(r => r.id === creatorState.raceId);
+  const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
+
+  const hero = {
+    id: 'hero_' + Date.now(),
+    name: creatorState.name.trim(),
+    portrait: creatorState.portrait,
+    raceId: creatorState.raceId,
+    classId: creatorState.classId,
+    alignment: race.alignment,
+    vp: 10,
+    xp: 0,
+    coins: 0,
+    attrs: { ...creatorState.attrs },
+    // Quest-state (reset per quest)
+    currentVitality: creatorState.attrs.vitality,
+    currentMana: cls.isCaster ? (cls.startMana || 6) : 0,
+    fortune: race.fortune,
+    currentFortune: race.fortune,
+    skills: [...race.startingSkills],
+    equipment: { hands: [], body: [], backpack: [] },
+    notes: ''
+  };
+
+  heroes.push(hero);
+  save();
+  closeCreator();
+  renderRoster();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HERO DETAIL
+// ═══════════════════════════════════════════════════════════════
+function openDetail(id) {
+  const h = heroes.find(h => h.id === id);
+  if (!h) return;
+  const race = RACE_DB.find(r => r.id === h.raceId) || {};
+  const cls  = CLASS_DB.find(c => c.id === h.classId) || {};
+
+  const attrRows = ATTR_META.map(a => {
+    const val = h.attrs[a.key];
+    if (val == null) return '';
+    const raceAt = race.attrs?.[a.key];
+    const maxVal = raceAt ? raceAt.max : val;
+    return `<div class="attr-sheet-row">
+      <span class="attr-sheet-name">${a.icon} ${a.label}</span>
+      <span>
+        <span class="attr-sheet-val">${val}</span>
+        <span class="attr-sheet-max"> / ${maxVal}</span>
+      </span>
+    </div>`;
+  }).join('');
+
+  const fortunePips = Array.from({length: h.fortune}, (_,i) =>
+    `<div class="fortune-pip ${i >= h.currentFortune ? 'spent' : ''}"
+      onclick="toggleFortune('${h.id}',${i})" title="${i < h.currentFortune ? 'Spend fortune' : 'Restore fortune'}"></div>`
+  ).join('');
+
+  const skillChips = (h.skills || []).map(s => `<span class="skill-chip">${s}</span>`).join('');
+  const weightMax = (h.attrs.strength + h.attrs.vitality) * 2;
+
+  const modal = document.getElementById('detail-modal');
+  modal.innerHTML = `
+    <div class="creator-header">
+      <div class="creator-title">${h.portrait} ${h.name}</div>
+      <button class="creator-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="hero-sheet">
+      <div class="hero-sheet-left">
+        <div class="hero-sheet-portrait-lg">${h.portrait}</div>
+        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);">${h.name}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${race.name || '?'} · ${cls.name || '?'}</div>
+        <div style="font-size:10px;color:var(--text-muted);">VP: <strong style="color:var(--gold-light)">${h.vp}</strong></div>
+        <hr class="section-divider">
+        <div class="sheet-section-title">Fortune</div>
+        <div class="fortune-pips">${fortunePips}</div>
+        <hr class="section-divider">
+        <div class="sheet-section-title">Coins</div>
+        <div class="coins-row">
+          <input class="coins-input" type="number" min="0" value="${h.coins}"
+            onchange="updateCoins('${h.id}',this.value)">
+          <span style="font-size:11px;color:var(--text-muted);">gold</span>
+        </div>
+        <hr class="section-divider">
+        <div style="font-size:10px;color:var(--text-muted);">Max carry: ${weightMax}</div>
+      </div>
+      <div class="hero-sheet-right">
+        <div class="sheet-section-title">Attributes</div>
+        <div class="attr-sheet-grid">${attrRows}</div>
+
+        <div class="sheet-section-title">Quest Status</div>
+        <div class="quest-controls">
+          <div class="quest-control-row">
+            <span class="quest-ctrl-label">Vitality</span>
+            <button class="qty-btn" onclick="adjustHeroVal('${h.id}','currentVitality',-1)">−</button>
+            <span class="qty-display" id="qv-${h.id}">${h.currentVitality}</span>
+            <button class="qty-btn" onclick="adjustHeroVal('${h.id}','currentVitality',1)">+</button>
+            <span style="font-size:10px;color:var(--text-muted)">/ ${h.attrs.vitality}</span>
+          </div>
+          ${cls.isCaster ? `<div class="quest-control-row">
+            <span class="quest-ctrl-label">Mana</span>
+            <button class="qty-btn" onclick="adjustHeroVal('${h.id}','currentMana',-1)">−</button>
+            <span class="qty-display" id="qm-${h.id}">${h.currentMana}</span>
+            <button class="qty-btn" onclick="adjustHeroVal('${h.id}','currentMana',1)">+</button>
+            <span style="font-size:10px;color:var(--text-muted)">/ ${h.attrs.mana != null ? h.attrs.mana : (cls.startMana || 6)}</span>
+          </div>` : ''}
+        </div>
+
+        <div class="sheet-section-title">Experience</div>
+        <div class="xp-section">
+          <div class="xp-row">
+            <span>XP:</span>
+            <input class="xp-input" type="number" min="0" value="${h.xp}"
+              onchange="updateXP('${h.id}',this.value)">
+            <span class="xp-hint">every 3 XP = 1 dev point</span>
+          </div>
+          <div class="xp-row" style="color:var(--text-muted);font-size:10px;">
+            Dev points available: <strong style="color:var(--gold-light)">${Math.floor(h.xp / 3)}</strong>
+          </div>
+        </div>
+
+        <div class="sheet-section-title">Skills</div>
+        <div>${skillChips || '<em style="font-size:10px;color:var(--text-muted)">No skills</em>'}</div>
+
+        <div class="sheet-section-title">Notes</div>
+        <textarea style="width:100%;background:var(--bg-dark);border:1px solid var(--panel-border);color:var(--text-light);
+          padding:6px;font-family:inherit;font-size:11px;resize:vertical;min-height:60px;"
+          onchange="updateNotes('${h.id}',this.value)">${h.notes || ''}</textarea>
+
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn-secondary" onclick="restHero('${h.id}');closeDetail()">⛺ Rest (restore all)</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  renderRoster();
+}
+
+// ─── Hero mutations ────────────────────────────────────────────
+function adjustHeroVal(id, key, delta) {
+  const h = heroes.find(h => h.id === id);
+  if (!h) return;
+  const cls = CLASS_DB.find(c => c.id === h.classId);
+  let max = key === 'currentVitality' ? h.attrs.vitality
+          : key === 'currentMana'     ? (h.attrs.mana != null ? h.attrs.mana : (cls?.startMana || 6))
+          : 999;
+  h[key] = Math.max(0, Math.min(max, (h[key] || 0) + delta));
+  save();
+  const el = document.getElementById((key === 'currentVitality' ? 'qv-' : 'qm-') + id);
+  if (el) el.textContent = h[key];
+}
+
+function toggleFortune(id, idx) {
+  const h = heroes.find(h => h.id === id);
+  if (!h) return;
+  h.currentFortune = idx < h.currentFortune ? idx : idx + 1;
+  save();
+  openDetail(id);
+}
+
+function updateCoins(id, val) {
+  const h = heroes.find(h => h.id === id);
+  if (h) { h.coins = parseInt(val) || 0; save(); }
+}
+
+function updateXP(id, val) {
+  const h = heroes.find(h => h.id === id);
+  if (h) { h.xp = parseInt(val) || 0; save(); openDetail(id); }
+}
+
+function updateNotes(id, val) {
+  const h = heroes.find(h => h.id === id);
+  if (h) { h.notes = val; save(); }
+}
+
+function restHero(id) {
+  const h = heroes.find(h => h.id === id);
+  if (!h) return;
+  const cls = CLASS_DB.find(c => c.id === h.classId);
+  h.currentVitality = h.attrs.vitality;
+  h.currentMana = cls?.isCaster ? (cls.startMana || 6) : 0;
+  h.currentFortune = h.fortune;
+  save();
+  renderRoster();
+}
+
+function deleteHero(id) {
+  if (!confirm('Delete this hero permanently?')) return;
+  heroes = heroes.filter(h => h.id !== id);
+  save();
+  renderRoster();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// XP VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderXpView() {
+  const el = document.getElementById('xp-award-list');
+  if (!heroes.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-style:italic;">No heroes in party.</div>';
+    return;
+  }
+  el.innerHTML = heroes.map(h => {
+    const race = RACE_DB.find(r => r.id === h.raceId) || {};
+    const devPts = Math.floor(h.xp / 3);
+    return `<div style="background:var(--bg-panel);border:1px solid var(--panel-border);padding:12px;display:flex;align-items:center;gap:16px;">
+      <div style="font-size:28px;">${h.portrait}</div>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold-light);">${h.name}</div>
+        <div style="font-size:10px;color:var(--text-muted);">${race.name} · VP ${h.vp}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;color:var(--text-muted);">Award XP:</span>
+        <button class="qty-btn" onclick="awardXP('${h.id}',-1)">−</button>
+        <span style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-light);min-width:30px;text-align:center;">${h.xp}</span>
+        <button class="qty-btn" onclick="awardXP('${h.id}',1)">+</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);min-width:100px;">
+        Dev points: <strong style="color:var(--gold-light)">${devPts}</strong>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function awardXP(id, delta) {
+  const h = heroes.find(h => h.id === id);
+  if (h) { h.xp = Math.max(0, h.xp + delta); save(); renderXpView(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+load();
+renderRoster();
+</script>
+</body>
+</html>
