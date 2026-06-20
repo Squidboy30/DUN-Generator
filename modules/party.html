@@ -93,6 +93,14 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
 }
+/* Each hero occupies one cell; when its panel is open, expand to full width */
+.hero-card-wrap {
+  display: contents; /* transparent in grid — card and panel are independent grid items */
+}
+.hero-card-wrap:has(.hero-cards-panel:not([style*="display:none"])) {
+  display: block;
+  grid-column: 1 / -1;
+}
 
 .hero-card {
   background: var(--bg-panel);
@@ -241,6 +249,7 @@ body {
   border: 1px solid var(--panel-border);
   border-top: none;
   padding: 16px;
+  grid-column: 1 / -1;  /* span all grid columns */
 }
 .cards-panel-section {
   margin-bottom: 20px;
@@ -258,7 +267,8 @@ body {
 .cards-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 /* ── DUN Card Component ─────────────────────────────────────── */
@@ -1284,7 +1294,8 @@ function renderRoster() {
     const groupClass = cls.group === 'fighter' ? 'fighter-card' : cls.group === 'explorer' ? 'explorer-card' : 'caster-card';
     const cur = calcCurrentAttrs(h.attrs, h.equippedItems || []);
 
-    return `<div class="hero-card ${groupClass}" onclick="openDetail('${h.id}')">
+    return `<div class="hero-card-wrap">
+      <div class="hero-card ${groupClass}" onclick="openDetail('${h.id}')">
       <div class="hero-card-header">
         <div class="hero-portrait">${h.portrait || '⚔'}</div>
         <div class="hero-identity">
@@ -1314,8 +1325,8 @@ function renderRoster() {
         <button class="hero-card-btn" onclick="event.stopPropagation();restHero('${h.id}')">REST</button>
         <button class="hero-card-btn cards-btn" id="cards-btn-${h.id}" onclick="event.stopPropagation();toggleCardsPanel('${h.id}')">CARDS</button>
       </div>
-    </div>
-    <div class="hero-cards-panel" id="cards-panel-${h.id}" style="display:none;"></div>`;
+      <div class="hero-cards-panel" id="cards-panel-${h.id}" style="display:none;"></div>
+    </div>`;
   }).join('');
 }
 
