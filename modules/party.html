@@ -209,7 +209,31 @@ body {
   cursor: pointer;
   transition: all .2s;
 }
-.hero-card-btn.cards-btn { color: var(--gold-light); }
+.dun-card-img-wrap {
+  width: 180px;
+  flex-shrink: 0;
+}
+.dun-card-img-wrap img {
+  width: 180px;
+  height: auto;
+  display: block;
+  border-radius: 3px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,.7);
+}
+.dun-card-fallback {
+  width: 180px;
+  height: 240px;
+  background: var(--bg-panel);
+  border: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px;
+}
 .hero-card-btn.cards-btn.active { background: rgba(160,120,32,.2); color: var(--gold-light); }
 
 .hero-cards-panel {
@@ -2857,29 +2881,29 @@ const SPELL_DESC = {
 };
 
 function renderDunCard(cfg) {
-  // cfg: { title, subtitle, icon, desc, type, footer[] }
-  // type: 'combat'|'exploration'|'scholarly'|'nature'|'spell'|'item'|'armor'
+  // Use the real card image if available, fall back to CSS card
+  const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
+  const imgUrl = cfg.imgPath ? base + cfg.imgPath : null;
+
+  if (imgUrl) {
+    return `<div class="dun-card-img-wrap">
+      <img src="${imgUrl}" alt="${cfg.title}" title="${cfg.title}"
+        onerror="this.parentElement.innerHTML=\`<div class='dun-card-fallback'>${cfg.title}</div>\`"
+        loading="lazy">
+    </div>`;
+  }
+
+  // CSS fallback
   const typeLabel = {
     combat:'Combat Skill', exploration:'Exploration', scholarly:'Scholarly',
     nature:'Nature', spell:'Magic Spell', item:'Equipment', armor:'Armor & Shield'
   }[cfg.type] || cfg.type;
-
-  const footerCells = (cfg.footer || []).map(f =>
-    `<div class="dun-card-stat">
-      <div class="dun-card-stat-val">${f.val}</div>
-      <div class="dun-card-stat-lbl">${f.lbl}</div>
-    </div>`
-  ).join('');
-
   return `<div class="dun-card card-${cfg.type}">
     <div class="dun-card-header">
       <div class="dun-card-type">${typeLabel}</div>
       <div class="dun-card-title">${cfg.title}</div>
-      ${cfg.subtitle ? `<div style="font-family:'Cinzel',serif;font-size:7px;color:rgba(255,220,160,.7);margin-top:2px;">${cfg.subtitle}</div>` : ''}
     </div>
-    <div class="dun-card-icon ${cfg.type}-icon">${cfg.icon}</div>
-    <div class="dun-card-body">${cfg.desc || '<em>No description available.</em>'}</div>
-    ${footerCells ? `<div class="dun-card-footer">${footerCells}</div>` : ''}
+    <div class="dun-card-body">${cfg.desc || ''}</div>
   </div>`;
 }
 
@@ -2903,15 +2927,12 @@ function renderCardsPanel(h) {
   // ── SKILLS ──────────────────────────────────────────────────
   if (h.skills && h.skills.length) {
     const skillCards = h.skills.map(sName => {
-      const sk = SKILL_DB.find(s => s.name === sName) || { type: 'combat' };
-      const desc = SKILL_DESC[sName] || 'See rulebook for full description.';
+      const sk = SKILL_DB.find(s => s.name === sName);
       return renderDunCard({
         title: sName,
-        subtitle: (sk.type || '').replace(/_/g,' '),
-        icon: SKILL_ICONS[sk.type] || '⚔',
-        desc,
-        type: sk.type || 'combat',
-        footer: []
+        type: sk?.type || 'combat',
+        imgPath: sk ? `skills/${sk.id}.jpg` : null,
+        desc: SKILL_DESC[sName] || sName
       });
     }).join('');
     sections.push(`<div class="cards-panel-section">
@@ -2924,18 +2945,11 @@ function renderCardsPanel(h) {
   if (h.knownSpells && h.knownSpells.length) {
     const spellCards = h.knownSpells.map(spName => {
       const sp = SPELL_DB.find(s => s.name === spName);
-      const desc = SPELL_DESC[spName] || 'See rulebook for full description.';
-      const lore = sp?.lore || '?';
       return renderDunCard({
         title: spName,
-        subtitle: `${lore} Lore`,
-        icon: LORE_ICONS[lore] || '✨',
-        desc,
         type: 'spell',
-        footer: [
-          { val: sp?.manaCost ?? 1, lbl: 'MANA' },
-          { val: sp?.cost ?? '—', lbl: 'COST' },
-        ]
+        imgPath: sp ? `spells/${sp.id}.jpg` : null,
+        desc: SPELL_DESC[spName] || spName
       });
     }).join('');
     sections.push(`<div class="cards-panel-section">
@@ -2949,35 +2963,11 @@ function renderCardsPanel(h) {
     const itemCards = h.equippedItems.map(itemId => {
       const item = ITEM_BY_ID[itemId];
       if (!item) return '';
-      const isArmor = item.cat === 'armor' || item.cat === 'shield';
-      const cardType = isArmor ? 'armor' : 'item';
-
-      // Build footer stats
-      const footer = [];
-      if (item.cost)        footer.push({ val: item.cost,        lbl: 'COST' });
-      if (item.weight)      footer.push({ val: item.weight,      lbl: 'WT'   });
-      if (item.armorBonus)  footer.push({ val: `+${item.armorBonus}`, lbl: 'ARMOR' });
-      if (item.damageDice)  footer.push({ val: item.damageDice,  lbl: 'DMG'  });
-
-      // Build description from modifiers + note
-      let descParts = [];
-      if (item.isHeavyArmor) descParts.push('Heavy armor.');
-      if (item.attrMods && Object.keys(item.attrMods).length) {
-        const mods = Object.entries(item.attrMods)
-          .map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k.replace(/([A-Z])/g,' $1').toLowerCase()}`)
-          .join(', ');
-        descParts.push(`${mods}.`);
-      }
-      if (item.note) descParts.push(item.note + '.');
-      if (item.hands === 2) descParts.push('Two-handed.');
-
       return renderDunCard({
         title: item.name,
-        subtitle: (CAT_LABELS[item.cat] || item.cat),
-        icon: CAT_ICONS[item.cat] || '📦',
-        desc: descParts.join(' ') || 'No special rules.',
-        type: cardType,
-        footer
+        type: item.cat === 'armor' || item.cat === 'shield' ? 'armor' : 'item',
+        imgPath: `items/${item.id}.jpg`,
+        desc: item.name
       });
     }).join('');
     sections.push(`<div class="cards-panel-section">
