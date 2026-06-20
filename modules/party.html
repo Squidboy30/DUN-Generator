@@ -2256,6 +2256,12 @@ function finaliseHero() {
   const race = RACE_DB.find(r => r.id === creatorState.raceId);
   const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
 
+  // VP: base 10 + 2 per professional skill + 2 per spell
+  // Racial starting skills don't cost VP (they're free with the race)
+  const proSkills = creatorState.skills || [];
+  const startingSpells = cls.isCaster ? (creatorState.spells || []) : [];
+  const startingVP = 10 + (proSkills.length * 2) + (startingSpells.length * 2);
+
   const hero = {
     id: 'hero_' + Date.now(),
     name: creatorState.name.trim(),
@@ -2263,7 +2269,7 @@ function finaliseHero() {
     raceId: creatorState.raceId,
     classId: creatorState.classId,
     alignment: race.alignment,
-    vp: 10,
+    vp: startingVP,
     xp: 0,        // unspent accumulated XP
     xpSpent: 0,   // XP already invested in improvements
     coins: 0,
@@ -3067,18 +3073,18 @@ function addHeroSkill(heroId, skillName) {
   if (!h.skills) h.skills = [];
   if (!h.skills.includes(skillName)) {
     h.skills.push(skillName);
-    h.vp += 2; // each skill learned = +2 VP
+    h.vp += 2; // each skill learned = +2 VP (rulebook p.80)
   }
   save();
+  // Refresh skill chips in sheet and VP badge on roster card
   const el = document.getElementById('hero-skills-' + heroId);
   if (el) el.innerHTML = renderHeroSkillChips(h);
-  // Refresh vp display
-  document.querySelectorAll('.hero-vp-badge').forEach(b => {
-    // Re-render roster in background
-  });
-  // Close picker and refresh
-  toggleSkillPicker(heroId);
-  toggleSkillPicker(heroId);
+  // Update VP badge without full re-render
+  const badge = document.querySelector(`[onclick*="openDetail('${heroId}')"] .hero-vp-badge, #cards-btn-${heroId}`)?.closest('.hero-card')?.querySelector('.hero-vp-badge');
+  if (badge) badge.textContent = `VP ${h.vp}`;
+  // Update party VP banner
+  const partyBanner = document.querySelector('.party-vp-banner span');
+  if (partyBanner) partyBanner.textContent = calcPartyVP();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3204,6 +3210,9 @@ function learnSpell(heroId, spellName) {
   }
   save();
   openDetail(heroId);
+  // Update party VP banner
+  const partyBanner = document.querySelector('.party-vp-banner span');
+  if (partyBanner) partyBanner.textContent = calcPartyVP();
 }
 
 // ═══════════════════════════════════════════════════════════════
