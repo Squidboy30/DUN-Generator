@@ -209,9 +209,148 @@ body {
   cursor: pointer;
   transition: all .2s;
 }
-.hero-card-btn:hover { background: var(--border-gold); color: var(--ink); }
-.hero-card-btn:not(:last-child) { border-right: 1px solid var(--panel-border); }
-.hero-card-btn.danger:hover { background: var(--accent-red); color: var(--text-light); }
+.hero-card-btn.cards-btn { color: var(--gold-light); }
+.hero-card-btn.cards-btn.active { background: rgba(160,120,32,.2); color: var(--gold-light); }
+
+.hero-cards-panel {
+  background: var(--bg-dark);
+  border: 1px solid var(--panel-border);
+  border-top: none;
+  padding: 16px;
+}
+.cards-panel-section {
+  margin-bottom: 20px;
+}
+.cards-panel-title {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+.cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ── DUN Card Component ─────────────────────────────────────── */
+.dun-card {
+  width: 160px;
+  min-height: 220px;
+  background: linear-gradient(160deg, #f5e8c4 0%, #ead5a0 40%, #e2c880 80%, #d8bb6a 100%);
+  border: 2px solid #7a5c18;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 3px rgba(255,220,120,.4),
+    inset 0 0 0 5px rgba(120,80,20,.3),
+    3px 3px 8px rgba(0,0,0,.6);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+/* Outer ornate border line */
+.dun-card::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(160,110,20,.5);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dun-card-header {
+  background: linear-gradient(180deg, #2a1a06 0%, #3d2510 100%);
+  padding: 6px 8px 5px;
+  text-align: center;
+  border-bottom: 2px solid #7a5c18;
+  position: relative;
+  z-index: 2;
+}
+.dun-card-type {
+  font-family: 'Cinzel', serif;
+  font-size: 6px;
+  letter-spacing: 2px;
+  color: #c8a060;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.dun-card-title {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 10px;
+  color: #f0d890;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.dun-card-icon {
+  text-align: center;
+  padding: 10px 8px 4px;
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.dun-card-icon.skill-icon { font-size: 30px; padding: 8px 8px 4px; }
+.dun-card-icon.spell-icon { font-size: 28px; }
+
+.dun-card-body {
+  flex: 1;
+  padding: 4px 10px 6px;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 9px;
+  color: #2a1a0a;
+  line-height: 1.45;
+  text-align: center;
+  font-style: italic;
+}
+
+.dun-card-footer {
+  background: linear-gradient(0deg, rgba(180,130,40,.2) 0%, transparent 100%);
+  border-top: 1px solid rgba(120,80,20,.4);
+  padding: 5px 8px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  color: #5c3a10;
+}
+.dun-card-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.dun-card-stat-val {
+  font-size: 11px;
+  font-weight: bold;
+  color: #2a1a0a;
+}
+.dun-card-stat-lbl {
+  font-size: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* Card type colour accents */
+.dun-card.card-combat    .dun-card-header { background: linear-gradient(180deg, #3a0a0a 0%, #5a1010 100%); }
+.dun-card.card-combat    .dun-card-title  { color: #ffd0b0; }
+.dun-card.card-exploration .dun-card-header { background: linear-gradient(180deg, #0a2a10 0%, #103a18 100%); }
+.dun-card.card-exploration .dun-card-title  { color: #b0ffc0; }
+.dun-card.card-scholarly .dun-card-header { background: linear-gradient(180deg, #1a0a3a 0%, #2a1058 100%); }
+.dun-card.card-scholarly .dun-card-title  { color: #d0b0ff; }
+.dun-card.card-nature    .dun-card-header { background: linear-gradient(180deg, #0a2010 0%, #103020 100%); }
+.dun-card.card-nature    .dun-card-title  { color: #b0ffb0; }
+.dun-card.card-spell     .dun-card-header { background: linear-gradient(180deg, #0a102a 0%, #101840 100%); }
+.dun-card.card-spell     .dun-card-title  { color: #b0d0ff; }
+.dun-card.card-item      .dun-card-header { background: linear-gradient(180deg, #1a1208 0%, #2a1c0c 100%); }
+.dun-card.card-item      .dun-card-title  { color: #ffe0a0; }
+.dun-card.card-armor     .dun-card-header { background: linear-gradient(180deg, #101828 0%, #182038 100%); }
+.dun-card.card-armor     .dun-card-title  { color: #a0c8ff; }
 
 .empty-party {
   grid-column: 1/-1;
@@ -1149,9 +1288,10 @@ function renderRoster() {
       <div class="hero-card-footer">
         <button class="hero-card-btn" onclick="event.stopPropagation();openDetail('${h.id}')">SHEET</button>
         <button class="hero-card-btn" onclick="event.stopPropagation();restHero('${h.id}')">REST</button>
-        <button class="hero-card-btn danger" onclick="event.stopPropagation();deleteHero('${h.id}')">DELETE</button>
+        <button class="hero-card-btn cards-btn" id="cards-btn-${h.id}" onclick="event.stopPropagation();toggleCardsPanel('${h.id}')">CARDS</button>
       </div>
-    </div>`;
+    </div>
+    <div class="hero-cards-panel" id="cards-panel-${h.id}" style="display:none;"></div>`;
   }).join('');
 }
 
@@ -2386,8 +2526,10 @@ function openDetail(id) {
           padding:6px;font-family:inherit;font-size:11px;resize:vertical;min-height:60px;"
           onchange="updateNotes('${h.id}',this.value)">${h.notes || ''}</textarea>
 
-        <div style="margin-top:12px;display:flex;gap:8px;">
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn-secondary" onclick="restHero('${h.id}');closeDetail()">⛺ Rest (restore all)</button>
+          <button class="btn-secondary" style="color:#bf4040;border-color:#7a2020;margin-left:auto;"
+            onclick="if(confirm('Delete ${h.name} permanently?')){deleteHero('${h.id}');closeDetail()}">🗑 Delete Hero</button>
         </div>
       </div>
     </div>`;
@@ -2478,10 +2620,392 @@ function restHero(id) {
 }
 
 function deleteHero(id) {
-  if (!confirm('Delete this hero permanently?')) return;
   heroes = heroes.filter(h => h.id !== id);
   save();
   renderRoster();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CARDS PANEL (roster card expand)
+// ═══════════════════════════════════════════════════════════════
+
+// Descriptions sourced from rulebook p.110-116 and card screenshots
+const SKILL_DESC = {
+  // Combat
+  "Accurate shooting":   "Rolls one extra damage die while using ranged and throwing weapons.",
+  "Aiming":              "While shooting, may reroll one die on the hitting roll as long as the roll is not a critical failure and character hadn't moved. Only one shot per turn.",
+  "Axe Skills":          "Gains +1 Combat Skill while wielding an axe or battleaxe.",
+  "Berserker":           "May go Berserker at turn start. Immune to fear, cannot use shields or heavy armor. One extra melee attack per turn at −1 Combat Skill. Must always attack nearest visible enemy.",
+  "Blocking":            "While wielding a Greatsword or Bastard Sword, may block attacks on a result of 5+. Blocking causes −1 Combat Skill on next attack.",
+  "Blocking with two Axes": "While defending with two axes, can block melee hits on a result of 5 or 6, as if using a shield. Axes won't break when blocking a hit, except in case of a blunder.",
+  "Bodyguard":           "An adjacent ally gets +1 Combat Skill while defending. Once per turn may intercept a projectile that hit an adjacent ally.",
+  "Brutal blow":         "With a two-handed weapon, results of 4+ are critical hits. Suffers −1 Combat Skill when attacking and while defending next enemy turn.",
+  "Combat master":       "Requires Combat Skill 4+. While fighting two enemies at once, gains one extra attack with no penalties.",
+  "Cruel":               "After hitting an enemy in melee or casting a Damage spell, may reroll one result of 1 on the damage roll.",
+  "Dance battler":       "During activation, gains one extra attack if both dice results equal or exceed the enemy's Agility. Cannot use heavy armor. Requires Agility 3+.",
+  "Defeating roar":      "Once per game, use an Action to perform a deafening roar. All adjacent enemies must move one space away. Gains the Fearsome skill until end of combat.",
+  "Dirty fighter":       "If character rolls doubles (not a critical failure) while attacking or defending in melee, automatically stuns the opponent (not Huge ones).",
+  "Door Breaking":       "Can use an Action to break open any standard door automatically, without a Strength test.",
+  "Duelist":             "Once per combat, may challenge a single enemy to a duel. Both characters roll Initiative. Loser suffers −1 Combat Skill for the rest of the combat.",
+  "Elite":               "Requires Combat Skill 4+. May reroll melee hitting rolls of 1 (not critical failures).",
+  "Expert archer":       "Can perform Defending Shots with a Long Bow. May reroll one failed shot per game (not a critical failure).",
+  "Expert shooter":      "When moving up to half movement, suffers no penalty for moving and shooting in the same turn.",
+  "Expert thrower":      "Requires Shooting Skill 4+. May reroll hitting rolls of 1 while using throwing weapons (not critical failures).",
+  "Fast attacks":        "Once per turn, may attack with 3D6 in melee, choosing the two most favourable. Apply −1 penalty to the roll. Double 1 on any two dice = critical failure.",
+  "Fast shooting":       "May shoot twice per turn without moving. Shooting Skill is reduced by 1. Cannot be used with Reload weapons.",
+  "Foresight":           "When targeted by an attack, if defender rolls doubles and wins, is considered to have foreseen the attack and hits the attacker instead.",
+  "Furious":             "Gains +1 to all melee damage rolls. Additionally, character may reroll one damage die per attack.",
+  "Giant killer":        "When hitting a large or huge character, gains one extra damage die. May also reroll failed Courage rolls against such enemies.",
+  "Hardy":               "Increases Vitality by 1 (may exceed racial maximum).",
+  "Hardened":            "Covered in scars. Whenever losing one or more Vitality from attacks, roll 1D6. On a 4+, damage is reduced by 1.",
+  "Hatred towards":      "Gets +1 Combat Skill and +1 Shooting Skill against the chosen character type. May also reroll failed Courage tests against them.",
+  "Hatred towards the underworld": "Gets +1 Combat Skill and +1 Shooting Skill against undead and demons. May reroll failed Courage tests against them.",
+  "Headbutt":            "Once per activation, may make a free Headbutt attack against an adjacent enemy. If it hits, the target is Knocked Down.",
+  "Heart seeker":        "Once per game, may perform a shot that ignores the target's armor entirely.",
+  "Lethal shot":         "While shooting, critical hits cause the target to be Knocked Out immediately (not Leaders or champions).",
+  "Lethal blow":         "Critical hits in melee cause the target to be Knocked Out immediately (not Leaders or champions).",
+  "Mace Skills":         "Gains +1 Combat Skill while wielding a mace or warhammer.",
+  "Martial arts":        "Unarmed attacks are treated as if using a weapon. Character does not suffer the usual Unarmed penalties.",
+  "Mighty blow":         "While using a two-handed weapon, may double the strength value for damage purposes once per turn.",
+  "Opportunity Action":  "May use an Action during an enemy's turn (outside their own activation) to perform one melee attack.",
+  "Powerful blow":       "Gains +1 Strength while attacking in melee. Can only be used once per turn.",
+  "Quick reloading":     "Reduces the Reload time of ranged weapons by 1 Action. This allows Reload weapons to be fired every turn.",
+  "Repositioning":       "Once per turn may move 1 square during combat (even within enemy Melee Range) without triggering free attacks.",
+  "Seize":               "Action: target an adjacent enemy and roll opposed Combat Skill. If character wins, target is Stationary until next activation.",
+  "Shield onslaught":    "When equipped with a shield, may perform a Shield Bash as an Action. If it hits, target is Knocked Down.",
+  "Spinning blow":       "Once per activation, may attack all enemies in Melee Range with a single roll, suffering −1 Combat Skill.",
+  "Strong":              "Increases Strength by 1 (may exceed racial maximum).",
+  "Swift brawling":      "May make one extra melee attack per turn as a Quick Action, at −1 Combat Skill.",
+  "Sword master":        "Gains +1 Combat Skill and +1 to initiative rolls while wielding a sword.",
+  "Tough":               "Reduces damage from critical hits by 1 die (minimum 1).",
+  "Trick fighter":       "Once per turn, may feint an opponent: the enemy suffers −1 to their defence roll for that attack.",
+  "Two-weapon fighting": "When attacking with two weapons simultaneously, gains one extra attack per turn with −1 Combat Skill. Both weapons must be one-handed.",
+  "Unstoppable charge":  "May move through enemies during a charge. Each enemy passed through suffers 1 damage die. Character must end move adjacent to a target.",
+  "Used to armors":      "Heavy armor does not reduce Combat Skill or Movement for this character.",
+  // Exploration
+  "Acrobat":             "Requires Agility 4+. Gets +1 to Agility rolls (even opposing ones).",
+  "Ambush":              "Gets +1 to Initiative rolls. If group wins Initiative, may reroll the first failed attack roll.",
+  "Cat reflexes":        "Requires Agility 4+. May reroll results of 1 (not critical failures) when defending against melee attacks.",
+  "Cautious trapper":    "When disarming a trap, may wear a special protecting breastplate increasing Armor by 1 (max 6).",
+  "Climber":             "May reroll any failed rolls when climbing or jumping.",
+  "Eagle eye":           "Gets +1 to Perception rolls detecting traps, inspecting halls, or searching for secret doors. May also ignore light cover when shooting.",
+  "Escapist":            "May attempt to escape from captivity or restraints. Rolls Agility against a difficulty of 8+.",
+  "Expert rider":        "Suffers no penalties for casting spells or shooting while riding. May reroll failed Agility tests when avoiding falling off.",
+  "Expert trapper":      "Gets +1 to Perception and Dexterity when detecting and disarming traps.",
+  "Explore terrain":     "May move through difficult terrain without penalty. Once per game, may identify a terrain type before the group enters it.",
+  "Fast":                "Requires Agility and Movement 4+. Always moves twice Movement when running if not in heavy armor. +1 Agility to escape Melee Range.",
+  "Fleet footed":        "Movement increased by 1 permanently. This may exceed racial maximum.",
+  "Hide":                "May spend an Action to hide. While hidden, enemies cannot target this character unless they pass a Perception test.",
+  "Infiltrator":         "May move through enemy Melee Zones without triggering free attacks, as long as not attacking.",
+  "Initiative":          "Gets +2 to all Initiative rolls. This skill may only be used once per roll.",
+  "Jumping":             "May jump over obstacles or gaps of up to 2 squares. No Agility test required.",
+  "Light footed":        "Ignores all movement penalties for difficult terrain.",
+  "Lock picking":        "Gets +2 to Dexterity when trying to open locks stealthily.",
+  "Lost in the Dark":    "−1 to all attributes (except Movement and Fortune) while in a section under Darkness or Complete Darkness. −1 Combat Skill when shooting at enemies in a dark section.",
+  "Lycanthropy":         "Under certain conditions (full moon, injury), character transforms into a beast, gaining +2 Strength and +1 Combat Skill but losing control.",
+  "Pathfinder":          "Character and companions within 3 squares may ignore movement penalties from difficult terrain.",
+  "Pickpocket":          "Once per game, may attempt to steal an item from an adjacent character. Roll Dexterity against Intelligence of the target.",
+  "Poisoner":            "May coat weapons with poison. Targets hit by a poisoned weapon must pass an Agility test or become Poisoned.",
+  "Precise shot":        "May ignore light cover when shooting at enemies. Also reduces distance penalties by 1.",
+  "Rider":               "Suffers no combat penalties while mounted. May also reroll failed Agility tests to avoid being unhorsed.",
+  "Rope mastery":        "May use a rope to climb or cross gaps without an Agility test. Also allows securing a rope for others to use.",
+  "Sailor":              "Suffers no movement penalties in water or aquatic terrain. May use boats and ships effectively.",
+  "Sharp Senses":        "Gets +1 to all Perception tests. May detect hidden enemies within 6 squares automatically.",
+  "Slippery":            "Requires Agility 4+. Enemies shooting or throwing at this character get −1 to their hitting rolls. Cannot use heavy armor.",
+  "Stealthy shot":       "May shoot at enemies while hidden without revealing position, if the shot misses.",
+  "Stealth":             "May ignore an enemy's Melee Range once per combat turn. Cannot be used by large characters or while in heavy armor.",
+  "Swimmer":             "No movement penalties in water. May dive and emerge from water freely.",
+  "Tracker":             "Twice per game, may force the Dark Player to reveal all Encounter cards in hand.",
+  "Trap mastery":        "May activate a trap when an enemy moves to or activates within 3 squares. Enemy passes Perception 8+ or stops, suffers 4 damage dice, and loses their turn.",
+  "Underworld":          "Takes 1 less damage die from fire or flaming attacks. Immune to Poisoned and Diseased. Ignores Complete Darkness.",
+  // Scholarly
+  "Alchemist":           "May use an Action to find out what effects a potion has (pass Intelligence test). Spellcasters start each quest with 1 free Components for magic.",
+  "Battle wizard":       "May use light armor and a common weapon. Mana cannot exceed Intelligence value. −1 penalty to casting if this is not a class skill.",
+  "Blacksmithing":       "Repair cost for any item is always 1 coin. If adjacent to a Forge, may use an Action to create an object worth up to its acquisition cost.",
+  "Blood for the Gods":  "Only spellcasters of neutral or evil alignment. Caster gets +2 on the Combat Skill roll in exchange for losing 1D2 Vitality points.",
+  "Bounty hunter":       "Gets +1 to Initiative rolls when facing creatures with a bounty. Receives extra gold equal to the target's VP when eliminating a wanted creature.",
+  "Charismatic leader":  "All allied characters within 6 squares may reroll one failed Courage test per quest.",
+  "Channeling":          "May recover mana by channeling. Once per game, roll 4D6: each 2+ recovers 1 Mana; each 1 costs 1 Vitality.",
+  "Curse":               "Once per quest, may place a curse on an enemy as an Action. Target suffers −1 to all rolls for the rest of the quest.",
+  "Detect evil":         "Can sense the presence of evil creatures or objects within 6 squares. Once per quest may reveal a secret room or trap.",
+  "Dispelling":          "Gets +1 to all dispelling rolls. May attempt to dispel enemy spells even while in Melee Range.",
+  "Divine protection":   "Once per quest, may invoke divine protection as a reaction: the character ignores all conditions and damage from one attack.",
+  "Dreaded presence":    "Enemies within 3 squares must pass a Courage test each activation or suffer −1 to all rolls.",
+  "Efficient casting":   "Basic spells (1 mana) are cast at no mana cost once per quest. The character may also reroll one failed casting attempt per quest.",
+  "Encouraging shout":   "Once per quest, use an Action to encourage mates. Allied characters within 6 squares may reroll failed attribute tests and attack/defence rolls until next turn.",
+  "Endurance":           "Increases Vitality by 1. Also reduces the duration of all conditions (Stunned, Knocked Down) by 1 turn.",
+  "Expert enchanter":    "When identifying magical objects, gets +2 to the Intelligence test. May also identify relics, which normally require a School of Magic.",
+  "Fast casting":        "May cast a spell as a Quick Action instead of a full Action once per turn. The spell's Mana cost is increased by 1.",
+  "Healing":             "May use an Action to heal an adjacent ally or self. Target recovers 1D3 Vitality. Once per quest per target.",
+  "Herbalism":           "May use an Action to search for herbs in natural terrain. On a roll of 5+, finds 1D3 Healing Herbs.",
+  "History knowledge":   "Gets +1 to all Intelligence tests involving knowledge, riddles, or identifying relics.",
+  "Inspiring":           "Allied characters within 6 squares gain +1 Courage. If this character fails a Courage test, the skill is disabled for the rest of the quest.",
+  "Interrogator":        "When searching a corpse, if any die shows a 6, may extract information: the party may reroll the next Initiative roll.",
+  "Languages":           "Understands and speaks all languages encountered in the campaign. Gets +1 to Persuasion rolls and riddles.",
+  "Magic lore":          "Gets +1 to all Intelligence tests when casting or dispelling spells. Also grants knowledge of basic spell effects without identifying them.",
+  "Magic resistance":    "Reduces mana cost of dispelling by 1 (minimum 0). Also gains +1 to Intelligence tests when defending against spells.",
+  "Mercenary leader":    "May hire one additional mercenary. All hired mercenaries get +1 to their Combat Skill when adjacent to this character.",
+  "Merchant":            "All purchases cost 1 less coin (minimum 1). May sell items at half price instead of one quarter.",
+  "Nature knowledge":    "Gets +1 to all Perception tests in outdoor terrain. May identify plants and animals automatically.",
+  "Necromancy":          "May attempt to reanimate a destroyed undead creature once per quest. Pass an Intelligence test (difficulty 10) to add it to the group.",
+  "Object identification": "May use an Action to detect the effects of any magical objects or relics. Pass an Intelligence test. Only one attempt per object.",
+  "Onslaught":           "May move during combat (even within Melee Range) and still attack in the same activation, as a full Action.",
+  "Potion knowledge":    "Can identify potions without an Intelligence test. Also grants +1 to Intelligence tests when using alchemical items.",
+  "Regeneration":        "At the start of each activation, recover 1 Vitality point if not Knocked Out (maximum racial value).",
+  "Rune mastery":        "May inscribe a rune on a weapon or armor granting +1 to its main attribute. One rune per quest per item.",
+  "Skilled hands":       "Gets +1 to Dexterity tests. May also attempt to disarm traps that normally require special tools.",
+  "Sorcerer hunter":     "Gets +1 Combat Skill and +1 Shooting Skill when targeting spellcasters. May also attempt to disrupt enemy spells in range.",
+  "Spell focus":         "Gets +1 to all casting rolls. Also reduces the mana cost of superior spells by 1 (minimum 1).",
+  "Spell shield":        "Once per quest, may create a magical barrier as a reaction: the character ignores the effects of one enemy spell.",
+  "Strategy":            "Once per game, may reorder the Initiative of all allies in the party for the current turn.",
+  "Survival":            "Lodges for free in Inns. Starts each quest with 1 free Pack of Provisions.",
+  // Nature
+  "Breath":              "May use an Action to breathe a line attack of (x) squares. All targets must pass Agility or suffer (x) damage dice against Natural Armor.",
+  "Brutal":              "All melee attacks cause 1 extra damage die. However, the character always attacks the nearest enemy.",
+  "Clumsy hands":        "Character suffers −2 to Dexterity tests and cannot use ranged weapons requiring fine manual control.",
+  "Corrosive vomit":     "May use an Action to spit corrosive acid at one target within 3 squares. Target suffers 2D6 against Natural Armor and loses 1 Armor point until end of quest.",
+  "Fearsome":            "Enemies who begin their activation within 3 squares must pass a Courage test or suffer −1 Combat Skill for that turn.",
+  "Flying":              "May move over obstacles and enemies. Ignores terrain movement penalties. May use a Jump Action to move up to 8 squares in a straight line.",
+  "Huge":                "Occupies a 2×2 area. Gets +2 Strength and +2 Natural Armor but is always visible and cannot use some equipment.",
+  "Invulnerable":        "Ignores the first damage die of any attack. Immune to Poison and Disease. Cannot be Stunned.",
+  "Large":               "Occupies a 2×2 area. Gets +1 Strength and +1 Natural Armor.",
+  "Monstrous":           "Enemies within 3 squares must pass a Courage test at the start of their activation or be Frightened for that turn.",
+  "Paralyzing touch":    "On a successful melee hit, target must pass an Agility test or become Stationary until its next activation.",
+  "Pathfinder":          "Ignores all movement penalties in natural terrain. Allies within 3 squares also benefit.",
+  "Poisonous":           "Successful melee hits cause the target to make an Agility test or become Poisoned.",
+  "Sharp Senses":        "Gets +2 to Perception tests. Can detect hidden enemies or traps without rolling.",
+  "Small":               "Occupies only half a square. Gets +1 Agility and −1 Strength. Can move through gaps and squeeze through small spaces.",
+  "Slippery":            "Once per turn, may automatically escape from an enemy's Melee Range without an Agility test.",
+  "Stupid":              "At the start of each activation, roll 1D6. On a 1, the character wastes its turn performing a random action.",
+  "Sweep":               "Once per activation, may attack all enemies in Melee Range simultaneously with one roll.",
+  "Tough":               "Reduces damage from all attacks by 1 die (minimum 1 die total).",
+  "Tracker":             "Can follow tracks and detect ambushes. Gets +2 to Perception tests when actively searching for enemies or traps.",
+  "Undead":              "Ignores Poisoned, Diseased, Wounded, and Stunned conditions. Ignores Complete Darkness. Immune to all Control spells.",
+  "Lycanthropy":         "Under stress or injury, transforms into beast form. Gains +2 STR, +1 CS, but attacks nearest character (friend or foe).",
+};
+
+const SPELL_DESC = {
+  "Crushing Wave":    "Creates a huge wave at a target. Adjacent enemies suffer 2 damage dice and must pass Strength or be Knocked Down and pushed 1 square back.",
+  "Ice Arrows":       "Casts several ice arrows at a target. All characters adjacent to the target suffer 3 damage dice.",
+  "Ice Bridge":       "Creates an obstacle up to 2 squares wide that automatically overcomes gaps (pits, cliffs). Any character crossing it suffers 1 damage die. Vulnerable to fire.",
+  "Ice Wall":         "Creates an ice wall 1–3 squares long on empty squares. Blocks LoS and is impassable. Has Vitality 8 and Armor 6. Vulnerable to fire.",
+  "Treacherous Waters": "Target and enemies (not Huge) in area must pass Agility or be Stationary. Large targets are staggered instead. Cannot be cast on Huge targets.",
+  "Walking on Water": "Target can move and act normally over water surfaces. Not restricted to deep water or difficult terrain.",
+  "Water Elemental":  "Summons a Water Elemental. It is placed adjacent to the summoner and follows the Summoner AI. The caster can only perform 2 summons per quest.",
+  "Water of Life":    "Choose an adjacent friendly character. Target recovers up to 4 Vitality. Also removes Diseased, Poisoned and Stunned conditions.",
+  "Water Shield":     "Caster and all allies in area take 2 dice less damage from all attacks. Immune to conditions from fire or flaming attacks.",
+  "Water Whip":       "A water tendril strikes all in line. Enemies in area must pass a Strength test or take 2 damage dice and be pushed 1 square backwards.",
+  "Burst of Speed":   "Caster and adjacent friendly characters get +2 to Agility and Movement. They can also perform defensive shots without any penalties.",
+  "Choke":            "Choose one target and roll 3 dice. If result equals or exceeds target's Natural Armor, target loses 1 Vitality and is Stationary.",
+  "Sneaking":         "Target ignores enemy Melee Zones as long as it doesn't run. Target is Stationary.",
+  "Bleeding":         "Target loses 1 Vitality at the start of each of its activations. Spell can be cast even when adjacent to enemies.",
+  "Damage Mind":      "Choose a target and roll 1D6. If Intelligence is greater than the result, target loses 1 Intelligence and gets Stunned.",
+  "Entrail Blast":    "A rat-like creature emerges from a friendly character, dashing through enemies. Each enemy it contacts takes 1 damage die and loses 100 VP from the character with the lowest Intelligence.",
+  "Great Tumors":     "Caster rolls 1D6. If result equals or exceeds target's Natural Armor, target loses 100 Vitality and gets Diseased.",
+  "Hunger":           "Choose an ally or yourself. Target deals 2 damage dice to each adjacent enemy at each activation, and recovers 1 Vitality for each wound inflicted.",
+  "Inner Fire":       "Choose a target. It suffers 4 damage dice against Natural Armor.",
+  "Marshy Ground":    "All enemies in the area will be regarded as moving through difficult terrain during their movement.",
+  "Mind Corruption":  "Archmage level required. Target must pass a Courage test or lose 3 Vitality and gets Stunned. Not applied to Huge creatures or Leaders.",
+  "Panic":            "Target must pass a Strength test. On failure, target loses its next turn. If target is a Leader, it will send the nearest minion to attack the caster.",
+  "Vile Vomit":       "Caster's arm turns into a burning tentacle spraying 3 squares. Each character in affected area suffers 4 damage dice and gets Stunned.",
+  "Burning Fist":     "Caster performs a melee attack with +4 bonus. While this spell is active, all melee attacks deal 1 extra fire damage die.",
+  "Burning Ground":   "The entire section is engulfed in flames. All enemies suffer 5 damage dice each activation. Each enemy takes 1 damage die per section while moving through it.",
+  "Fire Elemental":   "Summons a Fire Elemental. It is placed adjacent to the summoner. The caster can only perform 2 summons per quest.",
+  "Fire Wall":        "Creates a fire wall 1–3 squares long. Characters passing through suffer 5 damage dice. Can be extinguished by water magic projectiles.",
+  "Fireball":         "Caster casts a fireball causing 5 damage dice at the target. All characters adjacent to target suffer 3 damage dice.",
+  "Firestorm":        "Archmage level required. All affected creatures take 3 fire damage dice at the start of their activation until the spell ends.",
+  "Flamestrike":      "Deals 2 fire damage dice against Natural Armor. Target takes 1 extra fire damage die at the end of each of its subsequent activations.",
+  "Flaming Weapon":   "Choose a friendly character. Character's weapon gets +2 fire damage dice and becomes a source of light.",
+  "Skin of Fire":     "Choose a friendly character. Target gets the skill 'Aura' which deals 1 fire damage die to any character that enters adjacent squares.",
+  "Wound Healing":    "Choose an adjacent ally or yourself. Target recovers 1D3+1 Vitality points.",
+  "Deathtouch":       "Can be cast while adjacent to a target. Target must pass a Strength test with −1 penalty or is immediately Knocked Out. Large and Huge: only on critical cast result.",
+  "Demonic Seduction":"Choose a target and all characters in area. Caster may roll Combat Skill and all affected characters must pass Courage or be Stunned.",
+  "Favour of the Gods":"Caster prays for help. 1) Caster and all friendly characters recover 1 Vitality and 1 Mana. 2) All enemies suffer 1D6 damage dice against Natural Armor.",
+  "Fire of Chaos":    "From the caster's hand a mighty flame erupts. Target suffers 4 damage dice with −1 to Armor. Adjacent characters suffer 1 damage die.",
+  "Fire Ring":        "Choose an ally or yourself. Enemies who miss or activate in a square adjacent to target take 1 damage die at the start of their next activation.",
+  "Infernal Possession": "Choose a target which is not Huge nor a Champion and roll 1D6. If result equals or exceeds target's Intelligence, you can control it for the rest of the combat.",
+  "Regeneration":     "Choose a friendly character. It gets the skill 'Regeneration'. Vitality points are recovered at the start of each of its activations.",
+  "Summon Demon":     "Archmage level required. Summons a Demon. Caster can only perform 2 summons per quest. Demon attacks nearest hero if caster is Knocked Out.",
+  "Summon Imps":      "Summons all Imps as per the AoE. Those who fail a Courage test are Stunned and Knocked Down at their next activation. Up to 2 summons per quest.",
+  "Whip of Evil":     "One of the caster's arms turns into a burning tentacle affecting 3 squares in a straight or diagonal line. Each character in affected squares suffers 4 fire damage dice.",
+  "Blast of Light":   "Target and all characters in the spell's AoE take 3 dice less damage from the target caster and are Stunned. Human Dark Player only.",
+  "Clairvoyance":     "Caster can see everything on the other side of an adjacent door or wall up to 1 square thick. Sections and the furniture and special elements it contains are revealed.",
+  "Demon Bane":       "Archmage level required. Target must have the skill 'Undead' or 'Underworld'. Target takes 5 damage dice against its Natural Armor.",
+  "Flashing Weapon":  "Choose a friendly character's weapon. It can be used twice per turn without any penalties to its Combat Skill for the rest of the quest.",
+  "Great Dispelling": "Caster can dispel a permanent spell that was cast in a previous turn. Roll succeeds if it overcomes enemy caster's Intelligence (−1 penalty). The spell will dispel without consuming mana.",
+  "Healing Light":    "Choose an adjacent friendly character or yourself. Target recovers up to 4 Vitality and all conditions except Injured and Knocked Out.",
+  "Holy Light":       "Choose a friendly character's weapon. It is considered a source of light that illuminates the entire section where the spell is cast.",
+  "Light Aura":       "Choose an adjacent ally or yourself. Target is considered a source of light such as a torch, and gets +1 to Initiative rolls while the spell is active.",
+  "Light Spear":      "Target takes 4 damage dice against Natural Armor.",
+  "Sheltering Light": "Enemies get −1 to casting spells and shooting while they target caster or a friendly character within this spell's AoE.",
+  "Gravity Rocks":    "Target must pass a Strength test or take 5 damage dice (it is also Knocked Down).",
+  "Jade Arrows":      "Choose an ally or yourself. Target's ranged weapon deals 1 extra damage die and enemies get −2 to block rolls against it.",
+  "Mud":              "All enemies in the spell's AoE will be regarded as moving through difficult terrain. This applies to enemies that enter the AoE.",
+  "Rain of Stones":   "Choose a target. A rain of stones falls on it. Target and all adjacent characters except caster suffer 4 damage dice and are Stunned.",
+  "Restoring Earth":  "Target recovers up to 4 Vitality. Also removes all conditions except Injured and Knocked Out.",
+  "Stone Bridge":     "Choose an obstacle up to 2 squares wide. It is automatically overcome by a great Jump action. The obstacle will be automatically overcome by any character crossing it.",
+  "Stone Skin":       "Choose a friendly character. Target gets +1 to Natural Armor while the spell is on.",
+  "Summon Elemental": "Summons an Earth Elemental. The caster can only perform 2 summons per quest. A summoned Elemental won't be able to move.",
+  "Walkthrough":      "Caster summons a wolf up to one square thick, or a castle, where he wishes to open it. Regarded as an open, average-sized door.",
+  "Wall of Stone":    "Caster creates a stone wall 1–3 squares long and 1–2 wide in a straight line. The wall blocks LoS and is impassable. Has Vitality 8 and Armor 6.",
+};
+
+function renderDunCard(cfg) {
+  // cfg: { title, subtitle, icon, desc, type, footer[] }
+  // type: 'combat'|'exploration'|'scholarly'|'nature'|'spell'|'item'|'armor'
+  const typeLabel = {
+    combat:'Combat Skill', exploration:'Exploration', scholarly:'Scholarly',
+    nature:'Nature', spell:'Magic Spell', item:'Equipment', armor:'Armor & Shield'
+  }[cfg.type] || cfg.type;
+
+  const footerCells = (cfg.footer || []).map(f =>
+    `<div class="dun-card-stat">
+      <div class="dun-card-stat-val">${f.val}</div>
+      <div class="dun-card-stat-lbl">${f.lbl}</div>
+    </div>`
+  ).join('');
+
+  return `<div class="dun-card card-${cfg.type}">
+    <div class="dun-card-header">
+      <div class="dun-card-type">${typeLabel}</div>
+      <div class="dun-card-title">${cfg.title}</div>
+      ${cfg.subtitle ? `<div style="font-family:'Cinzel',serif;font-size:7px;color:rgba(255,220,160,.7);margin-top:2px;">${cfg.subtitle}</div>` : ''}
+    </div>
+    <div class="dun-card-icon ${cfg.type}-icon">${cfg.icon}</div>
+    <div class="dun-card-body">${cfg.desc || '<em>No description available.</em>'}</div>
+    ${footerCells ? `<div class="dun-card-footer">${footerCells}</div>` : ''}
+  </div>`;
+}
+
+const SKILL_ICONS = {
+  combat:'⚔', exploration:'🌲', scholarly:'📖', nature:'🐾'
+};
+const LORE_ICONS = {
+  Fire:'🔥', Water:'💧', Air:'💨', Earth:'🪨',
+  Light:'☀️', Blessings:'✝️', Runic:'ᚱ', Music:'🎵',
+  Necromancy:'💀', Witchcraft:'🔮', Underworld:'👁', Corruption:'☠️',
+  Nature:'🌿', Tribal:'🥁', Channeling:'⚡', Animism:'🌀',
+};
+const CAT_ICONS = {
+  melee_weapon:'⚔️', ranged_weapon:'🏹', shield:'🛡️', armor:'🪖',
+  common_object:'🎒', special_object:'⭐', magic_object:'✨', relic:'🏺', crafting:'⚒️'
+};
+
+function renderCardsPanel(h) {
+  const sections = [];
+
+  // ── SKILLS ──────────────────────────────────────────────────
+  if (h.skills && h.skills.length) {
+    const skillCards = h.skills.map(sName => {
+      const sk = SKILL_DB.find(s => s.name === sName) || { type: 'combat' };
+      const desc = SKILL_DESC[sName] || 'See rulebook for full description.';
+      return renderDunCard({
+        title: sName,
+        subtitle: (sk.type || '').replace(/_/g,' '),
+        icon: SKILL_ICONS[sk.type] || '⚔',
+        desc,
+        type: sk.type || 'combat',
+        footer: []
+      });
+    }).join('');
+    sections.push(`<div class="cards-panel-section">
+      <div class="cards-panel-title">Skills</div>
+      <div class="cards-row">${skillCards}</div>
+    </div>`);
+  }
+
+  // ── SPELLS ──────────────────────────────────────────────────
+  if (h.knownSpells && h.knownSpells.length) {
+    const spellCards = h.knownSpells.map(spName => {
+      const sp = SPELL_DB.find(s => s.name === spName);
+      const desc = SPELL_DESC[spName] || 'See rulebook for full description.';
+      const lore = sp?.lore || '?';
+      return renderDunCard({
+        title: spName,
+        subtitle: `${lore} Lore`,
+        icon: LORE_ICONS[lore] || '✨',
+        desc,
+        type: 'spell',
+        footer: [
+          { val: sp?.manaCost ?? 1, lbl: 'MANA' },
+          { val: sp?.cost ?? '—', lbl: 'COST' },
+        ]
+      });
+    }).join('');
+    sections.push(`<div class="cards-panel-section">
+      <div class="cards-panel-title">Spells</div>
+      <div class="cards-row">${spellCards}</div>
+    </div>`);
+  }
+
+  // ── EQUIPMENT ───────────────────────────────────────────────
+  if (h.equippedItems && h.equippedItems.length) {
+    const itemCards = h.equippedItems.map(itemId => {
+      const item = ITEM_BY_ID[itemId];
+      if (!item) return '';
+      const isArmor = item.cat === 'armor' || item.cat === 'shield';
+      const cardType = isArmor ? 'armor' : 'item';
+
+      // Build footer stats
+      const footer = [];
+      if (item.cost)        footer.push({ val: item.cost,        lbl: 'COST' });
+      if (item.weight)      footer.push({ val: item.weight,      lbl: 'WT'   });
+      if (item.armorBonus)  footer.push({ val: `+${item.armorBonus}`, lbl: 'ARMOR' });
+      if (item.damageDice)  footer.push({ val: item.damageDice,  lbl: 'DMG'  });
+
+      // Build description from modifiers + note
+      let descParts = [];
+      if (item.isHeavyArmor) descParts.push('Heavy armor.');
+      if (item.attrMods && Object.keys(item.attrMods).length) {
+        const mods = Object.entries(item.attrMods)
+          .map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k.replace(/([A-Z])/g,' $1').toLowerCase()}`)
+          .join(', ');
+        descParts.push(`${mods}.`);
+      }
+      if (item.note) descParts.push(item.note + '.');
+      if (item.hands === 2) descParts.push('Two-handed.');
+
+      return renderDunCard({
+        title: item.name,
+        subtitle: (CAT_LABELS[item.cat] || item.cat),
+        icon: CAT_ICONS[item.cat] || '📦',
+        desc: descParts.join(' ') || 'No special rules.',
+        type: cardType,
+        footer
+      });
+    }).join('');
+    sections.push(`<div class="cards-panel-section">
+      <div class="cards-panel-title">Equipment</div>
+      <div class="cards-row">${itemCards}</div>
+    </div>`);
+  }
+
+  if (!sections.length) {
+    return `<div style="padding:16px;font-style:italic;color:var(--text-muted);font-size:11px;">No skills, spells or equipment to display.</div>`;
+  }
+  return sections.join('');
+}
+
+function toggleCardsPanel(heroId) {
+  const panel = document.getElementById('cards-panel-' + heroId);
+  const btn   = document.getElementById('cards-btn-' + heroId);
+  if (!panel) return;
+
+  if (panel.style.display !== 'none') {
+    panel.style.display = 'none';
+    btn?.classList.remove('active');
+    return;
+  }
+
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  // Ensure migrations
+  if (!h.equippedItems) h.equippedItems = [];
+  if (!h.knownSpells)   h.knownSpells   = [];
+
+  panel.innerHTML = renderCardsPanel(h);
+  panel.style.display = 'block';
+  btn?.classList.add('active');
 }
 
 // ═══════════════════════════════════════════════════════════════
