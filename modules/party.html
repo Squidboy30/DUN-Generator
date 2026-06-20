@@ -1335,6 +1335,200 @@ function changeAttr(key, delta) {
 
 function attachAttrEvents() {}
 
+// ═══════════════════════════════════════════════════════════════
+// ITEM DATA (equipment & objects)
+// ═══════════════════════════════════════════════════════════════
+const ITEM_DB = [
+  // MELEE WEAPONS
+  {id:20,name:"Axe",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:3},
+  {id:9,name:"Bastard Sword",cat:"melee_weapon",slot:"hands",hands:1,cost:3,weight:7},
+  {id:264,name:"Battle Staff",cat:"melee_weapon",slot:"hands",hands:2,cost:3,weight:2},
+  {id:22,name:"Battleaxe",cat:"melee_weapon",slot:"hands",hands:1,cost:4,weight:5},
+  {id:8,name:"Broadsword",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:5},
+  {id:14,name:"Claws",cat:"melee_weapon",slot:"hands",hands:1,cost:0,weight:0,isNaturalWeapon:true},
+  {id:15,name:"Club",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:5},
+  {id:6,name:"Dagger",cat:"melee_weapon",slot:"hands",hands:1,cost:4,weight:1},
+  {id:32,name:"Double-headed Axe",cat:"melee_weapon",slot:"hands",hands:2,cost:5,weight:6},
+  {id:11,name:"Elven Sword",cat:"melee_weapon",slot:"hands",hands:1,cost:3,weight:12},
+  {id:30,name:"Falcata Sword",cat:"melee_weapon",slot:"hands",hands:1,cost:3,weight:3},
+  {id:29,name:"Falx",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:3},
+  {id:33,name:"Fangs",cat:"melee_weapon",slot:"hands",hands:1,cost:0,weight:0,isNaturalWeapon:true},
+  {id:28,name:"Fausal Sword",cat:"melee_weapon",slot:"hands",hands:1,cost:3,weight:5},
+  {id:36,name:"Flail",cat:"melee_weapon",slot:"hands",hands:1,cost:3,weight:5},
+  {id:26,name:"Gladiator Scissors",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:3},
+  {id:25,name:"Great Falx",cat:"melee_weapon",slot:"hands",hands:2,cost:4,weight:5},
+  {id:27,name:"Great Flail",cat:"melee_weapon",slot:"hands",hands:2,cost:5,weight:5},
+  {id:24,name:"Greatsword",cat:"melee_weapon",slot:"hands",hands:2,cost:4,weight:7},
+  {id:2,name:"Halberd",cat:"melee_weapon",slot:"hands",hands:2,cost:3,weight:5},
+  {id:31,name:"Hammer",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:3},
+  {id:34,name:"Horns",cat:"melee_weapon",slot:"hands",hands:1,cost:0,weight:0,isNaturalWeapon:true},
+  {id:1,name:"Improvised Weapon",cat:"melee_weapon",slot:"hands",hands:1,cost:0,weight:1},
+  {id:35,name:"Iron Fist",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:3},
+  {id:38,name:"Katana",cat:"melee_weapon",slot:"hands",hands:2,cost:8,weight:3},
+  {id:13,name:"Katar",cat:"melee_weapon",slot:"hands",hands:1,cost:8,weight:3},
+  {id:37,name:"Kopesh Sword",cat:"melee_weapon",slot:"hands",hands:1,cost:7,weight:3},
+  {id:16,name:"Kukri",cat:"melee_weapon",slot:"hands",hands:1,cost:8,weight:2},
+  {id:10,name:"Kusarigama",cat:"melee_weapon",slot:"hands",hands:2,cost:8,weight:2},
+  {id:39,name:"Lance",cat:"melee_weapon",slot:"hands",hands:2,cost:3,weight:3},
+  {id:21,name:"Lucerne Hammer",cat:"melee_weapon",slot:"hands",hands:2,cost:3,weight:5},
+  {id:7,name:"Mace",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:3},
+  {id:40,name:"Macuahuitl",cat:"melee_weapon",slot:"hands",hands:1,cost:7,weight:1},
+  {id:41,name:"Morningstar",cat:"melee_weapon",slot:"hands",hands:1,cost:3,weight:4},
+  {id:42,name:"Parrying Dagger",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:1},
+  {id:43,name:"Rapier",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:4},
+  {id:44,name:"Saber",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:4},
+  {id:45,name:"Sai",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:2},
+  {id:46,name:"Scimitar",cat:"melee_weapon",slot:"hands",hands:1,cost:2,weight:4},
+  {id:47,name:"Scythe",cat:"melee_weapon",slot:"hands",hands:2,cost:2,weight:3},
+  {id:48,name:"Serrated Sword",cat:"melee_weapon",slot:"hands",hands:1,cost:7,weight:3},
+  {id:49,name:"Short Sword",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:3},
+  {id:50,name:"Spear",cat:"melee_weapon",slot:"hands",hands:2,cost:2,weight:2},
+  {id:3,name:"Staff",cat:"melee_weapon",slot:"hands",hands:2,cost:1,weight:1},
+  {id:51,name:"Throwing Axe",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:2},
+  {id:52,name:"Tool",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:1},
+  {id:53,name:"Trident",cat:"melee_weapon",slot:"hands",hands:2,cost:2,weight:3},
+  {id:4,name:"Unarmed",cat:"melee_weapon",slot:"hands",hands:1,cost:0,weight:0},
+  {id:54,name:"Warhammer",cat:"melee_weapon",slot:"hands",hands:1,cost:4,weight:5},
+  {id:55,name:"Whip",cat:"melee_weapon",slot:"hands",hands:1,cost:1,weight:2},
+  {id:56,name:"Zanbato",cat:"melee_weapon",slot:"hands",hands:2,cost:5,weight:8},
+  // RANGED WEAPONS
+  {id:64,name:"Arquebus",cat:"ranged_weapon",slot:"hands",hands:2,cost:18,weight:8},
+  {id:71,name:"Blowgun",cat:"ranged_weapon",slot:"hands",hands:2,cost:6,weight:1},
+  {id:65,name:"Composite Bow",cat:"ranged_weapon",slot:"hands",hands:2,cost:20,weight:3},
+  {id:69,name:"Crossbow",cat:"ranged_weapon",slot:"hands",hands:2,cost:24,weight:5},
+  {id:148,name:"Crossbow Pistol",cat:"ranged_weapon",slot:"hands",hands:1,cost:12,weight:2},
+  {id:67,name:"Elven Bow",cat:"ranged_weapon",slot:"hands",hands:2,cost:24,weight:1},
+  {id:76,name:"Handgun",cat:"ranged_weapon",slot:"hands",hands:1,cost:10,weight:5},
+  {id:147,name:"Heavy Javelin",cat:"ranged_weapon",slot:"hands",hands:1,cost:2,weight:2},
+  {id:66,name:"Javelin",cat:"ranged_weapon",slot:"hands",hands:1,cost:3,weight:2},
+  {id:68,name:"Longbow",cat:"ranged_weapon",slot:"hands",hands:2,cost:24,weight:4},
+  {id:75,name:"Net",cat:"ranged_weapon",slot:"hands",hands:1,cost:3,weight:1},
+  {id:73,name:"Repeating Crossbow",cat:"ranged_weapon",slot:"hands",hands:2,cost:20,weight:6},
+  {id:72,name:"Short Bow",cat:"ranged_weapon",slot:"hands",hands:2,cost:1,weight:4},
+  {id:70,name:"Sling",cat:"ranged_weapon",slot:"hands",hands:1,cost:1,weight:2},
+  {id:74,name:"Sling with Lead",cat:"ranged_weapon",slot:"hands",hands:1,cost:3,weight:2},
+  {id:77,name:"Throwing Dagger",cat:"ranged_weapon",slot:"hands",hands:1,cost:2,weight:1},
+  // SHIELDS
+  {id:88,name:"Buckler",cat:"shield",slot:"hands",hands:1,cost:2,weight:2,armorBonus:0,attrMods:{}},
+  {id:130,name:"Dwarf Steel Shield",cat:"shield",slot:"hands",hands:1,cost:4,weight:5,armorBonus:0,attrMods:{}},
+  {id:129,name:"Elven Shield",cat:"shield",slot:"hands",hands:1,cost:2,weight:4,armorBonus:0,attrMods:{agility:-1}},
+  {id:87,name:"Great Shield",cat:"shield",slot:"hands",hands:1,cost:6,weight:6,armorBonus:0,attrMods:{}},
+  {id:128,name:"Improvised Shield",cat:"shield",slot:"hands",hands:1,cost:0,weight:6,armorBonus:0,attrMods:{agility:-1}},
+  {id:86,name:"Shield",cat:"shield",slot:"hands",hands:1,cost:4,weight:3,armorBonus:0,attrMods:{}},
+  // ARMOR
+  {id:123,name:"Breastplate",cat:"armor",slot:"body",cost:6,weight:8,armorBonus:2,isHeavyArmor:true,attrMods:{agility:-1,combatSkill:-1,movement:-1}},
+  {id:83,name:"Chainmail",cat:"armor",slot:"body",cost:6,weight:8,armorBonus:2,isHeavyArmor:true,attrMods:{agility:-1,combatSkill:-1,movement:-1}},
+  {id:84,name:"Elven Armor",cat:"armor",slot:"body",cost:9,weight:15,armorBonus:1,isHeavyArmor:false,attrMods:{agility:-1}},
+  {id:124,name:"Full Armor",cat:"armor",slot:"body",cost:8,weight:20,armorBonus:3,isHeavyArmor:true,attrMods:{agility:-1,combatSkill:-1,movement:-1}},
+  {id:127,name:"Larnil Armor",cat:"armor",slot:"body",cost:10,weight:25,armorBonus:3,isHeavyArmor:true,attrMods:{agility:-1,combatSkill:-1,movement:-2}},
+  {id:85,name:"Leather Armor",cat:"armor",slot:"body",cost:3,weight:4,armorBonus:1,isHeavyArmor:false,attrMods:{agility:-1}},
+  {id:126,name:"Lorica Segmentata",cat:"armor",slot:"body",cost:6,weight:12,armorBonus:2,isHeavyArmor:true,attrMods:{agility:-1,combatSkill:-1,movement:-1}},
+  {id:80,name:"Scale Armor",cat:"armor",slot:"body",cost:6,weight:10,armorBonus:2,isHeavyArmor:true,attrMods:{agility:-1,combatSkill:-1,movement:-1}},
+  {id:122,name:"Studded Armor",cat:"armor",slot:"body",cost:4,weight:6,armorBonus:1,isHeavyArmor:false,attrMods:{agility:-1}},
+  {id:125,name:"Superior Armor",cat:"armor",slot:"body",cost:9,weight:20,armorBonus:2,isHeavyArmor:true,attrMods:{agility:-1,combatSkill:-1,movement:-1}},
+  {id:82,name:"Yoroi",cat:"armor",slot:"body",cost:9,weight:16,armorBonus:2,isHeavyArmor:true,attrMods:{agility:-2,combatSkill:-1,movement:-1}},
+  // COMMON OBJECTS
+  {id:152,name:"Antidote",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:280,name:"Bell",cat:"common_object",slot:"backpack",cost:1,weight:4},
+  {id:284,name:"Camouflage Paints",cat:"common_object",slot:"backpack",cost:1,weight:3},
+  {id:279,name:"Healing Brew",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:106,name:"Healing Herbs",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:281,name:"Hook",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:151,name:"Incendiary Arrows",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:154,name:"Lantern",cat:"common_object",slot:"backpack",cost:1,weight:3},
+  {id:285,name:"Lucky Clover",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:159,name:"Mandrake Root",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:282,name:"Master Key",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:157,name:"Mushrooms of Frenzy",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:150,name:"Musical Instrument",cat:"common_object",slot:"backpack",cost:1,weight:3},
+  {id:110,name:"Pack of Provisions",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:283,name:"Pick",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:111,name:"Pickaxe",cat:"common_object",slot:"backpack",cost:1,weight:3},
+  {id:104,name:"Picklocks",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:108,name:"Rat Poison",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:103,name:"Rope",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:278,name:"Smoke Bomb",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:155,name:"Torch",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:156,name:"Trap",cat:"common_object",slot:"backpack",cost:1,weight:2},
+  {id:158,name:"Vial of Acid",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  {id:102,name:"Whetstone",cat:"common_object",slot:"backpack",cost:1,weight:1},
+  // SPECIAL OBJECTS
+  {id:113,name:"Amulet of Protection",cat:"special_object",slot:"body",cost:5,weight:1},
+  {id:114,name:"Battle Horn",cat:"special_object",slot:"backpack",cost:3,weight:2},
+  {id:160,name:"Bear Trap",cat:"special_object",slot:"backpack",cost:3,weight:3},
+  {id:288,name:"Belt of Agility",cat:"special_object",slot:"body",cost:5,weight:1,attrMods:{agility:1}},
+  {id:289,name:"Boots of Speed",cat:"special_object",slot:"body",cost:5,weight:1,attrMods:{movement:1}},
+  {id:290,name:"Cloak of Shadows",cat:"special_object",slot:"body",cost:5,weight:1},
+  {id:291,name:"Component Pouch",cat:"special_object",slot:"backpack",cost:3,weight:2},
+  {id:293,name:"Crystal Ball",cat:"special_object",slot:"backpack",cost:5,weight:2},
+  {id:292,name:"Dexterity Potion",cat:"special_object",slot:"backpack",cost:1,weight:1,attrMods:{dexterity:2}},
+  {id:286,name:"Elven Cloak",cat:"special_object",slot:"body",cost:5,weight:1},
+  {id:116,name:"Healing Potion",cat:"special_object",slot:"backpack",cost:1,weight:1},
+  {id:112,name:"Holy Water",cat:"special_object",slot:"backpack",cost:2,weight:1},
+  {id:117,name:"Intelligence Potion",cat:"special_object",slot:"backpack",cost:3,weight:1,attrMods:{intelligence:2}},
+  {id:119,name:"Magic Torch",cat:"special_object",slot:"backpack",cost:2,weight:1},
+  {id:115,name:"Mana Potion",cat:"special_object",slot:"backpack",cost:2,weight:1},
+  {id:120,name:"Medallion of Courage",cat:"special_object",slot:"body",cost:4,weight:1,attrMods:{courage:1}},
+  {id:121,name:"Paralysing Powder",cat:"special_object",slot:"backpack",cost:2,weight:1},
+  {id:297,name:"Perception Potion",cat:"special_object",slot:"backpack",cost:3,weight:1,attrMods:{perception:2}},
+  {id:298,name:"Poison Vial",cat:"special_object",slot:"backpack",cost:2,weight:1},
+  {id:303,name:"Strength Potion",cat:"special_object",slot:"backpack",cost:3,weight:1,attrMods:{strength:2}},
+  // MAGIC OBJECTS (sample)
+  {id:161,name:"Amulet of Regeneration",cat:"magic_object",slot:"body",cost:10,weight:1},
+  {id:171,name:"Boots of Stealth",cat:"magic_object",slot:"body",cost:12,weight:1},
+  {id:174,name:"Bracers of Defense",cat:"magic_object",slot:"body",cost:10,weight:2,armorBonus:1},
+  {id:176,name:"Cloak of Elvenkind",cat:"magic_object",slot:"body",cost:15,weight:1},
+  {id:179,name:"Enchanted Shield",cat:"magic_object",slot:"hands",cost:12,weight:3,armorBonus:1},
+  {id:182,name:"Flame Tongue Sword",cat:"magic_object",slot:"hands",cost:20,weight:5},
+  {id:185,name:"Gauntlets of Power",cat:"magic_object",slot:"body",cost:12,weight:2,attrMods:{strength:1}},
+  {id:188,name:"Helm of Courage",cat:"magic_object",slot:"body",cost:10,weight:2,attrMods:{courage:1}},
+  {id:195,name:"Ring of Agility",cat:"magic_object",slot:"body",cost:10,weight:1,attrMods:{agility:1}},
+  {id:196,name:"Ring of Intelligence",cat:"magic_object",slot:"body",cost:12,weight:1,attrMods:{intelligence:1}},
+  {id:202,name:"Rune Axe",cat:"magic_object",slot:"hands",cost:18,weight:5},
+  {id:203,name:"Rune Sword",cat:"magic_object",slot:"hands",cost:20,weight:5},
+  {id:204,name:"Staff of Power",cat:"magic_object",slot:"hands",cost:15,weight:2},
+  {id:207,name:"Sword of Light",cat:"magic_object",slot:"hands",cost:18,weight:5},
+  {id:214,name:"Talisman of Fortune",cat:"magic_object",slot:"body",cost:15,weight:1},
+  {id:224,name:"Vorpal Blade",cat:"magic_object",slot:"hands",cost:20,weight:3},
+];
+
+const ITEM_BY_ID   = Object.fromEntries(ITEM_DB.map(i => [i.id, i]));
+const ITEM_BY_NAME = Object.fromEntries(ITEM_DB.map(i => [i.name.toLowerCase(), i]));
+const ITEMS_BY_CAT = {};
+ITEM_DB.forEach(i => { (ITEMS_BY_CAT[i.cat] = ITEMS_BY_CAT[i.cat]||[]).push(i); });
+
+const CAT_LABELS = {
+  melee_weapon:"Melee Weapons", ranged_weapon:"Ranged Weapons", shield:"Shields",
+  armor:"Armor", common_object:"Common Objects", special_object:"Special Objects",
+  magic_object:"Magic Objects", relic:"Relics", crafting:"Crafting"
+};
+
+/**
+ * Calculate current attribute values by applying equipped item modifiers to base attrs.
+ * Base attrs = starting racial stats + dev point upgrades (character evolution only).
+ * Current attrs = base + item bonuses/penalties (armor, rings, potions, etc).
+ */
+function calcCurrentAttrs(baseAttrs, equippedItemIds) {
+  const cur = { ...baseAttrs };
+  // Start total armor from natural armor
+  cur.totalArmor = cur.naturalArmor || 0;
+  
+  for (const itemId of (equippedItemIds || [])) {
+    const item = ITEM_BY_ID[itemId];
+    if (!item) continue;
+    // Apply attribute modifiers
+    if (item.attrMods) {
+      for (const [attr, mod] of Object.entries(item.attrMods)) {
+        if (cur[attr] != null) cur[attr] = (cur[attr]||0) + mod;
+        else cur[attr] = mod; // dex/perception start at 0
+      }
+    }
+    // Add armor bonus to total armor
+    if (item.armorBonus) cur.totalArmor += item.armorBonus;
+  }
+  return cur;
+}
+
 // ─── Step 4: Skills ────────────────────────────────────────────
 const SKILL_DB = [
   // COMBAT
@@ -1590,12 +1784,14 @@ function finaliseHero() {
     classId: creatorState.classId,
     alignment: race.alignment,
     vp: 10,
-    // XP — unspent accumulated (every 3 = 1 dev point)
-    xp: 0,
-    xpSpent: 0,
+    xp: 0,        // unspent accumulated XP
+    xpSpent: 0,   // XP already invested in improvements
     coins: 0,
+    // Base attributes: racial starting values + dev point spends + XP upgrades
+    // These only change through character development, never equipment
     attrs: { ...creatorState.attrs, dexterity: 0, perception: 0 },
-    totalArmor: creatorState.attrs.naturalArmor || 0, // natural + equipment bonuses
+    // Equipped item IDs — used to calculate currentAttrs on the fly
+    equippedItems: [],   // item IDs currently equipped (hands/body slots)
     weightCurrent: 0,
     // Quest-state (reset per quest)
     currentVitality: creatorState.attrs.vitality,
@@ -1620,71 +1816,73 @@ function finaliseHero() {
 function openDetail(id) {
   const h = heroes.find(h => h.id === id);
   if (!h) return;
-  // Migrate old heroes missing new fields
+  // Migrate old heroes
   if (h.attrs.dexterity == null) h.attrs.dexterity = 0;
   if (h.attrs.perception == null) h.attrs.perception = 0;
   if (h.fortuneBase == null) h.fortuneBase = h.fortune;
-  if (h.totalArmor == null) h.totalArmor = h.attrs.naturalArmor || 0;
+  if (!h.equippedItems) h.equippedItems = [];
   if (h.weightCurrent == null) h.weightCurrent = 0;
   if (h.xpSpent == null) h.xpSpent = 0;
 
   const race = RACE_DB.find(r => r.id === h.raceId) || {};
   const cls  = CLASS_DB.find(c => c.id === h.classId) || {};
 
-  // Build attribute rows — split into two columns like the physical card
+  // Calculate current attrs (base + equipment modifiers)
+  const cur = calcCurrentAttrs(h.attrs, h.equippedItems);
+
+  // Attribute rows: base | current (highlighted if different)
   const mainAttrs = ['movement','combatSkill','strength','shootingSkill','agility',
-                     'intelligence','mana','courage','naturalArmor','vitality'];
-  const attrRows = mainAttrs.map(key => {
-    const a = ATTR_META.find(m => m.key === key);
-    if (!a) return '';
-    const val = h.attrs[key];
-    if (val == null && key !== 'mana') return '';
-    if (key === 'mana' && val == null) return '';
+                     'intelligence','mana','courage','naturalArmor','vitality',
+                     'dexterity','perception'];
+
+  function attrRow(key, label, icon, note) {
+    const base = h.attrs[key] ?? 0;
+    const current = cur[key] ?? base;
+    const diff = current - base;
+    const diffStr = diff > 0 ? `<span style="color:#4abf4a">+${diff}</span>`
+                  : diff < 0 ? `<span style="color:#bf4a4a">${diff}</span>` : '';
+    const isSkillOnly = (key === 'dexterity' || key === 'perception');
+    const isFixed = (key === 'naturalArmor');
     const raceAt = race.attrs?.[key];
-    const maxVal = raceAt ? raceAt.max : (val || 0);
-    const isFixed = !a.devPts;
-    return `<div class="attr-sheet-row">
-      <span class="attr-sheet-name">${a.icon} ${a.label}</span>
-      <span>
-        <span class="attr-sheet-val">${val || 0}</span>
-        ${isFixed ? '' : `<span class="attr-sheet-max"> / ${maxVal}</span>`}
-      </span>
-    </div>`;
-  }).join('');
+    const maxVal = raceAt ? raceAt.max : base;
+    const tag = isSkillOnly ? `<span style="font-size:8px;color:#6a5030">(skill)</span>`
+              : isFixed    ? `<span style="font-size:8px;color:#6a5030">(fixed)</span>`
+              : `<span class="attr-sheet-max">/ ${maxVal}</span>`;
 
-  // Dex / Perception separate — skill-only, always shown
-  const dexPerc = `
-    <div class="attr-sheet-row" style="border-top:1px dashed rgba(106,74,32,.4);margin-top:4px;padding-top:4px;">
-      <span class="attr-sheet-name">🖐 Dexterity</span>
-      <span>
-        <span class="attr-sheet-val" id="dex-${h.id}">${h.attrs.dexterity || 0}</span>
-        <span class="attr-sheet-max"> (skill-only)</span>
-      </span>
-    </div>
-    <div class="attr-sheet-row">
-      <span class="attr-sheet-name">👁 Perception</span>
-      <span>
-        <span class="attr-sheet-val" id="perc-${h.id}">${h.attrs.perception || 0}</span>
-        <span class="attr-sheet-max"> (skill-only)</span>
+    return `<div class="attr-sheet-row" title="${note||''}">
+      <span class="attr-sheet-name">${icon} ${label}</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span class="attr-sheet-val">${current}</span>
+        ${diffStr}
+        ${tag}
+        ${diff !== 0 ? `<span style="font-size:9px;color:var(--text-muted)">(base&nbsp;${base})</span>` : ''}
       </span>
     </div>`;
+  }
 
-  // Armor display: natural | total (with equipment)
-  const armorRow = `
-    <div class="attr-sheet-row" style="border-top:1px dashed rgba(106,74,32,.4);margin-top:4px;padding-top:4px;">
-      <span class="attr-sheet-name">🛡 Armor</span>
-      <span>
-        <span class="attr-sheet-val">${h.attrs.naturalArmor || 0}</span>
-        <span class="attr-sheet-max"> nat · </span>
-        <input style="background:transparent;border:none;border-bottom:1px solid var(--panel-border);
-          color:var(--gold-light);font-family:'Cinzel',serif;font-size:14px;font-weight:bold;
-          width:28px;text-align:center;" type="number" min="0" max="6"
-          value="${h.totalArmor || h.attrs.naturalArmor || 0}"
-          onchange="updateField('${h.id}','totalArmor',this.value)"
-          title="Total armor (natural + equipment)">
-        <span class="attr-sheet-max"> total</span>
-      </span>
-    </div>`;
+  // Total armor gets special treatment
+  const totalArmorRow = `<div class="attr-sheet-row" style="border-top:1px dashed rgba(106,74,32,.4);margin-top:4px;padding-top:4px;">
+    <span class="attr-sheet-name">🛡 Total Armor</span>
+    <span style="display:flex;align-items:center;gap:6px;">
+      <span class="attr-sheet-val">${cur.totalArmor}</span>
+      <span class="attr-sheet-max">(${h.attrs.naturalArmor||0} nat + ${(cur.totalArmor||0)-(h.attrs.naturalArmor||0)} eq)</span>
+    </span>
+  </div>`;
+
+  const attrRows = [
+    attrRow('movement','Movement','🥾','squares per turn'),
+    attrRow('combatSkill','Combat Skill','⚔','melee attacks'),
+    attrRow('strength','Strength','💪','damage & carry'),
+    attrRow('shootingSkill','Shooting Skill','🎯','ranged attacks'),
+    attrRow('agility','Agility','🌬','dodge & jump'),
+    attrRow('intelligence','Intelligence','🧠','spells & traps'),
+    h.attrs.mana != null ? attrRow('mana','Mana','✨','spell power') : '',
+    attrRow('courage','Courage','🚩','resist fear'),
+    attrRow('naturalArmor','Natural Armor','🛡','fixed — skin toughness'),
+    attrRow('vitality','Vitality','❤','hit points'),
+    attrRow('dexterity','Dexterity','🖐','traps & locks'),
+    attrRow('perception','Perception','👁','detect & initiative'),
+  ].join('') + totalArmorRow;
 
   // Fortune pips — show fortuneBase and current max (can be raised +2)
   const maxFortune = h.fortune;
@@ -1754,11 +1952,12 @@ function openDetail(id) {
       </div>
 
       <div class="hero-sheet-right">
-        <div class="sheet-section-title">Attributes</div>
-        <div class="attr-sheet-grid">
+        <div class="sheet-section-title">
+          Attributes
+          <span style="font-size:8px;color:var(--text-muted);margin-left:6px;">current (base if modified by equipment)</span>
+        </div>
+        <div class="attr-sheet-grid" style="grid-template-columns:1fr;">
           ${attrRows}
-          ${dexPerc}
-          ${armorRow}
         </div>
 
         <div class="sheet-section-title">Quest Status</div>
@@ -1810,6 +2009,16 @@ function openDetail(id) {
             onclick="toggleSkillPicker('${h.id}')">+ Add Skill</button>
         </div>
         <div id="skill-picker-${h.id}" style="display:none;margin-top:8px;"></div>
+
+        <div class="sheet-section-title">Equipment</div>
+        <div id="hero-equip-${h.id}">
+          ${renderEquipSlots(h)}
+        </div>
+        <div style="margin-top:6px;">
+          <button class="btn-secondary" style="font-size:9px;padding:4px 10px;"
+            onclick="toggleItemPicker('${h.id}')">+ Add Item</button>
+        </div>
+        <div id="item-picker-${h.id}" style="display:none;margin-top:8px;"></div>
 
         <div class="sheet-section-title">Notes</div>
         <textarea style="width:100%;background:var(--bg-dark);border:1px solid var(--panel-border);color:var(--text-light);
@@ -1979,6 +2188,104 @@ function addHeroSkill(heroId, skillName) {
   // Close picker and refresh
   toggleSkillPicker(heroId);
   toggleSkillPicker(heroId);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EQUIPMENT MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function renderEquipSlots(h) {
+  if (!h.equippedItems || !h.equippedItems.length) {
+    return '<em style="font-size:10px;color:var(--text-muted)">No equipment</em>';
+  }
+  return h.equippedItems.map(itemId => {
+    const item = ITEM_BY_ID[itemId];
+    if (!item) return '';
+    const hasMods = item.attrMods && Object.keys(item.attrMods).length > 0;
+    const modStr = hasMods
+      ? Object.entries(item.attrMods).map(([a,v]) => `${v>0?'+':''}${v} ${a}`).join(', ')
+      : '';
+    const armorStr = item.armorBonus ? `+${item.armorBonus} armor` : '';
+    const effects = [modStr, armorStr].filter(Boolean).join(' · ');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid rgba(106,74,32,.2);">
+      <span class="skill-chip" style="margin:0;flex:1;cursor:default;">
+        ${item.name}
+        ${effects ? `<span style="font-size:8px;color:var(--text-muted);margin-left:4px;">(${effects})</span>` : ''}
+      </span>
+      <span style="font-size:9px;color:var(--text-muted);">${CAT_LABELS[item.cat]||item.cat}</span>
+      <span style="cursor:pointer;color:#8a2020;font-size:12px;"
+        onclick="removeEquipItem('${h.id}',${itemId})">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function removeEquipItem(heroId, itemId) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  h.equippedItems = (h.equippedItems||[]).filter(id => id !== itemId);
+  // Remove from old equipment slots too for compatibility
+  h.equipment.hands = (h.equipment.hands||[]).filter(n => {
+    const item = ITEM_BY_ID[itemId]; return n !== item?.name;
+  });
+  h.equipment.body = (h.equipment.body||[]).filter(n => {
+    const item = ITEM_BY_ID[itemId]; return n !== item?.name;
+  });
+  save();
+  // Refresh equip display and attrs
+  const el = document.getElementById('hero-equip-' + heroId);
+  if (el) el.innerHTML = renderEquipSlots(h);
+  openDetail(heroId); // full re-render to update current attrs
+}
+
+function toggleItemPicker(heroId) {
+  const picker = document.getElementById('item-picker-' + heroId);
+  if (!picker) return;
+  if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+
+  const h = heroes.find(h => h.id === heroId);
+  const equippedIds = new Set(h.equippedItems || []);
+
+  // Show item categories with a filter input
+  const sections = Object.entries(CAT_LABELS).map(([cat, label]) => {
+    const items = (ITEMS_BY_CAT[cat]||[]).filter(i => !equippedIds.has(i.id));
+    if (!items.length) return '';
+    const chips = items.map(item => {
+      const hasMods = item.attrMods && Object.keys(item.attrMods).length > 0;
+      const armorStr = item.armorBonus ? ` +${item.armorBonus}⚔` : '';
+      const modStr = hasMods ? ' ' + Object.entries(item.attrMods).map(([a,v])=>`${v>0?'+':''}${v}${a.slice(0,3)}`).join('') : '';
+      return `<span class="skill-chip" style="cursor:pointer;margin:2px;"
+        onclick="addEquipItem('${heroId}',${item.id})">
+        + ${item.name}${armorStr}${modStr}
+        <span style="font-size:8px;color:var(--text-muted)"> ${item.cost}gp·${item.weight}w</span>
+      </span>`;
+    }).join('');
+    return `<div style="margin-bottom:8px;">
+      <div style="font-size:8px;color:var(--text-muted);font-family:'Cinzel',serif;letter-spacing:1px;margin-bottom:4px;">${label}</div>
+      ${chips}
+    </div>`;
+  }).join('');
+
+  picker.innerHTML = `
+    <div style="background:var(--bg-dark);border:1px solid var(--panel-border);padding:10px;max-height:240px;overflow-y:auto;">
+      <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;font-style:italic;">
+        Items with ⚔ give armor bonus. Items with stat modifiers shown. Equipped items update current stats automatically.
+      </div>
+      ${sections}
+    </div>`;
+  picker.style.display = 'block';
+}
+
+function addEquipItem(heroId, itemId) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  if (!h.equippedItems) h.equippedItems = [];
+  if (!h.equippedItems.includes(itemId)) {
+    h.equippedItems.push(itemId);
+    // Update carry weight
+    const item = ITEM_BY_ID[itemId];
+    if (item) h.weightCurrent = (h.weightCurrent||0) + item.weight;
+  }
+  save();
+  openDetail(heroId); // full re-render updates current attrs display
 }
 
 // ═══════════════════════════════════════════════════════════════
