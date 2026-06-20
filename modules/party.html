@@ -950,16 +950,18 @@ const CLASS_DB = [
 // ATTRIBUTE CONFIG
 // ═══════════════════════════════════════════════════════════════
 const ATTR_META = [
-  { key:"movement",      label:"Movement",       icon:"🥾", note:"squares per turn" },
-  { key:"combatSkill",   label:"Combat Skill",   icon:"⚔",  note:"melee attacks" },
-  { key:"strength",      label:"Strength",       icon:"💪", note:"damage & carry" },
-  { key:"shootingSkill", label:"Shooting",       icon:"🎯", note:"ranged attacks" },
-  { key:"agility",       label:"Agility",        icon:"🌬", note:"dodge & jump" },
-  { key:"intelligence",  label:"Intelligence",   icon:"🧠", note:"spells & traps" },
-  { key:"mana",          label:"Mana",           icon:"✨", note:"spell power" },
-  { key:"courage",       label:"Courage",        icon:"🚩", note:"resist fear" },
-  { key:"naturalArmor",  label:"Natural Armor",  icon:"🛡", note:"fixed, skin toughness" },
-  { key:"vitality",      label:"Vitality",       icon:"❤",  note:"hit points" },
+  { key:"movement",      label:"Movement",       icon:"🥾", note:"squares per turn",      devPts:true  },
+  { key:"combatSkill",   label:"Combat Skill",   icon:"⚔",  note:"melee attacks",          devPts:true  },
+  { key:"strength",      label:"Strength",       icon:"💪", note:"damage & carry",          devPts:true  },
+  { key:"shootingSkill", label:"Shooting Skill", icon:"🎯", note:"ranged attacks",          devPts:true  },
+  { key:"agility",       label:"Agility",        icon:"🌬", note:"dodge & jump",            devPts:true  },
+  { key:"intelligence",  label:"Intelligence",   icon:"🧠", note:"spells & traps",          devPts:true  },
+  { key:"mana",          label:"Mana",           icon:"✨", note:"spell power",             devPts:true  },
+  { key:"courage",       label:"Courage",        icon:"🚩", note:"resist fear",             devPts:true  },
+  { key:"naturalArmor",  label:"Natural Armor",  icon:"🛡", note:"fixed (skin/endurance)",  devPts:false },
+  { key:"vitality",      label:"Vitality",       icon:"❤",  note:"hit points",              devPts:true  },
+  { key:"dexterity",     label:"Dexterity",      icon:"🖐", note:"traps & locks (skill-only)", devPts:false },
+  { key:"perception",    label:"Perception",     icon:"👁", note:"detect & initiative (skill-only)", devPts:false },
 ];
 
 // Portrait emoji options
@@ -1253,6 +1255,15 @@ function renderStepAttrs() {
   const warnClass = remaining === 0 ? 'spent' : remaining <= 2 ? 'warn' : '';
 
   const rows = ATTR_META.map(a => {
+    // Dexterity and Perception: start at 0, skill-only, not on race card
+    if (a.key === 'dexterity' || a.key === 'perception') {
+      return `<div class="attr-builder-row">
+        <div class="attr-builder-name">${a.icon} ${a.label}<em>${a.note}</em></div>
+        <div class="attr-builder-val" style="color:var(--text-muted)">0</div>
+        <div class="attr-builder-range" style="color:#6a5030">skill-only</div>
+        <div class="attr-cost-label" style="font-size:9px;color:#6a5030">modified by skills</div>
+      </div>`;
+    }
     const at = race.attrs[a.key];
     if (!at || a.key === 'naturalArmor') {
       const val = creatorState.attrs[a.key] ?? at?.min ?? 0;
@@ -1579,13 +1590,18 @@ function finaliseHero() {
     classId: creatorState.classId,
     alignment: race.alignment,
     vp: 10,
+    // XP — unspent accumulated (every 3 = 1 dev point)
     xp: 0,
+    xpSpent: 0,
     coins: 0,
-    attrs: { ...creatorState.attrs },
+    attrs: { ...creatorState.attrs, dexterity: 0, perception: 0 },
+    totalArmor: creatorState.attrs.naturalArmor || 0, // natural + equipment bonuses
+    weightCurrent: 0,
     // Quest-state (reset per quest)
     currentVitality: creatorState.attrs.vitality,
     currentMana: cls.isCaster ? (cls.startMana || 6) : 0,
-    fortune: race.fortune,
+    fortune: race.fortune,       // current max (can grow +2 above fortuneBase)
+    fortuneBase: race.fortune,   // racial base, for reference
     currentFortune: race.fortune,
     skills: [...race.startingSkills, ...(creatorState.skills || [])],
     equipment: { hands: [], body: [], backpack: [] },
@@ -1604,30 +1620,88 @@ function finaliseHero() {
 function openDetail(id) {
   const h = heroes.find(h => h.id === id);
   if (!h) return;
+  // Migrate old heroes missing new fields
+  if (h.attrs.dexterity == null) h.attrs.dexterity = 0;
+  if (h.attrs.perception == null) h.attrs.perception = 0;
+  if (h.fortuneBase == null) h.fortuneBase = h.fortune;
+  if (h.totalArmor == null) h.totalArmor = h.attrs.naturalArmor || 0;
+  if (h.weightCurrent == null) h.weightCurrent = 0;
+  if (h.xpSpent == null) h.xpSpent = 0;
+
   const race = RACE_DB.find(r => r.id === h.raceId) || {};
   const cls  = CLASS_DB.find(c => c.id === h.classId) || {};
 
-  const attrRows = ATTR_META.map(a => {
-    const val = h.attrs[a.key];
-    if (val == null) return '';
-    const raceAt = race.attrs?.[a.key];
-    const maxVal = raceAt ? raceAt.max : val;
+  // Build attribute rows — split into two columns like the physical card
+  const mainAttrs = ['movement','combatSkill','strength','shootingSkill','agility',
+                     'intelligence','mana','courage','naturalArmor','vitality'];
+  const attrRows = mainAttrs.map(key => {
+    const a = ATTR_META.find(m => m.key === key);
+    if (!a) return '';
+    const val = h.attrs[key];
+    if (val == null && key !== 'mana') return '';
+    if (key === 'mana' && val == null) return '';
+    const raceAt = race.attrs?.[key];
+    const maxVal = raceAt ? raceAt.max : (val || 0);
+    const isFixed = !a.devPts;
     return `<div class="attr-sheet-row">
       <span class="attr-sheet-name">${a.icon} ${a.label}</span>
       <span>
-        <span class="attr-sheet-val">${val}</span>
-        <span class="attr-sheet-max"> / ${maxVal}</span>
+        <span class="attr-sheet-val">${val || 0}</span>
+        ${isFixed ? '' : `<span class="attr-sheet-max"> / ${maxVal}</span>`}
       </span>
     </div>`;
   }).join('');
 
-  const fortunePips = Array.from({length: h.fortune}, (_,i) =>
-    `<div class="fortune-pip ${i >= h.currentFortune ? 'spent' : ''}"
-      onclick="toggleFortune('${h.id}',${i})" title="${i < h.currentFortune ? 'Spend fortune' : 'Restore fortune'}"></div>`
-  ).join('');
+  // Dex / Perception separate — skill-only, always shown
+  const dexPerc = `
+    <div class="attr-sheet-row" style="border-top:1px dashed rgba(106,74,32,.4);margin-top:4px;padding-top:4px;">
+      <span class="attr-sheet-name">🖐 Dexterity</span>
+      <span>
+        <span class="attr-sheet-val" id="dex-${h.id}">${h.attrs.dexterity || 0}</span>
+        <span class="attr-sheet-max"> (skill-only)</span>
+      </span>
+    </div>
+    <div class="attr-sheet-row">
+      <span class="attr-sheet-name">👁 Perception</span>
+      <span>
+        <span class="attr-sheet-val" id="perc-${h.id}">${h.attrs.perception || 0}</span>
+        <span class="attr-sheet-max"> (skill-only)</span>
+      </span>
+    </div>`;
 
-  const skillChips = (h.skills || []).map(s => `<span class="skill-chip">${s}</span>`).join('');
-  const weightMax = (h.attrs.strength + h.attrs.vitality) * 2;
+  // Armor display: natural | total (with equipment)
+  const armorRow = `
+    <div class="attr-sheet-row" style="border-top:1px dashed rgba(106,74,32,.4);margin-top:4px;padding-top:4px;">
+      <span class="attr-sheet-name">🛡 Armor</span>
+      <span>
+        <span class="attr-sheet-val">${h.attrs.naturalArmor || 0}</span>
+        <span class="attr-sheet-max"> nat · </span>
+        <input style="background:transparent;border:none;border-bottom:1px solid var(--panel-border);
+          color:var(--gold-light);font-family:'Cinzel',serif;font-size:14px;font-weight:bold;
+          width:28px;text-align:center;" type="number" min="0" max="6"
+          value="${h.totalArmor || h.attrs.naturalArmor || 0}"
+          onchange="updateField('${h.id}','totalArmor',this.value)"
+          title="Total armor (natural + equipment)">
+        <span class="attr-sheet-max"> total</span>
+      </span>
+    </div>`;
+
+  // Fortune pips — show fortuneBase and current max (can be raised +2)
+  const maxFortune = h.fortune;
+  const fortunePips = Array.from({length: maxFortune}, (_,i) =>
+    `<div class="fortune-pip ${i >= h.currentFortune ? 'spent' : ''}"
+      onclick="toggleFortune('${h.id}',${i})"
+      title="${i < h.currentFortune ? 'Click to spend' : 'Click to restore'}"></div>`
+  ).join('');
+  const canRaiseFortune = maxFortune < (h.fortuneBase + 2);
+  const canLowerFortune = maxFortune > h.fortuneBase;
+
+  const weightMax = ((h.attrs.strength || 3) + (h.attrs.vitality || 4)) * 2;
+
+  // XP split: earned vs spent
+  const devPtsTotal = Math.floor((h.xp + h.xpSpent) / 3);
+  const devPtsSpent = Math.floor(h.xpSpent / 3);
+  const devPtsAvail = devPtsTotal - devPtsSpent;
 
   const modal = document.getElementById('detail-modal');
   modal.innerHTML = `
@@ -1638,25 +1712,54 @@ function openDetail(id) {
     <div class="hero-sheet">
       <div class="hero-sheet-left">
         <div class="hero-sheet-portrait-lg">${h.portrait}</div>
-        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);">${h.name}</div>
+        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);margin-bottom:2px;">${h.name}</div>
         <div style="font-size:11px;color:var(--text-muted);">${race.name || '?'} · ${cls.name || '?'}</div>
-        <div style="font-size:10px;color:var(--text-muted);">VP: <strong style="color:var(--gold-light)">${h.vp}</strong></div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
+          Alignment: <span style="color:${h.alignment==='good'?'#6abf6a':h.alignment==='evil'?'#bf6a6a':'#bfbf6a'}">${h.alignment||'—'}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+          VP: <strong style="color:var(--gold-light);font-size:16px;">${h.vp}</strong>
+        </div>
+
         <hr class="section-divider">
-        <div class="sheet-section-title">Fortune</div>
+        <div class="sheet-section-title">Fortune
+          <span style="font-size:8px;margin-left:4px;color:var(--text-muted)">
+            base ${h.fortuneBase} · max ${h.fortuneBase + 2}
+          </span>
+        </div>
         <div class="fortune-pips">${fortunePips}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button class="qty-btn" ${canLowerFortune?'':'disabled'} onclick="raiseFortune('${h.id}',-1)" title="Decrease max fortune">−</button>
+          <span style="font-size:9px;color:var(--text-muted);align-self:center;">max ${maxFortune}</span>
+          <button class="qty-btn" ${canRaiseFortune?'':'disabled'} onclick="raiseFortune('${h.id}',1)" title="Increase max fortune (+2 XP spend)">+</button>
+        </div>
+
         <hr class="section-divider">
         <div class="sheet-section-title">Coins</div>
         <div class="coins-row">
           <input class="coins-input" type="number" min="0" value="${h.coins}"
             onchange="updateCoins('${h.id}',this.value)">
-          <span style="font-size:11px;color:var(--text-muted);">gold</span>
+          <span style="font-size:11px;color:var(--text-muted);">gp</span>
         </div>
+
         <hr class="section-divider">
-        <div style="font-size:10px;color:var(--text-muted);">Max carry: ${weightMax}</div>
+        <div class="sheet-section-title">Weight</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);">
+          <input style="background:var(--bg-dark);border:1px solid var(--panel-border);color:var(--text-light);
+            padding:3px 6px;font-family:'Cinzel',serif;font-size:13px;width:48px;text-align:center;"
+            type="number" min="0" value="${h.weightCurrent||0}"
+            onchange="updateField('${h.id}','weightCurrent',this.value)">
+          <span>/ ${weightMax}</span>
+        </div>
       </div>
+
       <div class="hero-sheet-right">
         <div class="sheet-section-title">Attributes</div>
-        <div class="attr-sheet-grid">${attrRows}</div>
+        <div class="attr-sheet-grid">
+          ${attrRows}
+          ${dexPerc}
+          ${armorRow}
+        </div>
 
         <div class="sheet-section-title">Quest Status</div>
         <div class="quest-controls">
@@ -1679,13 +1782,22 @@ function openDetail(id) {
         <div class="sheet-section-title">Experience</div>
         <div class="xp-section">
           <div class="xp-row">
-            <span>XP:</span>
+            <span>Accumulated XP:</span>
             <input class="xp-input" type="number" min="0" value="${h.xp}"
-              onchange="updateXP('${h.id}',this.value)">
-            <span class="xp-hint">every 3 XP = 1 dev point</span>
+              onchange="updateXP('${h.id}',this.value)"
+              title="Unspent XP — every 3 = 1 dev point">
+            <span class="xp-hint">unspent</span>
           </div>
-          <div class="xp-row" style="color:var(--text-muted);font-size:10px;">
-            Dev points available: <strong style="color:var(--gold-light)">${Math.floor(h.xp / 3)}</strong>
+          <div class="xp-row">
+            <span>XP Invested:</span>
+            <input class="xp-input" type="number" min="0" value="${h.xpSpent}"
+              onchange="updateXPSpent('${h.id}',this.value)"
+              title="XP already spent on improvements">
+            <span class="xp-hint">spent</span>
+          </div>
+          <div class="xp-row" style="color:var(--text-muted);font-size:10px;border-top:1px solid var(--panel-border);padding-top:6px;margin-top:2px;">
+            Dev points available: <strong style="color:var(--gold-light)">${devPtsAvail}</strong>
+            &nbsp;·&nbsp; Total upgrades: <strong style="color:var(--gold-light)">${devPtsSpent}</strong>
           </div>
         </div>
 
@@ -1736,6 +1848,29 @@ function toggleFortune(id, idx) {
   const h = heroes.find(h => h.id === id);
   if (!h) return;
   h.currentFortune = idx < h.currentFortune ? idx : idx + 1;
+  save();
+  openDetail(id);
+}
+
+function updateField(id, key, val) {
+  const h = heroes.find(h => h.id === id);
+  if (h) { h[key] = parseFloat(val) || 0; save(); }
+}
+
+function updateXPSpent(id, val) {
+  const h = heroes.find(h => h.id === id);
+  if (h) { h.xpSpent = parseInt(val) || 0; save(); openDetail(id); }
+}
+
+function raiseFortune(id, delta) {
+  const h = heroes.find(h => h.id === id);
+  if (!h) return;
+  const newMax = h.fortune + delta;
+  const cap = (h.fortuneBase || h.fortune) + 2;
+  if (newMax < (h.fortuneBase || h.fortune) || newMax > cap) return;
+  h.fortune = newMax;
+  if (h.currentFortune > newMax) h.currentFortune = newMax;
+  h.vp += delta * 2; // fortune increase costs XP → +2 VP per raise
   save();
   openDetail(id);
 }
