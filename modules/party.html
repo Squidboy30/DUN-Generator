@@ -297,14 +297,15 @@ body {
 
 /* Teal framed portrait */
 .card-portrait-cell {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
   background: #72cece;
   border-left: 2px solid #5a3a10; border-right: 2px solid #5a3a10;
   box-shadow: inset 0 0 8px rgba(0,0,0,.5), inset 0 0 0 2px #8a6220;
-  margin: 4px 0; min-height: 112px;
+  margin: 4px 0; min-height: 120px; height: 130px;
+  overflow: hidden; position: relative; padding: 0;
 }
 .card-portrait-emoji { font-size: 46px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.6)); }
-.card-alignment-pip  { width: 9px; height: 9px; border-radius: 50%; margin-top: 4px; border: 1px solid rgba(0,0,0,.4); }
+.card-alignment-pip  { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0,0,0,.4); }
 .align-good    { background: #3a7a3a; }
 .align-evil    { background: #7a1a1a; }
 .align-neutral { background: #7a6818; }
@@ -1351,6 +1352,51 @@ function renderPartyView() {
   strip.innerHTML = html;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PORTRAIT IMAGES — DUN miniature standees from worldofarasca.com
+// Publicly accessible, no session required
+// ═══════════════════════════════════════════════════════════════
+const PORTRAIT_BASE = 'https://worldofarasca.dungeonuniversalis.com/imagenes/tilesrnd/heroes/predefinidos/';
+const RACE_PORTRAITS = {
+  10: { fighter:['humano4.png','humano25.png','humano28.png','humano45.png'],   explorer:['humano3.png','humano13.png','humano17.png','humano22.png'], caster:['humano2.png','humano8.png','humano10.png','humano15.png','humano16.png'] },
+  11: { fighter:['elfo3.png','elfo4.png'],      explorer:['elfo2.png','elfo6.png'],   caster:['elfo2.png','elfo6.png'] },
+  7:  { fighter:['enano.png','enano2.png','enano3.png','enano4.png'], explorer:['enano6.png','enano7.png'], caster:['enano9.png','enano10.png'] },
+  12: { fighter:['elfooscuro.png','elfooscuro3.png','elfooscuro4.png'], explorer:['elfooscuro5.png'], caster:['elfooscuro.png'] },
+  13: { fighter:['mediano.png','mediano2.png'], explorer:['mediano3.png','mediano4.png'], caster:['mediano2.png'] },
+  14: { fighter:['orco2.png','orco5.png','orco6.png','orco7.png','orco8.png'], explorer:['orco2.png','orco5.png'], caster:['orco6.png'] },
+  9:  { fighter:['goblin.png','goblin2.png','goblin3.png','goblin4.png'], explorer:['goblin5.png','goblin6.png','goblin7.png','goblin8.png','goblin9.png'], caster:['goblin3.png','goblin9.png'] },
+  15: { fighter:['ratido.png','ratido2.png'], explorer:['ratido.png','ratido2.png'], caster:['ratido2.png'] },
+  8:  { fighter:['felido3.png'], explorer:['felido3.png'], caster:['felido3.png'] },
+  2:  { fighter:['canido.png','canido2.png'], explorer:['canido4.png'], caster:['canido.png'] },
+  1:  { fighter:['anfibio.png','anfibio2.png'], explorer:['anfibio3.png'], caster:['anfibio2.png'] },
+  20: { fighter:['celestial.png'], explorer:['celestial.png'], caster:['celestial.png'] },
+  17: { fighter:['centauro.png','centauro2.png'], explorer:['centauro2.png'], caster:['centauro.png'] },
+  19: { fighter:['arboreo.png','arboreo2.png'], explorer:['arboreo2.png'], caster:['arboreo.png'] },
+  24: { fighter:['hombrepajaro.png','hombrepajaro2.png'], explorer:['hombrepajaro2.png'], caster:['hombrepajaro.png'] },
+  18: { fighter:['vampiro.png'], explorer:['vampiro.png'], caster:['vampiro.png'] },
+  23: { fighter:['infernal.png','infernal2.png','infernal3.png','infernal4.png'], explorer:['infernal3.png'], caster:['infernal2.png'] },
+  22: { fighter:['hombrebestia.png'], explorer:['hombrebestia.png'], caster:['hombrebestia.png'] },
+  37: { fighter:['ogro.png'], explorer:['ogro.png'], caster:['ogro.png'] },
+  38: { fighter:['minotauro.png'], explorer:['minotauro.png'], caster:['minotauro.png'] },
+  35: { fighter:['cristalino.png'], explorer:['cristalino.png'], caster:['cristalino.png'] },
+  33: { fighter:['goblin4.png'], explorer:['goblin5.png'], caster:['goblin9.png'] },
+  34: { fighter:['humano38.png'], explorer:['humano43.png'], caster:['humano46.png'] },
+  21: { fighter:['ogro.png'], explorer:['ogro.png'], caster:['ogro.png'] },
+  30: { fighter:['minotauro.png'], explorer:['minotauro.png'], caster:['minotauro.png'] },
+  27: { fighter:['mediano4.png'], explorer:['mediano3.png'], caster:['mediano2.png'] },
+  28: { fighter:['enano2.png','enano3.png'], explorer:['enano7.png'], caster:['enano10.png'] },
+  32: { fighter:['reptiliano.png','reptiliano2.png'], explorer:['reptiliano2.png'], caster:['reptiliano.png'] },
+  36: { fighter:['elfo4.png'], explorer:['elfo6.png'], caster:['elfo3.png'] },
+  41: { fighter:['humano33.png'], explorer:['humano40.png'], caster:['humano47.png'] },
+};
+
+function getPortraitUrl(raceId, classGroup) {
+  const options = RACE_PORTRAITS[raceId];
+  if (!options) return PORTRAIT_BASE + 'humano14.png';
+  const pool = options[classGroup] || options.fighter;
+  return PORTRAIT_BASE + pool[raceId % pool.length];
+}
+
 function renderDunHeroCard(h, inParty) {
   const race = RACE_DB.find(r => r.id === h.raceId) || {};
   const cls  = CLASS_DB.find(c => c.id === h.classId) || {};
@@ -1397,6 +1443,9 @@ function renderDunHeroCard(h, inParty) {
     coins:        `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" stroke="white" stroke-width="1.5"/><path d="M10 6V14M8 8H11C11.6 8 12 8.4 12 9C12 9.6 11.6 10 11 10H9C8.4 10 8 10.4 8 11C8 11.6 8.4 12 9 12H12" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>`,
   };
 
+  // Portrait: real DUN miniature from worldofarasca.com
+  const portraitUrl = getPortraitUrl(h.raceId, cls.group || 'fighter');
+
   return `<div class="dun-hero-card ${isSelected ? 'selected' : ''}" id="hero-card-${h.id}">
 
     <div class="card-vp-badge">VP<span>${h.vp}</span></div>
@@ -1416,8 +1465,11 @@ function renderDunHeroCard(h, inParty) {
       </div>
 
       <div class="card-portrait-cell">
-        <div class="card-portrait-emoji">${h.portrait}</div>
-        <div class="card-alignment-pip ${alignCls}"></div>
+        <img src="${portraitUrl}" alt="${race.name||''} ${cls.name||''}"
+          style="width:100%;height:100%;object-fit:contain;object-position:bottom;display:block;"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:36px;color:rgba(255,255,255,.3);">?</div>
+        <div class="card-alignment-pip ${alignCls}" style="position:absolute;bottom:4px;right:4px;"></div>
       </div>
 
       <div class="card-stats-right">
@@ -1435,7 +1487,6 @@ function renderDunHeroCard(h, inParty) {
       <div class="card-vit-fill ${vitFillCls}" style="width:${vitPct}%"></div>
     </div>
 
-    <!-- Bottom: Armor(total) | Dex | Perc | Fortune | Coins -->
     <div class="card-bottom-row">
       <div class="card-bottom-cell" title="Total Armor">
         <div class="card-bottom-icon">${ICO.armor}</div>
