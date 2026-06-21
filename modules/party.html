@@ -678,9 +678,9 @@ body {
   inset: 0;
   background: rgba(0,0,0,.85);
   z-index: 200;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 20px;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
 }
 .creator-overlay.open { display: flex; }
@@ -689,7 +689,8 @@ body {
   border: 1px solid var(--border-gold);
   width: 100%;
   max-width: 800px;
-  max-height: 95vh;
+  height: 92vh;
+  max-height: 92vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
