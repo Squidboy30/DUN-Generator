@@ -689,6 +689,10 @@ body {
   border: 1px solid var(--border-gold);
   width: 100%;
   max-width: 800px;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .step-indicator {
   display: flex;
@@ -705,7 +709,7 @@ body {
 }
 .step-dot.done   { background: var(--gold-dim); }
 .step-dot.active { background: var(--gold-bright); }
-.creator-body { padding: 20px; min-height: 400px; }
+.creator-body { padding: 20px; min-height: 300px; overflow-y: auto; flex: 1; }
 .creator-footer {
   display: flex;
   gap: 8px;
