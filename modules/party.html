@@ -3554,28 +3554,6 @@ function renderCardsPanel(h) {
   return sections.join('');
 }
 
-function toggleCardsPanel(heroId) {
-  const panel = document.getElementById('cards-panel-' + heroId);
-  const btn   = document.getElementById('cards-btn-' + heroId);
-  if (!panel) return;
-
-  if (panel.style.display !== 'none') {
-    panel.style.display = 'none';
-    btn?.classList.remove('active');
-    return;
-  }
-
-  const h = heroes.find(h => h.id === heroId);
-  if (!h) return;
-  // Ensure migrations
-  if (!h.equippedItems) h.equippedItems = [];
-  if (!h.knownSpells)   h.knownSpells   = [];
-
-  panel.innerHTML = renderCardsPanel(h);
-  panel.style.display = 'block';
-  btn?.classList.add('active');
-}
-
 // ═══════════════════════════════════════════════════════════════
 // SKILL MANAGEMENT (hero detail)
 // ═══════════════════════════════════════════════════════════════
