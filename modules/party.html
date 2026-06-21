@@ -778,7 +778,9 @@ body {
 }
 .class-opt:hover { border-color: var(--border-mid); background: rgba(58,40,16,.4); }
 .class-opt.selected { border-color: var(--gold-bright); background: rgba(138,98,24,.2); }
-.class-opt.disabled { opacity: .35; cursor: default; pointer-events: none; }
+.skill-opt.free-skill { opacity: .55; cursor: default; pointer-events: none; border-style: dashed; }
+.skill-tag { font-size: 8px; color: var(--text-dim); font-style: italic; margin-left: 4px; }
+.skill-tag.vp-cost { color: #c08020; }
 .class-opt-name {
   font-family: 'Cinzel', serif;
   font-size: 11px;
@@ -1768,30 +1770,109 @@ function renderXpView() {
     el.innerHTML = '<div style="color:var(--text-muted);font-style:italic;padding:20px;">No heroes. Create a party and add heroes first.</div>';
     return;
   }
-  el.innerHTML = pool.map(h => {
-    const race = RACE_DB.find(r=>r.id===h.raceId)||{};
-    const devPts = Math.floor(h.xp/3);
-    return `<div class="xp-hero-row">
-      <div style="font-size:28px;">${h.portrait}</div>
-      <div style="flex:1;">
-        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);">${h.name}</div>
-        <div style="font-size:10px;color:var(--text-muted);">${race.name||'?'} · VP ${h.vp}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button class="qty-btn" onclick="awardXP('${h.id}',-1)">−</button>
-        <span style="font-family:'Cinzel',serif;font-size:16px;color:var(--gold-bright);min-width:32px;text-align:center;">${h.xp}</span>
-        <button class="qty-btn" onclick="awardXP('${h.id}',1)">+</button>
-      </div>
-      <div style="font-size:10px;color:var(--text-muted);min-width:100px;">
-        Dev pts: <strong style="color:var(--gold-bright)">${devPts}</strong>
-      </div>
-    </div>`;
-  }).join('');
+
+  el.innerHTML = `
+    <div style="background:var(--bg-raised);border:1px solid var(--border-dim);padding:10px 16px;margin-bottom:16px;font-size:10px;color:var(--text-muted);">
+      <strong style="color:var(--text-bone);">Rulebook (p.80):</strong>
+      Every <strong style="color:var(--gold-bright)">3 XP</strong> = 1 Development Point → spend on attribute increase or skill/spell/fortune.
+      Each upgrade costs <strong style="color:var(--gold-bright)">+2 VP</strong> regardless of dev points spent.
+      Attribute dev-point cost varies by race (shown on race card).
+    </div>
+    ${pool.map(h => {
+      const race = RACE_DB.find(r=>r.id===h.raceId) || {};
+      const cls  = CLASS_DB.find(c=>c.id===h.classId) || {};
+      const devPts     = Math.floor(h.xp / 3);
+      const xpRemainder = h.xp % 3;
+
+      // Build upgradable attributes with race-specific dev-point costs
+      const upgradeRows = ATTR_META.filter(a => {
+        if (!a.devPts) return false;
+        const at = race.attrs?.[a.key];
+        if (!at) return false;
+        const cur = h.attrs[a.key] ?? at.min ?? 0;
+        return cur < at.max; // only show if can still increase
+      }).map(a => {
+        const at   = race.attrs[a.key];
+        const cur  = h.attrs[a.key] ?? at.min ?? 0;
+        let   dc   = at.dc;
+        // Class discount on first increase of bonusAttr
+        if (cls.bonusAttr === a.key && cur === at.min) dc = Math.max(1, dc - 1);
+        const canUpgrade = devPts >= dc;
+        const xpNeeded   = dc * 3;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);">
+          <div style="flex:1;font-size:10px;color:${canUpgrade?'var(--text-bone)':'var(--text-dim)'};">
+            ${a.icon} ${a.label}
+            <span style="font-size:9px;color:var(--text-dim);margin-left:4px;">${cur} → ${cur+1}</span>
+          </div>
+          <div style="font-size:9px;color:var(--text-muted);min-width:100px;text-align:right;">
+            ${dc} dev pt${dc>1?'s':''} = ${xpNeeded} XP · +2 VP
+          </div>
+          <button class="attr-btn" style="width:22px;height:22px;font-size:12px;"
+            ${canUpgrade?`onclick="spendXpOnAttr('${h.id}','${a.key}',${dc})"`:' disabled'}
+            title="${canUpgrade?'Spend '+xpNeeded+' XP to increase '+a.label:'Need '+xpNeeded+' XP ('+dc+' dev pts)'}">+</button>
+        </div>`;
+      }).join('');
+
+      return `<div class="xp-hero-row" style="flex-direction:column;align-items:stretch;gap:0;padding:0;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-raised);">
+          <div style="flex:1;">
+            <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);">${h.name}</div>
+            <div style="font-size:10px;color:var(--text-muted);">${race.name||'?'} · ${cls.name||'?'} · VP ${h.vp}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">XP</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="qty-btn" onclick="awardXP('${h.id}',-1)">−</button>
+              <span style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-bright);min-width:28px;text-align:center;">${h.xp}</span>
+              <button class="qty-btn" onclick="awardXP('${h.id}',1)">+</button>
+            </div>
+          </div>
+          <div style="text-align:center;min-width:80px;">
+            <div style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">Dev Points</div>
+            <div style="font-family:'Cinzel',serif;font-size:18px;color:${devPts>0?'var(--gold-bright)':'var(--text-dim)'};">${devPts}</div>
+            ${xpRemainder>0?`<div style="font-size:8px;color:var(--text-dim);">(${xpRemainder} XP spare)</div>`:''}
+          </div>
+        </div>
+        ${devPts > 0 ? `
+        <div style="padding:8px 12px;background:var(--bg-dark);border-top:1px solid var(--border-dim);">
+          <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;">
+            Spend Dev Points — Attributes (race max limits apply)
+          </div>
+          ${upgradeRows || '<div style="font-size:9px;color:var(--text-dim);font-style:italic;">All attributes at racial maximum.</div>'}
+        </div>` : ''}
+      </div>`;
+    }).join('')}`;
 }
 
 function awardXP(id, delta) {
   const h = heroes.find(h=>h.id===id);
-  if (h) { h.xp = Math.max(0, h.xp+delta); save(); renderXpView(); }
+  if (h) { h.xp = Math.max(0, h.xp + delta); save(); renderXpView(); }
+}
+
+function spendXpOnAttr(heroId, attrKey, devPtCost) {
+  const h    = heroes.find(h=>h.id===heroId);
+  const race = RACE_DB.find(r=>r.id===h.raceId);
+  if (!h || !race) return;
+
+  const xpCost = devPtCost * 3;
+  if (h.xp < xpCost) return;
+
+  const at  = race.attrs[attrKey];
+  const cur = h.attrs[attrKey] ?? at.min ?? 0;
+  if (cur >= at.max) return;
+
+  // Rulebook p.80: each upgrade = +2 VP, costs the required XP
+  h.xp         -= xpCost;
+  h.xpSpent    += xpCost;
+  h.attrs[attrKey] = cur + 1;
+  h.vp         += 2;
+
+  // Keep current vitality in sync if vitality upgraded
+  if (attrKey === 'vitality') h.currentVitality = Math.min(h.currentVitality + 1, h.attrs.vitality);
+
+  save();
+  renderXpView();
+  renderPartyView(); // refresh cards
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2008,28 +2089,29 @@ const RACE_DB = [
 // ═══════════════════════════════════════════════════════════════
 const CLASS_DB = [
   // FIGHTERS
-  { id:"warrior",       name:"Warrior",        group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"combatSkill", desc:"Standard melee combatant. -1 cost on first Combat Skill increase." },
-  { id:"barbarian",     name:"Barbarian",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"strength",    desc:"Savage power fighter. -1 cost on first Strength increase." },
-  { id:"knight",        name:"Knight",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:"courage",     desc:"Armoured warrior with leadership qualities." },
-  { id:"paladin",       name:"Paladin",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          desc:"Holy warrior. Good alignment only." },
-  { id:"gladiator",     name:"Gladiator",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"agility",     desc:"Arena fighter. -1 cost on first Agility increase." },
-  { id:"battle_dancer", name:"Battle Dancer",   group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"agility",     desc:"Acrobatic melee fighter. Elves and Dark Elves preferred." },
-  { id:"warrior_monk",  name:"Warrior Monk",    group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          desc:"Disciplined martial artist." },
+  // FIGHTERS — each gets one free professional skill at creation (part of base 10 VP)
+  { id:"warrior",       name:"Warrior",        group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"combatSkill",  startingSkill:"Hardy",         desc:"Standard melee combatant. -1 cost on first Combat Skill increase." },
+  { id:"barbarian",     name:"Barbarian",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"strength",    startingSkill:"Berserker",      desc:"Savage power fighter. -1 cost on first Strength increase." },
+  { id:"knight",        name:"Knight",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:"courage",     startingSkill:"Bodyguard",      desc:"Armoured warrior with leadership qualities." },
+  { id:"paladin",       name:"Paladin",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          startingSkill:"Healing",        desc:"Holy warrior. Good alignment only." },
+  { id:"gladiator",     name:"Gladiator",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"agility",     startingSkill:"Combat master",  desc:"Arena fighter. -1 cost on first Agility increase." },
+  { id:"battle_dancer", name:"Battle Dancer",   group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"agility",     startingSkill:"Dance battler",  desc:"Acrobatic melee fighter. Elves and Dark Elves preferred." },
+  { id:"warrior_monk",  name:"Warrior Monk",    group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          startingSkill:"Martial arts",   desc:"Disciplined martial artist." },
   // EXPLORERS
-  { id:"scout",         name:"Scout",           group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:"shootingSkill",desc:"Versatile skirmisher. -1 cost on first Shooting Skill increase." },
-  { id:"ranger",        name:"Ranger",          group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           desc:"Wilderness expert. Access to Nature skills." },
-  { id:"rogue",         name:"Rogue",           group:"explorer", isCaster:false, skillRange:[3],   bonusAttr:"agility",      desc:"Sneaky thief. -1 cost on first Agility increase." },
-  { id:"assassin",      name:"Assassin",        group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           desc:"Precision striker. Expert in stealth attacks." },
-  { id:"bard",          name:"Bard",            group:"explorer", isCaster:false, skillRange:[2,3], bonusAttr:null,           desc:"Jack of all trades. Leadership and exploration." },
-  { id:"forester",      name:"Forester",        group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           desc:"Deep wilderness specialist." },
-  { id:"sorcerer_hunter",name:"Sorcerer Hunter",group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           desc:"Specialist in hunting magic users." },
+  { id:"scout",         name:"Scout",           group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:"shootingSkill",startingSkill:"Ambush",        desc:"Versatile skirmisher. -1 cost on first Shooting Skill increase." },
+  { id:"ranger",        name:"Ranger",          group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           startingSkill:"Tracker",       desc:"Wilderness expert. Access to Nature skills." },
+  { id:"rogue",         name:"Rogue",           group:"explorer", isCaster:false, skillRange:[3],   bonusAttr:"agility",      startingSkill:"Thief",         desc:"Sneaky thief. -1 cost on first Agility increase." },
+  { id:"assassin",      name:"Assassin",        group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           startingSkill:"Lethal blow",   desc:"Precision striker. Expert in stealth attacks." },
+  { id:"bard",          name:"Bard",            group:"explorer", isCaster:false, skillRange:[2,3], bonusAttr:null,           startingSkill:"Inspiring",     desc:"Jack of all trades. Leadership and exploration." },
+  { id:"forester",      name:"Forester",        group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           startingSkill:"Survival",      desc:"Deep wilderness specialist." },
+  { id:"sorcerer_hunter",name:"Sorcerer Hunter",group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           startingSkill:"Magic resistance",desc:"Specialist in hunting magic users." },
   // SPELLCASTERS
-  { id:"wizard",        name:"Wizard",          group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:"intelligence", desc:"Scholarly magic user. -1 cost on first Intelligence increase.", startMana:8 },
-  { id:"sorcerer",      name:"Sorcerer",        group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           desc:"Innate magic user. Some races: Tribal magic only.", startMana:6 },
-  { id:"animist",       name:"Animist",         group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           desc:"Nature magic user. Access to Nature skills.", startMana:6 },
-  { id:"necromancer",   name:"Necromancer",     group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:null,           desc:"Death magic. Evil alignment. Humans become evil.", startMana:6 },
-  { id:"runic_master",  name:"Runic Master",    group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           desc:"Magic through runes. Dwarves preferred.", startMana:6 },
-  { id:"battle_wizard", name:"Battle Wizard",   group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           desc:"Combat-capable spellcaster.", startMana:5 },
+  { id:"wizard",        name:"Wizard",          group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:"intelligence", startingSkill:"Alchemist",     desc:"Scholarly magic user. -1 cost on first Intelligence increase.", startMana:8 },
+  { id:"sorcerer",      name:"Sorcerer",        group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           startingSkill:"Foresight",     desc:"Innate magic user. Some races: Tribal magic only.", startMana:6 },
+  { id:"animist",       name:"Animist",         group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           startingSkill:"Taming animals",desc:"Nature magic user. Access to Nature skills.", startMana:6 },
+  { id:"necromancer",   name:"Necromancer",     group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:null,           startingSkill:"Undead lore",   desc:"Death magic. Evil alignment. Humans become evil.", startMana:6 },
+  { id:"runic_master",  name:"Runic Master",    group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           startingSkill:"Runic lore",    desc:"Magic through runes. Dwarves preferred.", startMana:6 },
+  { id:"battle_wizard", name:"Battle Wizard",   group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           startingSkill:"Hardy",         desc:"Combat-capable spellcaster.", startMana:5 },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -2840,33 +2922,34 @@ function renderStepSkills() {
   const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
 
   const allowedTypes = CLASS_SKILL_TYPES[creatorState.classId] || ['combat'];
-  // Nature skills available if race card indicates it or class is ranger/animist/forester
-  const hasNature = allowedTypes.includes('nature');
-
-  // Max new professional skills = Intelligence × 2 (but at creation, 1 slot by default for most,
-  // some races/classes grant extras). Simplified: show picker, allow up to INT×2 total across campaign.
-  // At creation: 1 professional skill slot (from class starting skill, if defined, it's pre-filled).
   const intVal = creatorState.attrs.intelligence || 3;
-  const maxProSkills = intVal * 2; // lifetime max, show as context
+  const maxNewSkills = intVal * 2; // lifetime max new professional skills after creation
 
-  // Pre-selected: racial starting skills already on hero
+  // Free skills (part of base 10 VP — not selectable, already assigned)
   const racialSkills = race ? race.startingSkills : [];
+  const classSkill   = cls.startingSkill || null;
 
-  const selectedProSkills = creatorState.skills || [];
+  const extraSkills = creatorState.skills || []; // manually chosen — each costs +2 VP
+
+  const vpCurrent = 10 + (extraSkills.length * 2);
 
   const sections = allowedTypes.map(type => {
     const skills = SKILL_DB.filter(s => s.type === type);
-    const color = TYPE_COLORS[type];
-    const chips = skills.map(s => {
-      const isRacial = racialSkills.some(r => r.toLowerCase().includes(s.name.toLowerCase()));
-      const isSel = selectedProSkills.includes(s.name);
-      const style = isSel ? `border-color:${color};background:rgba(${type==='combat'?'192,64,32':'type'==='exploration'?'32,96,64':'64,32,160'},0.15)` : '';
-      const safeName = s.name.replace(/'/g, "\\'");
-      const clickHandler = isRacial ? '' : `onclick="toggleSkill('${safeName}')"`;
-      return `<div class="skill-opt ${isSel?'selected':''} ${isRacial?'disabled':''}"
-        style="${style}" ${clickHandler}
-        title="${isRacial?'Racial skill — already on hero sheet':''}">
-        <div class="skill-name">${s.name}${isRacial?' <em style="font-size:8px;color:var(--text-muted)">(racial)</em>':''}</div>
+    const color  = TYPE_COLORS[type];
+    const chips  = skills.map(s => {
+      const isRacial = racialSkills.some(r => r.toLowerCase() === s.name.toLowerCase());
+      const isClass  = classSkill && classSkill.toLowerCase() === s.name.toLowerCase();
+      const isFree   = isRacial || isClass;
+      const isSel    = extraSkills.includes(s.name);
+      const freeLabel = isRacial ? '(race)' : isClass ? '(class)' : '';
+      const safeName  = s.name.replace(/'/g, "\\'");
+      return `<div class="skill-opt ${isSel ? 'selected' : ''} ${isFree ? 'free-skill' : ''}"
+        ${!isFree ? `onclick="toggleSkill('${safeName}')"` : ''}
+        title="${isFree ? `Free ${freeLabel} — already assigned, no VP cost` : `+2 VP if selected`}">
+        <div class="skill-name">${s.name}
+          ${isFree ? `<em class="skill-tag">${freeLabel} — free</em>` : ''}
+          ${isSel  ? `<em class="skill-tag vp-cost">+2 VP</em>` : ''}
+        </div>
       </div>`;
     }).join('');
 
@@ -2881,18 +2964,27 @@ function renderStepSkills() {
 
   return `
     <div style="margin-bottom:12px;background:var(--bg-dark);border:1px solid var(--border-gold);
-      padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted);">
-        Professional skills selected: <strong style="color:var(--gold-light)">${selectedProSkills.length}</strong>
-        <span style="font-size:9px;margin-left:8px;">(lifetime max: INT×2 = ${maxProSkills})</span>
+      padding:10px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);">
+          VP: <strong>${vpCurrent}</strong>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);">
+          Extra skills: <strong style="color:var(--gold-bright)">${extraSkills.length}</strong>
+          × 2 VP = +${extraSkills.length * 2} VP
+        </div>
       </div>
-      <div style="font-size:10px;color:var(--text-muted);">Learnable types for ${cls.name}: 
-        ${allowedTypes.map(t => `<span style="color:${TYPE_COLORS[t]}">${TYPE_LABELS[t]}</span>`).join(', ')}
+      <div style="font-size:10px;color:var(--text-muted);">
+        <strong style="color:var(--text-bone)">Free (included in base 10 VP):</strong>
+        Race: ${racialSkills.map(s => `<span class="skill-chip">${s}</span>`).join(' ')}
+        ${classSkill ? `· Class: <span class="skill-chip">${classSkill}</span>` : ''}
       </div>
     </div>
     <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-bottom:12px;">
-      Select your starting professional skill(s). Racial skills are pre-assigned. 
-      No two heroes may share the same professional skill.
+      Click a skill below to add it as an <strong>extra skill (+2 VP each)</strong>.
+      Class: <strong>${cls.name}</strong> can learn: 
+      ${allowedTypes.map(t => `<span style="color:${TYPE_COLORS[t]}">${TYPE_LABELS[t]}</span>`).join(', ')}.
+      Lifetime max new professional skills: INT×2 = ${maxNewSkills}.
     </div>
     ${sections}`;
 }
@@ -3181,7 +3273,10 @@ function renderStepReview() {
     </div>`;
   }).join('');
 
-  const vp = 10; // base VP; upgrades will add on top
+  const classSkill = cls.startingSkill ? [cls.startingSkill] : [];
+  const extraSkills = creatorState.skills || [];
+  const startingSpells = cls.isCaster ? (creatorState.spells || []) : [];
+  const vp = 10 + (extraSkills.length * 2) + (startingSpells.length * 2);
 
   return `
     <div style="max-width:600px;margin:0 auto;">
@@ -3192,13 +3287,22 @@ function renderStepReview() {
           <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-light);margin-bottom:4px;">${creatorState.name || '(unnamed)'}</div>
           <div style="font-size:12px;color:var(--text-muted);">${race.name} · ${cls.name}</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Alignment: ${race.alignment} · Fortune: ${race.fortune}</div>
-          <div style="font-size:11px;color:var(--text-muted);">Value Points: ${vp}</div>
+          <div style="font-size:11px;color:var(--text-muted);">Value Points: <strong style="color:var(--gold-bright)">${vp}</strong>
+            <span style="font-size:9px;"> = 10 base${extraSkills.length ? ` +${extraSkills.length*2} skills` : ''}${startingSpells.length ? ` +${startingSpells.length*2} spells` : ''}</span>
+          </div>
         </div>
         <div>
-          <div class="sheet-section-title">Starting Skills</div>
+          <div class="sheet-section-title">Starting Skills (all free)</div>
           <div style="font-size:11px;color:var(--text-muted);">
-            ${[...race.startingSkills].map(s => `<span class="skill-chip">${s}</span>`).join('')}
+            <div style="margin-bottom:4px;font-size:9px;color:var(--text-dim);">Race:</div>
+            ${race.startingSkills.map(s => `<span class="skill-chip">${s}</span>`).join('')}
             ${!race.startingSkills.length ? '<em>None</em>' : ''}
+            ${classSkill.length ? `
+            <div style="margin:6px 0 4px;font-size:9px;color:var(--text-dim);">Class (${cls.name}):</div>
+            ${classSkill.map(s => `<span class="skill-chip" style="border-color:var(--fighter)">${s}</span>`).join('')}` : ''}
+            ${extraSkills.length ? `
+            <div style="margin:6px 0 4px;font-size:9px;color:#c08020;">Extra (+2 VP each):</div>
+            ${extraSkills.map(s => `<span class="skill-chip" style="border-color:#c08020">${s}</span>`).join('')}` : ''}
           </div>
           <div class="sheet-section-title" style="margin-top:12px;">Carry Capacity</div>
           <div style="font-size:11px;color:var(--text-muted);">
@@ -3242,11 +3346,17 @@ function finaliseHero() {
   const race = RACE_DB.find(r => r.id === creatorState.raceId);
   const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
 
-  // VP: base 10 + 2 per professional skill + 2 per spell
-  // Racial starting skills don't cost VP (they're free with the race)
-  const proSkills = creatorState.skills || [];
+  // ── VP calculation (rulebook p.80) ────────────────────────────
+  // Base VP = 10 (includes all racial skills + class starting skill — all FREE)
+  // Each additional skill manually chosen at creation = +2 VP
+  // Each spell chosen at creation = +2 VP
+  const extraSkills   = creatorState.skills || [];          // manually chosen (beyond race+class freebies)
   const startingSpells = cls.isCaster ? (creatorState.spells || []) : [];
-  const startingVP = 10 + (proSkills.length * 2) + (startingSpells.length * 2);
+  const startingVP = 10 + (extraSkills.length * 2) + (startingSpells.length * 2);
+
+  // Build full skill list: racial + class starting + manually chosen extras
+  const classSkill = cls.startingSkill ? [cls.startingSkill] : [];
+  const allSkills  = [...race.startingSkills, ...classSkill, ...extraSkills];
 
   const hero = {
     id: 'hero_' + Date.now(),
@@ -3278,7 +3388,7 @@ function finaliseHero() {
     fortune: race.fortune,       // current max (can grow +2 above fortuneBase)
     fortuneBase: race.fortune,   // racial base, for reference
     currentFortune: race.fortune,
-    skills: [...race.startingSkills, ...(creatorState.skills || [])],
+    skills: allSkills,
     equipment: { hands: [], body: [], backpack: [] },
     notes: ''
   };
