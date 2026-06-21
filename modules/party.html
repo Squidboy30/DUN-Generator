@@ -13,33 +13,33 @@
   --bg-dark:    #111009;
   --bg-panel:   #1a1208;
   --bg-raised:  #221a0c;
-  --border-dim: #3a2a10;
-  --border-mid: #5a3e18;
-  --border-gold:#8a6218;
-  --gold-bright:#d4a020;
-  --gold-dim:   #8a6218;
-  --text-bone:  #e8dcc0;
-  --text-muted: #907858;
-  --text-dim:   #5a4830;
+  --border-dim: #4a3a18;
+  --border-mid: #6a4e22;
+  --border-gold:#9a7228;
+  --gold-bright:#e8b830;
+  --gold-dim:   #9a7228;
+  --text-bone:  #f0e4c8;
+  --text-muted: #b89060;
+  --text-dim:   #7a6040;
   --blood-red:  #8a1a1a;
   --rust:       #6a3010;
   --parchment:  #d8c8a0;
   --ink:        #1a1008;
 
   /* Attribute icon colours */
-  --col-move:   #6090a0;
-  --col-cs:     #c04020;
-  --col-str:    #a05030;
-  --col-shoot:  #60a060;
-  --col-agl:    #80b0c0;
-  --col-int:    #8060c0;
-  --col-mana:   #4060c0;
-  --col-cour:   #c08020;
-  --col-armor:  #709070;
-  --col-vit:    #c03030;
-  --col-dex:    #b07030;
-  --col-perc:   #a0a030;
-  --col-fort:   #c0a020;
+  --col-move:   #70a8c0;
+  --col-cs:     #e05030;
+  --col-str:    #c06840;
+  --col-shoot:  #70c070;
+  --col-agl:    #90c8d8;
+  --col-int:    #9878e0;
+  --col-mana:   #5888e0;
+  --col-cour:   #e0a030;
+  --col-armor:  #88b888;
+  --col-vit:    #e04040;
+  --col-dex:    #c88840;
+  --col-perc:   #c0c050;
+  --col-fort:   #e0c030;
 
   /* Class colours */
   --fighter:    #c04020;
@@ -78,10 +78,10 @@ body {
 .nav-tabs { display: flex; gap: 2px; margin-left: auto; }
 .nav-tab {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  padding: 6px 14px;
+  padding: 7px 16px;
   background: transparent;
   border: 1px solid var(--border-dim);
   color: var(--text-muted);
@@ -142,12 +142,12 @@ body {
 .party-item.active-party { border-color: var(--gold-bright); }
 .party-item-name {
   font-family: 'Cinzel', serif;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--gold-bright);
   margin-bottom: 6px;
 }
 .party-item-meta {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-muted);
   font-style: italic;
 }
@@ -222,8 +222,8 @@ body {
 /* ─────────────────────────────────────────────── DUN HERO CARD */
 /* Based on the physical card: scroll header, portrait flanked by stat grids, bottom row */
 .dun-hero-card {
-  min-width: 150px;
-  width: 150px;
+  min-width: 175px;
+  width: 175px;
   flex-shrink: 0;
   background: var(--bg-panel);
   border: 1px solid var(--border-mid);
@@ -246,14 +246,14 @@ body {
   background: var(--bg-void);
   border: 1px solid var(--border-gold);
   font-family: 'Cinzel', serif;
-  font-size: 8px;
+  font-size: 9px;
   color: var(--gold-bright);
-  padding: 2px 5px;
+  padding: 2px 6px;
   line-height: 1.4;
   text-align: center;
   z-index: 2;
 }
-.card-vp-badge span { display: block; font-size: 11px; font-weight: bold; }
+.card-vp-badge span { display: block; font-size: 14px; font-weight: bold; }
 
 /* Scroll header */
 .card-scroll-header {
@@ -264,7 +264,7 @@ body {
 }
 .card-name {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--gold-bright);
   line-height: 1.2;
   white-space: nowrap;
@@ -272,7 +272,7 @@ body {
   text-overflow: ellipsis;
 }
 .card-race-class {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-muted);
   font-style: italic;
   white-space: nowrap;
@@ -283,7 +283,7 @@ body {
 /* Central portrait + stat grid section */
 .card-body {
   display: grid;
-  grid-template-columns: 40px 1fr 40px;
+  grid-template-columns: 48px 1fr 48px;
   gap: 0;
   padding: 4px 3px;
   align-items: start;
@@ -300,29 +300,32 @@ body {
 .stat-cell {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 1px 2px;
+  gap: 3px;
+  padding: 2px 3px;
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
-  min-height: 20px;
+  min-height: 26px;
 }
 .stat-val {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: bold;
   color: var(--text-bone);
-  min-width: 14px;
+  min-width: 16px;
   text-align: center;
   flex-shrink: 0;
 }
 .stat-val.modified-up   { color: #70c870; }
 .stat-val.modified-down { color: #c87070; }
 .stat-icon {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+}
+.stat-icon svg { width: 12px; height: 12px; }
   justify-content: center;
 }
 .stat-icon svg { width: 10px; height: 10px; }
@@ -375,15 +378,15 @@ body {
 }
 .card-bottom-val {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: bold;
   color: var(--text-bone);
 }
 .card-bottom-icon {
-  width: 10px;
-  height: 10px;
+  width: 13px;
+  height: 13px;
 }
-.card-bottom-icon svg { width: 9px; height: 9px; }
+.card-bottom-icon svg { width: 11px; height: 11px; }
 
 /* Vitality bar */
 .card-vit-bar {
@@ -411,10 +414,10 @@ body {
 .card-btn {
   flex: 1;
   font-family: 'Cinzel', serif;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  padding: 4px 2px;
+  padding: 6px 2px;
   background: transparent;
   border: 1px solid var(--border-dim);
   color: var(--text-muted);
@@ -472,6 +475,19 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+/* Cards panel sections from renderCardsPanel */
+.cards-panel-section { margin-bottom: 16px; }
+.cards-panel-section:last-child { margin-bottom: 0; }
+.cards-panel-title {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-dim);
 }
 .dun-card-img-wrap img {
   width: 140px;
@@ -871,26 +887,32 @@ body {
 }
 .form-label {
   font-family: 'Cinzel', serif;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-muted);
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+}
+.form-group { margin-bottom: 14px; }
+.step-name-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 .form-input, .form-textarea {
   width: 100%;
   background: var(--bg-dark);
-  border: 1px solid var(--border-dim);
+  border: 1px solid var(--border-mid);
   color: var(--text-bone);
-  padding: 7px 10px;
+  padding: 9px 12px;
   font-family: 'IM Fell English', serif;
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 12px;
 }
 .form-input:focus, .form-textarea:focus {
   outline: none;
-  border-color: var(--border-gold);
+  border-color: var(--gold-bright);
 }
 .form-textarea { min-height: 70px; resize: vertical; }
 .mini-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
@@ -1148,6 +1170,8 @@ const PET_NAMES = {
   24:'Rock Serpent', 25:'Serpent', 26:'Steed', 27:'Storm Crow', 28:'Vampire Bat',
   29:'War Horse', 30:'War Wolf', 31:'Wyvern', 47:'Familiar'
 };
+
+const CREATOR_STEPS = ["Name", "Race", "Class", "Attributes", "Skills", "Spells", "Review"];
 
 // ═══════════════════════════════════════════════════════════════
 // STATE
@@ -1885,11 +1909,14 @@ function renderStepIndicator() {
   const el = document.getElementById('step-indicator');
   el.innerHTML = CREATOR_STEPS.map((s, i) => {
     let cls = i < creatorStep ? 'done' : i === creatorStep ? 'active' : '';
-    return `<div class="step-dot ${cls}">${s}</div>`;
+    return `<div class="step-dot ${cls}" title="${s}"></div>`;
   }).join('');
-  document.getElementById('creator-step-label').textContent = `Step ${creatorStep + 1} of ${CREATOR_STEPS.length}`;
-  document.getElementById('btn-prev').style.visibility = creatorStep === 0 ? 'hidden' : 'visible';
-  document.getElementById('btn-next').textContent = creatorStep === CREATOR_STEPS.length - 1 ? 'Create Hero ✓' : 'Next →';
+  const titleEl = document.getElementById('creator-title-label');
+  if (titleEl) titleEl.textContent = `Create Hero — ${CREATOR_STEPS[creatorStep]}`;
+  const prevBtn = document.getElementById('creator-prev-btn');
+  if (prevBtn) prevBtn.style.visibility = creatorStep === 0 ? 'hidden' : 'visible';
+  const nextBtn = document.getElementById('creator-next-btn');
+  if (nextBtn) nextBtn.textContent = creatorStep === CREATOR_STEPS.length - 1 ? 'Create Hero ✓' : 'Next →';
 }
 
 function renderCreatorStep() {
