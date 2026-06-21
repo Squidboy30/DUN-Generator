@@ -219,233 +219,170 @@ body {
   text-transform: uppercase;
 }
 
-/* ─────────────────────────────────────────────── DUN HERO CARD */
-/* Based on the physical card: scroll header, portrait flanked by stat grids, bottom row */
+/* ═══════════════════════════════════════════════════════
+   DUN HERO CARD — faithful recreation of physical sheet
+   ═══════════════════════════════════════════════════════ */
+
 .dun-hero-card {
-  min-width: 200px;
-  width: 200px;
-  flex-shrink: 0;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-mid);
-  position: relative;
-  cursor: pointer;
-  transition: border-color .2s;
-  user-select: none;
+  width: 220px; min-width: 220px;
+  flex-shrink: 0; position: relative; user-select: none;
+  font-family: 'Cinzel', serif;
+  background: #120d06;
+  border: 3px solid #6a4a18;
+  box-shadow: inset 0 0 0 1px #9a7228, 2px 2px 10px rgba(0,0,0,.9);
 }
-.dun-hero-card:hover { border-color: var(--gold-bright); }
-.dun-hero-card.selected { border-color: var(--gold-bright); box-shadow: 0 0 0 1px var(--border-gold); }
-.dun-hero-card.fighter-card { border-top: 2px solid var(--fighter); }
-.dun-hero-card.explorer-card { border-top: 2px solid var(--explorer); }
-.dun-hero-card.caster-card { border-top: 2px solid var(--caster); }
+.dun-hero-card:hover { border-color: #9a7228; }
+.dun-hero-card.selected { border-color: var(--gold-bright); box-shadow: inset 0 0 0 1px var(--gold-bright), 0 0 14px rgba(232,184,48,.35); }
 
 /* VP badge */
 .card-vp-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: var(--bg-void);
-  border: 1px solid var(--border-gold);
+  position: absolute; top: 5px; right: 5px;
+  background: #0a0704;
+  border: 1.5px solid #8a6220;
   font-family: 'Cinzel', serif;
-  font-size: 9px;
-  color: var(--gold-bright);
-  padding: 2px 6px;
-  line-height: 1.4;
-  text-align: center;
-  z-index: 2;
+  font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  color: #c0a030; padding: 2px 5px 1px; line-height: 1.3;
+  text-align: center; z-index: 2;
 }
-.card-vp-badge span { display: block; font-size: 14px; font-weight: bold; }
+.card-vp-badge span { display: block; font-size: 16px; font-weight: 700; color: var(--gold-bright); line-height: 1; }
 
-/* Scroll header */
+/* Parchment name scroll */
 .card-scroll-header {
-  background: linear-gradient(180deg, #2a1e0a 0%, #1e1508 100%);
-  border-bottom: 1px solid var(--border-dim);
-  padding: 6px 8px 5px;
-  padding-right: 40px; /* room for VP badge */
+  background: linear-gradient(180deg, #f5ead0 0%, #e8d4a8 55%, #d4be88 100%);
+  border-bottom: 2px solid #5a3a10;
+  padding: 5px 44px 4px 8px;
 }
 .card-name {
-  font-family: 'Cinzel', serif;
-  font-size: 13px;
-  color: var(--gold-bright);
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
+  color: #1a0800; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .card-race-class {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 10px; color: #4a2a10; font-style: italic;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* Central portrait + stat grid section */
+/* Main 3-col body */
 .card-body {
-  display: grid;
-  grid-template-columns: 54px 1fr 54px;
-  gap: 0;
-  padding: 4px 3px;
-  align-items: start;
+  display: grid; grid-template-columns: 50px 1fr 50px;
+  background: #1e1508; border-bottom: 1px solid #5a3a10;
+}
+.card-stats-left, .card-stats-right {
+  display: flex; flex-direction: column; gap: 2px; padding: 4px 2px;
+  background: linear-gradient(180deg, #181008 0%, #221a0c 100%);
 }
 
-/* Left stat column */
-.card-stats-left,
-.card-stats-right {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
+/* Stat row: value-box left-of-icon (left col) or icon-then-box (right col) */
+.stat-row { display: flex; align-items: center; gap: 2px; }
+.stat-row.left  { flex-direction: row; }
+.stat-row.right { flex-direction: row-reverse; }
 
-.stat-cell {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 3px;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  min-height: 26px;
+/* White parchment value box */
+.stat-box {
+  width: 24px; height: 24px; flex-shrink: 0;
+  background: #f0e8d0; border: 1.5px solid #8a6220;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+  color: #1a0800; line-height: 1;
 }
-.stat-val {
-  font-family: 'Cinzel', serif;
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--text-bone);
-  min-width: 16px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.stat-val.modified-up   { color: #70c870; }
-.stat-val.modified-down { color: #c87070; }
-.stat-icon {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.stat-icon svg { width: 12px; height: 12px; }
-  justify-content: center;
-}
-.stat-icon svg { width: 10px; height: 10px; }
+.stat-box.mod-up   { background: #b8f0b8; color: #0a3010; }
+.stat-box.mod-down { background: #f0b8b8; color: #3a0a0a; }
 
-/* Portrait cell */
+/* DUN icon cell */
+.stat-dun-icon {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-dun-icon svg { width: 20px; height: 20px; }
+
+/* Teal framed portrait */
 .card-portrait-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-void);
-  border: 1px solid var(--border-dim);
-  min-height: 110px;
-  padding: 4px 2px;
-  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #72cece;
+  border-left: 2px solid #5a3a10; border-right: 2px solid #5a3a10;
+  box-shadow: inset 0 0 8px rgba(0,0,0,.5), inset 0 0 0 2px #8a6220;
+  margin: 4px 0; min-height: 112px;
 }
-.card-portrait-img {
-  width: 52px;
-  height: 52px;
-  object-fit: cover;
-  display: block;
-}
-.card-portrait-emoji {
-  font-size: 40px;
-  line-height: 1;
-}
-.card-alignment-pip {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  margin-top: 4px;
-}
-.align-good    { background: #4a8a4a; }
-.align-evil    { background: #8a2020; }
-.align-neutral { background: #8a7020; }
-
-/* Bottom stat row — Armor | Dex | Perc | Fortune */
-.card-bottom-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 1px;
-  padding: 0 3px 3px;
-}
-.card-bottom-cell {
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2px 0;
-}
-.card-bottom-val {
-  font-family: 'Cinzel', serif;
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--text-bone);
-}
-.card-bottom-icon {
-  width: 13px;
-  height: 13px;
-}
-.card-bottom-icon svg { width: 11px; height: 11px; }
+.card-portrait-emoji { font-size: 46px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.6)); }
+.card-alignment-pip  { width: 9px; height: 9px; border-radius: 50%; margin-top: 4px; border: 1px solid rgba(0,0,0,.4); }
+.align-good    { background: #3a7a3a; }
+.align-evil    { background: #7a1a1a; }
+.align-neutral { background: #7a6818; }
 
 /* Vitality bar */
-.card-vit-bar {
-  margin: 2px 3px;
-  height: 3px;
-  background: var(--border-dim);
-  position: relative;
-}
-.card-vit-fill {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  background: var(--blood-red);
-  transition: width .3s;
-}
-.card-vit-fill.healthy { background: #2a6a2a; }
-.card-vit-fill.wounded { background: #8a6020; }
+.card-vit-bar { height: 4px; background: #0a0704; border-top: 1px solid #2a1808; }
+.card-vit-fill { height: 100%; transition: width .3s; background: #8a1a1a; }
+.card-vit-fill.healthy { background: #1a6a1a; }
+.card-vit-fill.wounded { background: #7a5010; }
 
-/* Card action buttons */
+/* Bottom stat row: Armor | Dex | Perc | Fortune | Coins */
+.card-bottom-row {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 2px; padding: 3px;
+  background: linear-gradient(180deg, #181008 0%, #221a0c 100%);
+  border-top: 1px solid #5a3a10; border-bottom: 1px solid #5a3a10;
+}
+.card-bottom-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.card-bottom-box {
+  width: 22px; height: 22px; flex-shrink: 0;
+  background: #f0e8d0; border: 1.5px solid #8a6220;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+  color: #1a0800; line-height: 1;
+}
+.card-bottom-icon { width: 14px; height: 14px; }
+.card-bottom-icon svg { width: 13px; height: 13px; }
+
+/* Gold coins/weight bar */
+.card-gold-bar {
+  background: linear-gradient(180deg, #6a4a10 0%, #4a3008 100%);
+  border-top: 2px solid #8a6220;
+  padding: 3px 6px;
+  display: flex; align-items: center; justify-content: space-between; gap: 4px;
+}
+.card-gold-bar-label {
+  font-family: 'Cinzel', serif; font-size: 8px; letter-spacing: 2px;
+  text-transform: uppercase; color: #e8c860; flex: 1; text-align: center;
+}
+.card-gold-val {
+  background: #f0e8d0; border: 1px solid #8a6220;
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+  color: #1a0800; padding: 1px 5px; min-width: 24px; text-align: center;
+}
+
+/* Action buttons */
 .card-actions {
-  display: flex;
-  gap: 1px;
-  padding: 3px;
-  border-top: 1px solid var(--border-dim);
+  display: flex; gap: 1px; padding: 3px;
+  background: #120d06; border-top: 1px solid #3a2008;
 }
 .card-btn {
-  flex: 1;
-  font-family: 'Cinzel', serif;
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 6px 2px;
-  background: transparent;
-  border: 1px solid var(--border-dim);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all .1s;
-  text-align: center;
+  flex: 1; font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: 1px; text-transform: uppercase; padding: 5px 2px;
+  background: transparent; border: 1px solid #4a3010;
+  color: #907848; cursor: pointer; transition: all .1s; text-align: center;
 }
-.card-btn:hover { border-color: var(--border-gold); color: var(--text-bone); }
-.card-btn.active { background: var(--border-gold); color: var(--ink); border-color: var(--gold-bright); }
+.card-btn:hover { border-color: #8a6020; color: #f0e8d0; background: rgba(138,96,32,.25); }
+.card-btn.active { background: #6a4a10; color: #f0e8d0; border-color: var(--gold-bright); }
 .card-btn.remove-btn { color: #6a2020; border-color: #3a1010; }
 .card-btn.remove-btn:hover { border-color: var(--blood-red); color: #d06060; }
 
-/* ─────────────────────────────────────────────── COMPANION CARDS (pets/mercs) */
-.dun-hero-card.companion-card {
-  min-width: 110px;
-  width: 110px;
-  border-color: var(--border-dim);
-  border-top: 2px solid var(--text-dim);
-}
+/* Companion cards */
+.dun-hero-card.companion-card { width: 130px; min-width: 130px; border-width: 2px; border-color: #3a2808; }
 .companion-label {
-  font-family: 'Cinzel', serif;
-  font-size: 7px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  padding: 3px 6px 0;
-  display: block;
+  font-family: 'Cinzel', serif; font-size: 7px; letter-spacing: 2px;
+  text-transform: uppercase; color: #7a6030; padding: 3px 6px 0; display: block;
+  background: #120d06;
 }
+
+/* Add-hero slot */
+.hero-add-slot {
+  min-width: 130px; width: 130px; flex-shrink: 0;
+  border: 2px dashed #3a2808; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; min-height: 280px; transition: border-color .15s;
+  flex-direction: column; gap: 8px; color: #4a3820; background: #0a0704;
+}
+.hero-add-slot:hover { border-color: #8a6020; color: #907848; }
+.hero-add-label { font-family: 'Cinzel', serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; }
 
 /* ─────────────────────────────────────────────── CARDS EXPAND PANEL */
 .cards-expand-panel {
@@ -1418,29 +1355,50 @@ function renderDunHeroCard(h, inParty) {
   const race = RACE_DB.find(r => r.id === h.raceId) || {};
   const cls  = CLASS_DB.find(c => c.id === h.classId) || {};
   const cur  = calcCurrentAttrs(h.attrs, h.equippedItems || []);
-
-  const groupCls = cls.group === 'fighter' ? 'fighter-card' : cls.group === 'explorer' ? 'explorer-card' : 'caster-card';
   const isSelected = selectedCardHeroId === h.id;
 
-  // Vitality pct
-  const vitPct = Math.round(((h.currentVitality||h.attrs.vitality) / h.attrs.vitality) * 100);
+  // Vitality bar
+  const vitPct = Math.round(((h.currentVitality ?? h.attrs.vitality) / h.attrs.vitality) * 100);
   const vitFillCls = vitPct >= 70 ? 'healthy' : vitPct >= 35 ? 'wounded' : '';
 
-  // Alignment colour
+  // Alignment pip
   const alignCls = race.alignment === 'good' ? 'align-good' : race.alignment === 'evil' ? 'align-evil' : 'align-neutral';
 
-  // Stat cell helper
-  const statCell = (key, colorVar, left) => {
+  // Stat row builder: left col = [value][icon], right col = [icon][value]
+  const statRow = (key, icon, side) => {
     const base = h.attrs[key] ?? 0;
-    const current = cur[key] ?? base;
-    const diff = current - base;
-    const cls2 = diff > 0 ? 'modified-up' : diff < 0 ? 'modified-down' : '';
-    const valHtml = `<span class="stat-val ${cls2}">${current}</span>`;
-    const iconHtml = `<span class="stat-icon" style="color:var(${colorVar})">${ICONS[key]||''}</span>`;
-    return `<div class="stat-cell">${left ? valHtml + iconHtml : iconHtml + valHtml}</div>`;
+    const val  = cur[key] ?? base;
+    const diff = val - base;
+    const modCls = diff > 0 ? 'mod-up' : diff < 0 ? 'mod-down' : '';
+    const box  = `<div class="stat-box ${modCls}">${val}</div>`;
+    const ico  = `<div class="stat-dun-icon">${icon}</div>`;
+    return `<div class="stat-row ${side}">${side === 'left' ? box + ico : ico + box}</div>`;
   };
 
-  return `<div class="dun-hero-card ${groupCls} ${isSelected ? 'selected' : ''}" id="hero-card-${h.id}">
+  // DUN-accurate icons — matching physical card symbols
+  const ICO = {
+    // Left column (value LEFT of icon)
+    movement:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C8.9 2 8 2.9 8 4C8 5.1 8.9 6 10 6C11.1 6 12 5.1 12 4C12 2.9 11.1 2 10 2ZM7 7L5 18H7L8.5 13L10 15L11.5 13L13 18H15L13 7H7ZM6 7.5L4 9H7L6 7.5ZM14 7.5L13 9H16L14 7.5Z"/></svg>`,
+    combatSkill:  `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L17 17M17 3L3 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="10" cy="10" r="2" fill="white"/></svg>`,
+    strength:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M6 16V13C6 11 7 10 8 9.5L10 8.5L12 9.5C13 10 14 11 14 13V16H12V13.5C12 12.5 11.5 12 10 12C8.5 12 8 12.5 8 13.5V16H6ZM10 2C8.3 2 7 3.3 7 5C7 5.8 7.3 6.5 7.8 7H12.2C12.7 6.5 13 5.8 13 5C13 3.3 11.7 2 10 2Z"/></svg>`,
+    shootingSkill:`<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="4" stroke="white" stroke-width="1"/><circle cx="10" cy="10" r="1.5" fill="white"/><path d="M10 3V1M10 19V17M3 10H1M19 10H17" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+    agility:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L4 8H7V12L4 12L10 18L16 12H13V8H16L10 2Z"/></svg>`,
+    // Right column (icon LEFT of value)
+    intelligence: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C7.2 2 5 4.2 5 7C5 8.5 5.6 9.9 6.6 10.9L7 14H13L13.4 10.9C14.4 9.9 15 8.5 15 7C15 4.2 12.8 2 10 2ZM8 15H12V16C12 17.1 11.1 18 10 18C8.9 18 8 17.1 8 16V15Z"/></svg>`,
+    mana:         `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L12 8H18L13 12L15 18L10 14L5 18L7 12L2 8H8L10 2Z" fill="white"/><path d="M10 5L11.5 9.5H16L12.5 12L14 16.5L10 13.8L6 16.5L7.5 12L4 9.5H8.5L10 5Z" fill="#7ecfcf"/></svg>`,
+    courage:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 4V16M7 7L10 4L13 7M5 10H15M7 13H13" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/><rect x="8" y="4" width="4" height="12" rx="1" fill="white" opacity=".3"/></svg>`,
+    vitality:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10 17 3 12.5 3 7.5C3 5.6 4.6 4 6.5 4C7.8 4 8.9 4.7 9.5 5.7C9.8 5.2 10.3 4.8 10.9 4.5M10 17C10 17 17 12.5 17 7.5C17 5.6 15.4 4 13.5 4C12.2 4 11.1 4.7 10.5 5.7C10.3 5.3 10 4.9 9.6 4.6"/></svg>`,
+    naturalArmor: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L17 5V10C17 14 13.5 17.5 10 18C6.5 17.5 3 14 3 10V5L10 2Z"/><path d="M10 4.5L15 7V10C15 13 12.5 15.5 10 16.2C7.5 15.5 5 13 5 10V7L10 4.5Z" fill="#5a3a10"/></svg>`,
+    // Bottom row
+    dexterity:    `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="10" r="3" stroke="white" stroke-width="1.5"/><circle cx="14" cy="10" r="3" stroke="white" stroke-width="1.5"/><path d="M9 10H11" stroke="white" stroke-width="1.5"/><path d="M6 4V7M6 13V16M14 4V7M14 13V16" stroke="white" stroke-width="1" stroke-linecap="round"/></svg>`,
+    perception:   `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 10C2 10 5.5 4 10 4C14.5 4 18 10 18 10C18 10 14.5 16 10 16C5.5 16 2 10 2 10Z" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="3" fill="white"/><circle cx="11" cy="9" r="1" fill="#1a0800"/></svg>`,
+    fortune:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L11.8 7.6H17.6L12.9 10.9L14.7 16.6L10 13.3L5.3 16.6L7.1 10.9L2.4 7.6H8.2L10 2Z"/></svg>`,
+    armor:        `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L17 5V10C17 14 13.5 17.5 10 18C6.5 17.5 3 14 3 10V5L10 2Z"/></svg>`,
+    coins:        `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" stroke="white" stroke-width="1.5"/><path d="M10 6V14M8 8H11C11.6 8 12 8.4 12 9C12 9.6 11.6 10 11 10H9C8.4 10 8 10.4 8 11C8 11.6 8.4 12 9 12H12" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  };
+
+  return `<div class="dun-hero-card ${isSelected ? 'selected' : ''}" id="hero-card-${h.id}">
+
     <div class="card-vp-badge">VP<span>${h.vp}</span></div>
 
     <div class="card-scroll-header">
@@ -1449,57 +1407,62 @@ function renderDunHeroCard(h, inParty) {
     </div>
 
     <div class="card-body">
-      <!-- Left stats: Move, CS, Str, Shoot, Agl -->
       <div class="card-stats-left">
-        ${statCell('movement',    '--col-move',  true)}
-        ${statCell('combatSkill', '--col-cs',    true)}
-        ${statCell('strength',    '--col-str',   true)}
-        ${statCell('shootingSkill','--col-shoot', true)}
-        ${statCell('agility',     '--col-agl',   true)}
+        ${statRow('movement',     ICO.movement,     'left')}
+        ${statRow('combatSkill',  ICO.combatSkill,  'left')}
+        ${statRow('strength',     ICO.strength,     'left')}
+        ${statRow('shootingSkill',ICO.shootingSkill,'left')}
+        ${statRow('agility',      ICO.agility,      'left')}
       </div>
 
-      <!-- Portrait -->
       <div class="card-portrait-cell">
         <div class="card-portrait-emoji">${h.portrait}</div>
         <div class="card-alignment-pip ${alignCls}"></div>
       </div>
 
-      <!-- Right stats: Int, Mana, Cour, Vit, (totalArmor shown in bottom row) -->
       <div class="card-stats-right">
-        ${statCell('intelligence', '--col-int',  false)}
-        ${h.attrs.mana != null ? statCell('mana','--col-mana',false) : `<div class="stat-cell"><span class="stat-icon" style="color:var(--col-mana)">${ICONS.mana}</span><span class="stat-val" style="opacity:.3">—</span></div>`}
-        ${statCell('courage',     '--col-cour', false)}
-        ${statCell('vitality',    '--col-vit',  false)}
-        <div class="stat-cell">
-          <span class="stat-icon" style="color:var(--col-armor)">${ICONS.naturalArmor}</span>
-          <span class="stat-val">${cur.totalArmor ?? h.attrs.naturalArmor ?? 0}</span>
-        </div>
+        ${statRow('intelligence',  ICO.intelligence, 'right')}
+        ${h.attrs.mana != null
+          ? statRow('mana', ICO.mana, 'right')
+          : `<div class="stat-row right"><div class="stat-dun-icon">${ICO.mana}</div><div class="stat-box" style="opacity:.35">—</div></div>`}
+        ${statRow('courage',       ICO.courage,      'right')}
+        ${statRow('vitality',      ICO.vitality,     'right')}
+        ${statRow('naturalArmor',  ICO.naturalArmor, 'right')}
       </div>
     </div>
 
-    <!-- Vitality bar -->
     <div class="card-vit-bar">
       <div class="card-vit-fill ${vitFillCls}" style="width:${vitPct}%"></div>
     </div>
 
-    <!-- Bottom row: Dex | Perc | Fortune | Coins -->
+    <!-- Bottom: Armor(total) | Dex | Perc | Fortune | Coins -->
     <div class="card-bottom-row">
+      <div class="card-bottom-cell" title="Total Armor">
+        <div class="card-bottom-icon">${ICO.armor}</div>
+        <div class="card-bottom-box">${cur.totalArmor ?? h.attrs.naturalArmor ?? 0}</div>
+      </div>
       <div class="card-bottom-cell" title="Dexterity">
-        <div class="card-bottom-icon" style="color:var(--col-dex)">${ICONS.dexterity}</div>
-        <div class="card-bottom-val">${cur.dexterity ?? 0}</div>
+        <div class="card-bottom-icon">${ICO.dexterity}</div>
+        <div class="card-bottom-box">${cur.dexterity ?? 0}</div>
       </div>
       <div class="card-bottom-cell" title="Perception">
-        <div class="card-bottom-icon" style="color:var(--col-perc)">${ICONS.perception}</div>
-        <div class="card-bottom-val">${cur.perception ?? 0}</div>
+        <div class="card-bottom-icon">${ICO.perception}</div>
+        <div class="card-bottom-box">${cur.perception ?? 0}</div>
       </div>
-      <div class="card-bottom-cell" title="Fortune (current/max)">
-        <div class="card-bottom-icon" style="color:var(--col-fort)">${ICONS.fortune}</div>
-        <div class="card-bottom-val">${h.currentFortune ?? h.fortune}/${h.fortune}</div>
+      <div class="card-bottom-cell" title="Fortune">
+        <div class="card-bottom-icon">${ICO.fortune}</div>
+        <div class="card-bottom-box">${h.currentFortune ?? h.fortune}</div>
       </div>
       <div class="card-bottom-cell" title="Coins">
-        <div class="card-bottom-icon" style="color:var(--gold-dim)">${ICONS.coins}</div>
-        <div class="card-bottom-val" style="font-size:9px;">${h.coins||0}</div>
+        <div class="card-bottom-icon">${ICO.coins}</div>
+        <div class="card-bottom-box" style="font-size:10px;">${h.coins || 0}</div>
       </div>
+    </div>
+
+    <div class="card-gold-bar">
+      <div class="card-bottom-icon" style="color:#e8c860;">${ICO.coins}</div>
+      <div class="card-gold-bar-label">Back Pack</div>
+      <div class="card-gold-val">${h.weightCurrent || 0}</div>
     </div>
 
     <div class="card-actions">
