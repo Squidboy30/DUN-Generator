@@ -304,6 +304,15 @@ body {
   margin: 4px 0; min-height: 120px; height: 130px;
   overflow: hidden; position: relative; padding: 0;
 }
+.card-portrait-change {
+  position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  background: rgba(0,0,0,.6); border: 1px solid #8a6220;
+  color: #c8a030; font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s; z-index: 3;
+}
+.card-portrait-cell:hover .card-portrait-change { opacity: 1; }
 .card-portrait-emoji { font-size: 46px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.6)); }
 .card-alignment-pip  { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0,0,0,.4); }
 .align-good    { background: #3a7a3a; }
@@ -772,16 +781,29 @@ body {
 /* Portrait picker */
 .portrait-grid, .portrait-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .portrait-opt {
-  width: 52px; height: 52px;
-  font-size: 28px;
+  width: 52px; height: 52px; font-size: 28px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--bg-raised);
-  border: 1px solid var(--border-dim);
-  cursor: pointer;
-  transition: border-color .1s;
+  background: var(--bg-raised); border: 1px solid var(--border-dim); cursor: pointer; transition: border-color .1s;
 }
 .portrait-opt:hover { border-color: var(--border-mid); }
 .portrait-opt.selected { border-color: var(--gold-bright); background: rgba(138,98,24,.2); }
+
+/* Mini portrait grid — actual DUN miniature images */
+.portrait-mini-grid {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  max-height: 300px; overflow-y: auto; padding: 4px;
+  background: var(--bg-dark); border: 1px solid var(--border-dim);
+}
+.portrait-mini-grid::-webkit-scrollbar { width: 4px; }
+.portrait-mini-grid::-webkit-scrollbar-thumb { background: var(--border-dim); }
+.portrait-mini-opt {
+  width: 64px; height: 80px; flex-shrink: 0;
+  background: #72cece; border: 2px solid transparent; cursor: pointer;
+  overflow: hidden; transition: border-color .1s;
+}
+.portrait-mini-opt:hover { border-color: var(--border-gold); }
+.portrait-mini-opt.selected { border-color: var(--gold-bright); box-shadow: 0 0 0 1px var(--gold-bright); }
+.portrait-mini-opt img { width: 100%; height: 100%; object-fit: contain; object-position: bottom; display: block; }
 
 /* Race detail */
 .race-detail {
@@ -1165,6 +1187,8 @@ function load() {
     if (!h.skills) h.skills = [];
     if (!h.mercenaries) h.mercenaries = []; // array of merc IDs
     if (!h.pets) h.pets = [];               // array of pet IDs
+    if (h.portraitUrl === undefined) h.portraitUrl = null;
+    if (h.portraitCustom === undefined) h.portraitCustom = null;
     if (h.weightCurrent == null) h.weightCurrent = 0;
     if (h.xpSpent == null) h.xpSpent = 0;
     if (!h.fortuneBase) h.fortuneBase = h.fortune;
@@ -1422,29 +1446,31 @@ function renderDunHeroCard(h, inParty) {
   };
 
   // DUN-accurate icons — matching physical card symbols
-  const ICO = {
-    // Left column (value LEFT of icon)
-    movement:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C8.9 2 8 2.9 8 4C8 5.1 8.9 6 10 6C11.1 6 12 5.1 12 4C12 2.9 11.1 2 10 2ZM7 7L5 18H7L8.5 13L10 15L11.5 13L13 18H15L13 7H7ZM6 7.5L4 9H7L6 7.5ZM14 7.5L13 9H16L14 7.5Z"/></svg>`,
-    combatSkill:  `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3L17 17M17 3L3 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="10" cy="10" r="2" fill="white"/></svg>`,
-    strength:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M6 16V13C6 11 7 10 8 9.5L10 8.5L12 9.5C13 10 14 11 14 13V16H12V13.5C12 12.5 11.5 12 10 12C8.5 12 8 12.5 8 13.5V16H6ZM10 2C8.3 2 7 3.3 7 5C7 5.8 7.3 6.5 7.8 7H12.2C12.7 6.5 13 5.8 13 5C13 3.3 11.7 2 10 2Z"/></svg>`,
-    shootingSkill:`<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="4" stroke="white" stroke-width="1"/><circle cx="10" cy="10" r="1.5" fill="white"/><path d="M10 3V1M10 19V17M3 10H1M19 10H17" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-    agility:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L4 8H7V12L4 12L10 18L16 12H13V8H16L10 2Z"/></svg>`,
-    // Right column (icon LEFT of value)
-    intelligence: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2C7.2 2 5 4.2 5 7C5 8.5 5.6 9.9 6.6 10.9L7 14H13L13.4 10.9C14.4 9.9 15 8.5 15 7C15 4.2 12.8 2 10 2ZM8 15H12V16C12 17.1 11.1 18 10 18C8.9 18 8 17.1 8 16V15Z"/></svg>`,
-    mana:         `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L12 8H18L13 12L15 18L10 14L5 18L7 12L2 8H8L10 2Z" fill="white"/><path d="M10 5L11.5 9.5H16L12.5 12L14 16.5L10 13.8L6 16.5L7.5 12L4 9.5H8.5L10 5Z" fill="#7ecfcf"/></svg>`,
-    courage:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 4V16M7 7L10 4L13 7M5 10H15M7 13H13" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/><rect x="8" y="4" width="4" height="12" rx="1" fill="white" opacity=".3"/></svg>`,
-    vitality:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10 17 3 12.5 3 7.5C3 5.6 4.6 4 6.5 4C7.8 4 8.9 4.7 9.5 5.7C9.8 5.2 10.3 4.8 10.9 4.5M10 17C10 17 17 12.5 17 7.5C17 5.6 15.4 4 13.5 4C12.2 4 11.1 4.7 10.5 5.7C10.3 5.3 10 4.9 9.6 4.6"/></svg>`,
-    naturalArmor: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L17 5V10C17 14 13.5 17.5 10 18C6.5 17.5 3 14 3 10V5L10 2Z"/><path d="M10 4.5L15 7V10C15 13 12.5 15.5 10 16.2C7.5 15.5 5 13 5 10V7L10 4.5Z" fill="#5a3a10"/></svg>`,
-    // Bottom row
-    dexterity:    `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="10" r="3" stroke="white" stroke-width="1.5"/><circle cx="14" cy="10" r="3" stroke="white" stroke-width="1.5"/><path d="M9 10H11" stroke="white" stroke-width="1.5"/><path d="M6 4V7M6 13V16M14 4V7M14 13V16" stroke="white" stroke-width="1" stroke-linecap="round"/></svg>`,
-    perception:   `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 10C2 10 5.5 4 10 4C14.5 4 18 10 18 10C18 10 14.5 16 10 16C5.5 16 2 10 2 10Z" stroke="white" stroke-width="1.5"/><circle cx="10" cy="10" r="3" fill="white"/><circle cx="11" cy="9" r="1" fill="#1a0800"/></svg>`,
-    fortune:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L11.8 7.6H17.6L12.9 10.9L14.7 16.6L10 13.3L5.3 16.6L7.1 10.9L2.4 7.6H8.2L10 2Z"/></svg>`,
-    armor:        `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L17 5V10C17 14 13.5 17.5 10 18C6.5 17.5 3 14 3 10V5L10 2Z"/></svg>`,
-    coins:        `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" stroke="white" stroke-width="1.5"/><path d="M10 6V14M8 8H11C11.6 8 12 8.4 12 9C12 9.6 11.6 10 11 10H9C8.4 10 8 10.4 8 11C8 11.6 8.4 12 9 12H12" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  // DUN card icons — traced from official ENG-sheet-hero-DUN.jpg
+  const DUN_ICO = {
+    // LEFT COLUMN — boot, crossed swords, fist, concentric target, breastplate armour
+    movement: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 1.5h5v2h1.5v3h-1v1.5H8V6.5H7v-3h0.5v-2zM6 7h8l1 2.5v9H5v-9L6 7z"/><path d="M7 10h6M7 12.5h6M7 15h6" stroke="#8a6020" stroke-width="0.5" fill="none"/></svg>`,
+    combatSkill: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 18L8.5 10.5 4 2l1.5-0.5 4 7 4-7L15 2l-4.5 8.5 5 7.5-1.5 0.5-4-6-4 6z"/><path d="M3.5 18L8.5 10.5M16.5 18L11.5 10.5" fill="none" stroke="white" stroke-width="0.3"/></svg>`,
+    strength: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 14.5v-3.5c0-0.8 0.3-1.5 0.8-2L10 7.5l2.7 1.5c0.5 0.5 0.8 1.2 0.8 2v3.5H12V11c0-0.6-0.4-1-0.9-1.2L10 9.3l-1.1 0.5C8.4 10 8 10.4 8 11v3.5H6.5z"/><path d="M7 9.5C6.3 9 6 8.2 6 7.3 6 5.5 7.8 4 10 4s4 1.5 4 3.3c0 0.9-0.3 1.7-1 2.2"/><path d="M8 8.5 C7.5 8 7.2 7.5 7.2 7 7.2 5.9 8.5 5 10 5s2.8 0.9 2.8 2c0 0.5-0.3 1-0.8 1.5" fill="#5a3a10"/></svg>`,
+    shootingSkill: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="11" r="7" stroke="white" stroke-width="1.5"/><circle cx="9" cy="11" r="4.5" stroke="white" stroke-width="1.2"/><circle cx="9" cy="11" r="2" stroke="white" stroke-width="1"/><circle cx="9" cy="11" r="0.7" fill="white"/><path d="M15 3L18 3L18 6M18 3L13 8" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    agility: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M4 6.5C4 6.5 5.5 5 10 5C14.5 5 16 6.5 16 6.5L17 9C17 9 14.5 8 10 8C5.5 8 3 9 3 9L4 6.5z"/><path d="M3 9C3 9 2 10.5 2 12C2 15 5.5 17 10 17C14.5 17 18 15 18 12C18 10.5 17 9 17 9C17 9 14.5 10.5 10 10.5C5.5 10.5 3 9 3 9z"/><path d="M10 10.5V17M7 11C6.5 12 6.5 13.5 7 14.5M13 11C13.5 12 13.5 13.5 13 14.5" stroke="#7a5010" stroke-width="0.8" fill="none"/></svg>`,
+    // RIGHT COLUMN — wing, brain, nautilus swirl, castle banner/flag, heartbeat heart
+    intelligence: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16 10C14 5 11 2.5 8 2.5C6 2.5 5 3.5 5 4.5C5 4.5 7 4 9 6C9 6 7 5 5.5 6.5C5.5 6.5 7.5 7 9.5 8.5C9.5 8.5 6.5 7.5 5.5 9.5C5.5 9.5 8 9.5 10.5 11C10.5 11 7.5 10.5 5.5 12C5.5 12 8 12.5 10 13.5C10 13.5 7.5 13.5 6.5 15C6.5 15 9 14.5 11 16C12.5 14 14 12 16 10z"/></svg>`,
+    mana: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2.5C7 2.5 4.5 4.8 4.5 7.5C4.5 8.7 5 9.8 5.8 10.6C5.2 11.1 4.8 11.9 4.8 12.7C4.8 14.5 6.2 16 8 16H10M10 2.5C13 2.5 15.5 4.8 15.5 7.5C15.5 8.7 15 9.8 14.2 10.6C14.8 11.1 15.2 11.9 15.2 12.7C15.2 14.5 13.8 16 12 16H10M10 2.5V16M6.5 6C6.5 6 7.5 7.5 7 9M9 5C9 5 9.8 6.5 9.2 8.5M13.5 6C13.5 6 12.5 7.5 13 9M11 5C11 5 10.2 6.5 10.8 8.5" fill="none" stroke="#3a2010" stroke-width="0.8"/></svg>`,
+    courage: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10 17 4 13 4 8C4 5.5 6.5 4 10 4C10 4 8 5.5 8 8C8 10 10 12 10 14.5C10 12 12 10 12 8C12 5.5 10 4 10 4C13.5 4 16 5.5 16 8C16 13 10 17 10 17z"/><path d="M10 4C10 4 9 5 9 7C9 8.5 10 10 10 10C10 10 11 8.5 11 7C11 5 10 4 10 4z" fill="#8a6020"/></svg>`,
+    vitality: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10 17 2 12 2 7C2 4.8 3.8 3 6 3C7.5 3 8.8 3.8 9.5 5C9.5 5 9.7 4.5 10 4.2M10 17C10 17 18 12 18 7C18 4.8 16.2 3 14 3C12.5 3 11.2 3.8 10.5 5C10.3 4.7 10.1 4.4 10 4.2"/><path d="M3.5 10.5H6.5L8 7.5L10 13.5L11.5 9.5L12.5 10.5H16.5" fill="none" stroke="#8a1a1a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    naturalArmor: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L17.5 5V10C17.5 14.5 14 17.5 10 19C6 17.5 2.5 14.5 2.5 10V5L10 2z"/><path d="M10 4L15.5 6.5V10C15.5 13.5 13 16 10 17.3C7 16 4.5 13.5 4.5 10V6.5L10 4z" fill="#5a3a10"/></svg>`,
+    // BOTTOM ROW — Thor's hammer, gear+person, eye-in-triangle, star
+    armor: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><rect x="5.5" y="2.5" width="9" height="7" rx="1"/><rect x="4" y="3.5" width="2.5" height="5" rx="0.5"/><rect x="13.5" y="3.5" width="2.5" height="5" rx="0.5"/><rect x="8.5" y="9" width="3" height="8.5" rx="0.5"/><line x1="5.5" y1="5" x2="14.5" y2="5" stroke="#4a3010" stroke-width="0.8"/><line x1="5.5" y1="7" x2="14.5" y2="7" stroke="#4a3010" stroke-width="0.8"/></svg>`,
+    dexterity: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5L11.8 4.2C12.7 3.9 13.7 3.9 14.6 4.4L16.5 2.5L18 4L16.1 5.9C16.6 6.8 16.6 7.8 16.1 8.7L18.5 10L17 12.5L14.5 11.5C13.8 12.2 12.9 12.6 12 12.8L11.5 15.5H8.5L8 12.8C7.1 12.6 6.2 12.2 5.5 11.5L3 12.5L1.5 10L3.9 8.7C3.4 7.8 3.4 6.8 3.9 5.9L2 4L3.5 2.5L5.4 4.4C6.3 3.9 7.3 3.9 8.2 4.2L10 1.5Z" fill="none" stroke="white" stroke-width="1.2"/><circle cx="10" cy="9" r="3.8" fill="white"/><circle cx="10" cy="7.8" r="1.4" fill="#1a0800"/><path d="M7.2 12.5C7.2 10.6 8.5 9.8 10 9.8C11.5 9.8 12.8 10.6 12.8 12.5" fill="#1a0800"/></svg>`,
+    perception: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5L19 15.5H1L10 1.5z"/><path d="M10 1.5L19 15.5H1L10 1.5z" fill="#3a2010" clip-path="inset(55% 0 0 0)"/><ellipse cx="10" cy="13" rx="4.5" ry="3.5" fill="#1a0800"/><ellipse cx="10" cy="13" rx="3" ry="2.2" fill="white"/><circle cx="10.8" cy="12.4" r="1.1" fill="#1a0800"/><circle cx="11.3" cy="12" r="0.4" fill="white"/></svg>`,
+    fortune: `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5L12.5 8H19.5L14 12L16.5 19L10 15L3.5 19L6 12L0.5 8H7.5L10 1.5Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+    coins: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="14" rx="6.5" ry="2.5"/><rect x="3.5" y="10" width="13" height="4" fill="white"/><ellipse cx="10" cy="10" rx="6.5" ry="2.5"/><rect x="3.5" y="6.5" width="13" height="3.5" fill="white"/><ellipse cx="10" cy="6.5" rx="6.5" ry="2.5"/></svg>`,
   };
+  const ICO = DUN_ICO;
 
-  // Portrait: real DUN miniature from worldofarasca.com
-  const portraitUrl = getPortraitUrl(h.raceId, cls.group || 'fighter');
+  // Portrait: custom upload > user-selected > race+class default
+  const portraitUrl = h.portraitCustom || h.portraitUrl || getPortraitUrl(h.raceId, cls.group || 'fighter');
 
   return `<div class="dun-hero-card ${isSelected ? 'selected' : ''}" id="hero-card-${h.id}">
 
@@ -1467,9 +1493,10 @@ function renderDunHeroCard(h, inParty) {
       <div class="card-portrait-cell">
         <img src="${portraitUrl}" alt="${race.name||''} ${cls.name||''}"
           style="width:100%;height:100%;object-fit:contain;object-position:bottom;display:block;"
-          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:36px;color:rgba(255,255,255,.3);">?</div>
+          onerror="this.style.display='none'">
         <div class="card-alignment-pip ${alignCls}" style="position:absolute;bottom:4px;right:4px;"></div>
+        <button class="card-portrait-change" onclick="event.stopPropagation();openPortraitPicker('${h.id}')"
+          title="Change portrait">✎</button>
       </div>
 
       <div class="card-stats-right">
@@ -1951,10 +1978,48 @@ function renderCreatorStep() {
 }
 
 // ─── Step 0: Name & Portrait ──────────────────────────────────
+// ─── All available predefined miniature portrait images (race → filenames) ───
+const ALL_MINIATURES = [
+  // Humans
+  'humano.png','humano2.png','humano3.png','humano4.png','humano8.png',
+  'humano10.png','humano12.png','humano13.png','humano14.png','humano15.png',
+  'humano16.png','humano17.png','humano18.png','humano19.png','humano20.png',
+  'humano21.png','humano22.png','humano24.png','humano25.png','humano26.png',
+  'humano27.png','humano28.png','humano30.png','humano32.png','humano33.png',
+  'humano34.png','humano36.png','humano37.png','humano38.png','humano40.png',
+  'humano41.png','humano42.png','humano43.png','humano45.png','humano46.png','humano47.png',
+  // Elves & dark elves
+  'elfo2.png','elfo3.png','elfo4.png','elfo6.png',
+  'elfooscuro.png','elfooscuro3.png','elfooscuro4.png','elfooscuro5.png',
+  // Dwarves
+  'enano.png','enano2.png','enano3.png','enano4.png','enano6.png',
+  'enano7.png','enano8.png','enano9.png','enano10.png',
+  // Small folk
+  'mediano.png','mediano2.png','mediano3.png','mediano4.png',
+  'goblin.png','goblin2.png','goblin3.png','goblin4.png','goblin5.png',
+  'goblin6.png','goblin7.png','goblin8.png','goblin9.png',
+  'ratido.png','ratido2.png','anfibio.png','anfibio2.png','anfibio3.png',
+  // Orcs & beastfolk
+  'orco2.png','orco5.png','orco6.png','orco7.png','orco8.png',
+  'hombrebestia.png','canido.png','canido2.png','canido4.png',
+  'felido3.png','reptiliano.png','reptiliano2.png',
+  // Special races
+  'vampiro.png','infernal.png','infernal2.png','infernal3.png','infernal4.png',
+  'celestial.png','hombrepajaro.png','hombrepajaro2.png',
+  'centauro.png','centauro2.png','arboreo.png','arboreo2.png',
+  'cristalino.png','troll.png','troll2.png','ogro.png','minotauro.png',
+];
+
 function renderStepName() {
-  const portraitOpts = PORTRAITS.map(p =>
-    `<div class="portrait-opt ${creatorState.portrait === p ? 'selected' : ''}" onclick="selectPortrait('${p}')">${p}</div>`
-  ).join('');
+  const selected = creatorState.portraitUrl || getPortraitUrl(creatorState.raceId || 10, 'fighter');
+  const miniOpts = ALL_MINIATURES.map(f => {
+    const url = PORTRAIT_BASE + f;
+    const isSel = (creatorState.portraitUrl === url);
+    return `<div class="portrait-mini-opt ${isSel ? 'selected' : ''}" onclick="selectPortraitUrl('${url}')">
+      <img src="${url}" loading="lazy" alt="">
+    </div>`;
+  }).join('');
+
   return `
     <div class="step-name-grid">
       <div class="form-group" style="grid-column:1/-1">
@@ -1962,15 +2027,172 @@ function renderStepName() {
         <input class="form-input" id="inp-name" placeholder="Enter a name…" value="${creatorState.name}"
           oninput="creatorState.name=this.value">
       </div>
+
       <div class="form-group" style="grid-column:1/-1">
-        <label class="form-label">Portrait</label>
-        <div class="portrait-picker" id="portrait-picker">${portraitOpts}</div>
+        <label class="form-label">Portrait — choose a miniature or upload your own</label>
+
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
+          <div id="portrait-preview" style="width:80px;height:100px;background:#72cece;border:2px solid #8a6220;flex-shrink:0;overflow:hidden;">
+            <img src="${selected}" id="portrait-preview-img" style="width:100%;height:100%;object-fit:contain;object-position:bottom;" alt="">
+          </div>
+          <div>
+            <label class="form-label" style="margin-bottom:6px;">Upload custom image</label>
+            <input type="file" accept="image/*" id="portrait-upload-input"
+              style="display:none;" onchange="handlePortraitUpload(this)">
+            <button class="btn-secondary" onclick="document.getElementById('portrait-upload-input').click()"
+              style="font-size:9px;padding:5px 12px;">Upload Image…</button>
+            <div style="font-size:9px;color:var(--text-dim);margin-top:4px;font-style:italic;">JPG/PNG, compressed automatically</div>
+          </div>
+        </div>
+
+        <label class="form-label">Or select from DUN miniatures</label>
+        <div class="portrait-mini-grid">${miniOpts}</div>
       </div>
     </div>`;
 }
+
 function selectPortrait(p) {
-  creatorState.portrait = p;
-  document.querySelectorAll('.portrait-opt').forEach(el => el.classList.toggle('selected', el.textContent === p));
+  creatorState.portrait = p; // keep legacy emoji field
+}
+
+function selectPortraitUrl(url) {
+  creatorState.portraitUrl = url;
+  creatorState.portraitCustom = null;
+  // Update preview
+  const img = document.getElementById('portrait-preview-img');
+  if (img) img.src = url;
+  document.querySelectorAll('.portrait-mini-opt').forEach(el => {
+    const elImg = el.querySelector('img');
+    el.classList.toggle('selected', elImg && elImg.src === url);
+  });
+}
+
+function handlePortraitUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Compress to max 200×250 via canvas
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxW = 200, maxH = 250;
+      let w = img.width, h = img.height;
+      if (w > maxW || h > maxH) {
+        const ratio = Math.min(maxW/w, maxH/h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+      }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.8);
+      creatorState.portraitCustom = compressed;
+      creatorState.portraitUrl = null;
+      // Update preview
+      const prevImg = document.getElementById('portrait-preview-img');
+      if (prevImg) prevImg.src = compressed;
+      // Deselect miniatures
+      document.querySelectorAll('.portrait-mini-opt').forEach(el => el.classList.remove('selected'));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Change portrait on an existing hero (called from the card)
+function openPortraitPicker(heroId) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  const currentUrl = h.portraitCustom || h.portraitUrl || getPortraitUrl(h.raceId, CLASS_DB.find(c=>c.id===h.classId)?.group||'fighter');
+
+  const miniOpts = ALL_MINIATURES.map(f => {
+    const url = PORTRAIT_BASE + f;
+    const isSel = (h.portraitUrl === url);
+    return `<div class="portrait-mini-opt ${isSel ? 'selected' : ''}" onclick="pickPortraitForHero('${heroId}','${url}')">
+      <img src="${url}" loading="lazy" alt="">
+    </div>`;
+  }).join('');
+
+  const modal = document.getElementById('detail-modal');
+  modal.innerHTML = `
+    <div class="creator-header">
+      <div class="creator-title">Change Portrait — ${h.name}</div>
+      <button class="creator-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div style="padding:20px;">
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px;">
+        <div style="width:80px;height:100px;background:#72cece;border:2px solid #8a6220;flex-shrink:0;overflow:hidden;">
+          <img src="${currentUrl}" id="pp-preview" style="width:100%;height:100%;object-fit:contain;object-position:bottom;" alt="">
+        </div>
+        <div>
+          <label class="form-label" style="margin-bottom:6px;">Upload custom image</label>
+          <input type="file" accept="image/*" id="pp-upload-input" style="display:none;"
+            onchange="handlePortraitUploadForHero('${heroId}',this)">
+          <button class="btn-secondary" onclick="document.getElementById('pp-upload-input').click()"
+            style="font-size:9px;padding:5px 12px;">Upload Image…</button>
+          <div style="font-size:9px;color:var(--text-dim);margin-top:4px;font-style:italic;">JPG/PNG, auto-compressed</div>
+          <div style="margin-top:8px;">
+            <button class="btn-secondary" onclick="clearPortrait('${heroId}')"
+              style="font-size:9px;padding:4px 10px;color:var(--text-dim);">Reset to default</button>
+          </div>
+        </div>
+      </div>
+      <label class="form-label">DUN Miniatures</label>
+      <div class="portrait-mini-grid">${miniOpts}</div>
+    </div>`;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function pickPortraitForHero(heroId, url) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  h.portraitUrl = url;
+  h.portraitCustom = null;
+  save();
+  const prevImg = document.getElementById('pp-preview');
+  if (prevImg) prevImg.src = url;
+  document.querySelectorAll('#detail-modal .portrait-mini-opt').forEach(el => {
+    el.classList.toggle('selected', el.querySelector('img')?.src === url);
+  });
+  renderPartyView();
+}
+
+function handlePortraitUploadForHero(heroId, input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxW = 200, maxH = 250;
+      let w = img.width, h = img.height;
+      if (w > maxW || h > maxH) {
+        const ratio = Math.min(maxW/w, maxH/h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.8);
+      const hero = heroes.find(h => h.id === heroId);
+      if (hero) { hero.portraitCustom = compressed; hero.portraitUrl = null; save(); }
+      const prevImg = document.getElementById('pp-preview');
+      if (prevImg) prevImg.src = compressed;
+      document.querySelectorAll('#detail-modal .portrait-mini-opt').forEach(el => el.classList.remove('selected'));
+      renderPartyView();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function clearPortrait(heroId) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  h.portraitCustom = null;
+  h.portraitUrl = null;
+  save();
+  renderPartyView();
+  closeDetail();
 }
 
 // ─── Step 1: Race ──────────────────────────────────────────────
@@ -2874,6 +3096,8 @@ function finaliseHero() {
     id: 'hero_' + Date.now(),
     name: creatorState.name.trim(),
     portrait: creatorState.portrait,
+    portraitUrl: creatorState.portraitUrl || null,
+    portraitCustom: creatorState.portraitCustom || null,
     raceId: creatorState.raceId,
     classId: creatorState.classId,
     alignment: race.alignment,
