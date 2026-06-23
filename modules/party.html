@@ -559,13 +559,35 @@ body {
 }
 .attr-sheet-row {
   display: grid;
-  grid-template-columns: 1fr 48px 48px;
+  grid-template-columns: 1fr 48px 48px 28px;
   padding: 2px 4px;
   border-bottom: 1px solid rgba(58,42,16,.3);
+  align-items: center;
 }
 .attr-sheet-row:hover { background: rgba(34,26,12,.5); }
 .attr-sheet-name { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
 .attr-sheet-name svg { width: 11px; height: 11px; flex-shrink: 0; }
+.attr-upgrade-btn {
+  width: 22px; height: 22px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  font-size: 14px; cursor: default;
+  display: flex; align-items: center; justify-content: center;
+}
+.attr-upgrade-btn.can-upgrade {
+  border-color: var(--border-gold); color: var(--gold-bright); cursor: pointer;
+}
+.attr-upgrade-btn.can-upgrade:hover { background: rgba(138,98,24,.2); }
+.attr-upgrade-btn:disabled { opacity: .25; }
+.attr-edit-input {
+  width: 36px; padding: 1px 3px;
+  background: rgba(200,168,32,.15);
+  border: 1px solid var(--gold-bright);
+  color: var(--text-bone);
+  font-family: 'Cinzel', serif;
+  font-size: 13px; text-align: center;
+}
 .attr-base, .attr-now {
   font-family: 'Cinzel', serif;
   font-size: 11px;
@@ -1232,20 +1254,57 @@ const MERCENARY_IDS = [18,19,20,21,22,23,32,33,34,35,45,46,48,49,50];
 const PET_IDS       = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,24,25,26,27,28,29,30,31,47];
 const CARD_BASE = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
 
-// Mercenary names sourced from DUN rulebook p.74
-const MERC_NAMES = {
-  18:'Crossbowman', 19:'Dwarf Warrior', 20:'Elf Archer', 21:'Goblin Scout',
-  22:'Guard Dog', 23:'Hired Sword', 32:'Orc Brute', 33:'Rat Catcher',
-  34:'Rogue', 35:'Scout', 45:'Battle Mage', 46:'Berserker',
-  48:'Champion', 49:'Knight Errant', 50:'Master Thief'
+const MERC_DB = {
+  18:{name:'Dwarf Mercenary',      vp:4},
+  19:{name:'Religious Fanatic',    vp:2},
+  20:{name:'Mercenary Sorcerer',   vp:4},
+  21:{name:'Ogre Mercenary',       vp:7},
+  22:{name:'Human Mercenary (Soldier)', vp:2},
+  23:{name:'Human Mercenary (Shooter)',vp:2},
+  32:{name:'Elf Mercenary',        vp:6},
+  33:{name:'Orc Mercenary',        vp:2},
+  34:{name:'Human Mercenary (Veteran)',vp:5},
+  35:{name:'Civilian',             vp:1},
+  45:{name:'Construct',            vp:6},
+  46:{name:'Swordsman',            vp:5},
+  48:{name:'Goblin Thief',         vp:4},
+  49:{name:'Halfling Mercenary',   vp:3},
+  50:{name:'Ranger',               vp:6},
 };
-const PET_NAMES = {
-  1:'Amphibian', 2:'Bear', 3:'Black Cat', 4:'Cave Lion', 5:'Dire Wolf',
-  6:'Eagle', 7:'Falcon', 8:'Giant Rat', 9:'Giant Spider', 10:'Guard Dog',
-  11:'Hunting Hound', 12:'Lynx', 13:'Panther', 14:'Raven', 15:'Riding Horse',
-  24:'Rock Serpent', 25:'Serpent', 26:'Steed', 27:'Storm Crow', 28:'Vampire Bat',
-  29:'War Horse', 30:'War Wolf', 31:'Wyvern', 47:'Familiar'
+// Pet IDs: 1=Eagle, 2=Horse, 3=Dragon Cub, 4=Crow, 5=Familiar Spirit,
+//  6=Cat, 7=Gorilla, 8=Great Cat, 9=Wolf, 10=Monkey,
+//  11=Bear, 12=Dog, 13=Warhound, 14=Giant Rat, 15=Unicorn,
+//  24=Devourer, 25=Goat, 26=Elk, 27=Great Spider, 28=Wild Boar,
+//  29=Dire Wolf, 30=Falcon, 31=Owl, 47=Crystal Feline
+const PET_DB = {
+  1:{name:'Eagle',         vp:3},
+  2:{name:'Horse',         vp:2},
+  3:{name:'Dragon Cub',    vp:5},
+  4:{name:'Crow',          vp:3},
+  5:{name:'Familiar Spirit',vp:3},
+  6:{name:'Cat',           vp:1},
+  7:{name:'Gorilla',       vp:3},
+  8:{name:'Great Cat',     vp:6},
+  9:{name:'Wolf',          vp:2},
+  10:{name:'Monkey',       vp:1},
+  11:{name:'Bear',         vp:5},
+  12:{name:'Dog',          vp:1},
+  13:{name:'Warhound',     vp:2},
+  14:{name:'Giant Rat',    vp:2},
+  15:{name:'Unicorn',      vp:4},
+  24:{name:'Devourer',     vp:4},
+  25:{name:'Goat',         vp:1},
+  26:{name:'Elk',          vp:2},
+  27:{name:'Great Spider', vp:3},
+  28:{name:'Wild Boar',    vp:3},
+  29:{name:'Dire Wolf',    vp:3},
+  30:{name:'Falcon',       vp:2},
+  31:{name:'Owl',          vp:1},
+  47:{name:'Crystal Feline',vp:4},
 };
+// Back-compat name maps
+const MERC_NAMES = Object.fromEntries(Object.entries(MERC_DB).map(([k,v])=>[k,v.name]));
+const PET_NAMES  = Object.fromEntries(Object.entries(PET_DB).map(([k,v])=>[k,v.name]));
 
 const CREATOR_STEPS = ["Name", "Race", "Class", "Attributes", "Skills", "Spells", "Review"];
 
@@ -1448,11 +1507,31 @@ function removeHeroFromParty(heroId) {
 // ═══════════════════════════════════════════════════════════════
 function calcPartyVP() {
   const party = parties.find(p => p.id === activePartyId);
-  if (!party) return heroes.reduce((s,h)=>s+(h.vp||10),0); // fallback: all heroes
-  return party.heroIds.reduce((s,id) => {
-    const h = heroes.find(h => h.id === id);
-    return s + (h ? (h.vp||10) : 0);
-  }, 0);
+  const partyHeroes = party
+    ? party.heroIds.map(id => heroes.find(h => h.id === id)).filter(Boolean)
+    : heroes;
+
+  let total = 0;
+  for (const h of partyHeroes) {
+    // Hero base VP
+    total += h.vp || 10;
+    // Merc VP (rulebook p.9)
+    for (const mid of (h.mercenaries || [])) {
+      total += MERC_DB[mid]?.vp || 0;
+    }
+    // Pet VP (rulebook p.9)
+    for (const pid of (h.pets || [])) {
+      total += PET_DB[pid]?.vp || 0;
+    }
+    // Magic/Special item VP (rulebook p.9: Magic Objects, Relics, Special Objects only)
+    for (const itemId of (h.equippedItems || [])) {
+      total += ITEM_BY_ID[itemId]?.vp || 0;
+    }
+    for (const itemId of (h.backpack || [])) {
+      total += ITEM_BY_ID[itemId]?.vp || 0;
+    }
+  }
+  return total;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2768,6 +2847,15 @@ const ITEM_DB = [
 
 const ITEM_BY_ID   = Object.fromEntries(ITEM_DB.map(i => [i.id, i]));
 const ITEM_BY_NAME = Object.fromEntries(ITEM_DB.map(i => [i.name.toLowerCase(), i]));
+
+// Apply VP to items that count toward group VP (rulebook p.9: Magic Objects, Relics, Special Objects)
+// Special objects = 1 VP each; magic objects = 2 VP each (unless item has explicit vp field)
+ITEM_DB.forEach(item => {
+  if (item.vp != null) return; // explicit VP already set
+  if (item.cat === 'special_object') item.vp = 1;
+  else if (item.cat === 'magic_object') item.vp = 2;
+  else item.vp = 0; // weapons, armour, common objects = no VP
+});
 const ITEMS_BY_CAT = {};
 ITEM_DB.forEach(i => { (ITEMS_BY_CAT[i.cat] = ITEMS_BY_CAT[i.cat]||[]).push(i); });
 
@@ -3442,6 +3530,9 @@ function openDetail(id) {
                      'intelligence','mana','courage','naturalArmor','vitality',
                      'dexterity','perception'];
 
+  // editMode is stored on the modal — a boolean toggled by the user
+  const isEdit = !!window._detailEditMode;
+
   function attrRow(key, label, icon, note) {
     const base    = h.attrs[key] ?? 0;
     const current = cur[key] ?? base;
@@ -3451,12 +3542,34 @@ function openDetail(id) {
     const raceAt      = race.attrs?.[key];
     const maxVal      = raceAt ? raceAt.max : null;
 
-    // BASE column — shows development-point value with racial max below
-    const baseHTML = `<div class="attr-base">
-      ${base}${maxVal != null ? `<small>max ${maxVal}</small>` : (isFixed ? `<small>fixed</small>` : isSkillOnly ? `<small>skill</small>` : '')}
-    </div>`;
+    // XP upgrade button (only for dev-point attributes, not fixed or skill-only)
+    let upgradeBtn = '';
+    if (!isFixed && !isSkillOnly && raceAt) {
+      let dc = raceAt.dc;
+      if (cls.bonusAttr === key && base === raceAt.min) dc = Math.max(1, dc - 1);
+      const xpCost  = dc * 3;
+      const devPtsAvailNow = Math.floor(h.xp / 3);
+      const canUp   = devPtsAvailNow >= dc && base < raceAt.max;
+      upgradeBtn = `<button class="attr-upgrade-btn ${canUp ? 'can-upgrade' : ''}"
+        ${canUp ? `onclick="spendXpOnAttr('${h.id}','${key}',${dc});openDetail('${h.id}')"` : 'disabled'}
+        title="${canUp ? `Spend ${xpCost} XP (+2 VP)` : (base >= raceAt.max ? 'At maximum' : `Need ${xpCost} XP`)}">+</button>`;
+    }
 
-    // NOW column — only meaningful if modified by equipment
+    // Edit mode: show input instead of static value
+    let baseHTML;
+    if (isEdit && !isFixed && !isSkillOnly) {
+      baseHTML = `<div class="attr-base">
+        <input class="attr-edit-input" type="number" min="0" max="${maxVal||20}" value="${base}"
+          onchange="editAttrDirect('${h.id}','${key}',this.value)" style="width:36px;">
+        ${maxVal != null ? `<small>max ${maxVal}</small>` : ''}
+      </div>`;
+    } else {
+      baseHTML = `<div class="attr-base">
+        ${base}${maxVal != null ? `<small>max ${maxVal}</small>` : (isFixed ? `<small>fixed</small>` : isSkillOnly ? `<small>skill</small>` : '')}
+      </div>`;
+    }
+
+    // NOW column
     let nowHTML;
     if (isSkillOnly) {
       nowHTML = `<div class="attr-now dash" title="Only modified by skills">—</div>`;
@@ -3472,6 +3585,7 @@ function openDetail(id) {
       <span class="attr-sheet-name">${icon} ${label}</span>
       ${baseHTML}
       ${nowHTML}
+      ${upgradeBtn}
     </div>`;
   }
 
@@ -3520,8 +3634,16 @@ function openDetail(id) {
   const modal = document.getElementById('detail-modal');
   modal.innerHTML = `
     <div class="creator-header">
-      <div class="creator-title">${h.portrait} ${h.name}</div>
-      <button class="creator-close" onclick="closeDetail()">✕</button>
+      <div class="creator-title">${h.name}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-secondary ${isEdit ? 'active' : ''}"
+          onclick="window._detailEditMode=!window._detailEditMode;openDetail('${h.id}')"
+          style="font-size:9px;padding:4px 10px;${isEdit ? 'border-color:var(--gold-bright);color:var(--gold-bright)' : ''}"
+          title="Toggle manual edit mode — directly change any stat value">
+          ✏ ${isEdit ? 'EDITING' : 'Edit'}
+        </button>
+        <button class="creator-close" onclick="closeDetail()">✕</button>
+      </div>
     </div>
     <div class="hero-sheet">
       <div class="hero-sheet-left">
@@ -3659,8 +3781,25 @@ function openDetail(id) {
 }
 
 function closeDetail() {
+  window._detailEditMode = false;
   document.getElementById('detail-overlay').classList.remove('open');
   renderRoster();
+}
+
+// Direct stat edit — used in manual edit mode on the detail sheet
+function editAttrDirect(heroId, key, rawVal) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  const val = parseInt(rawVal, 10);
+  if (isNaN(val) || val < 0) return;
+  const oldVal = h.attrs[key] ?? 0;
+  const delta  = val - oldVal;
+  h.attrs[key] = val;
+  // Adjust VP: each +1 to an attribute = +2 VP (rulebook p.80)
+  // In edit mode we trust the user knows what they're doing
+  h.vp = Math.max(10, (h.vp || 10) + delta * 2);
+  save();
+  renderPartyView();
 }
 
 // ─── Hero mutations ────────────────────────────────────────────
