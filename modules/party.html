@@ -436,11 +436,18 @@ body {
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border-dim);
 }
+.dun-card-img-wrap {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+.dun-card-img-wrap:hover img { border-color: var(--border-gold); }
 .dun-card-img-wrap img {
   width: 140px;
   height: auto;
   display: block;
   border: 1px solid var(--border-dim);
+  transition: border-color .15s;
 }
 .dun-card-fallback {
   width: 140px;
@@ -455,6 +462,58 @@ body {
   font-style: italic;
   padding: 8px;
   text-align: center;
+}
+
+/* ── Card Lightbox ─────────────────────────────────────────────── */
+.card-lightbox {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.92);
+  align-items: center; justify-content: center; cursor: pointer;
+}
+.card-lightbox.open { display: flex; }
+.card-lightbox-inner {
+  position: relative; cursor: default;
+  max-width: 95vw; max-height: 95vh;
+}
+.card-lightbox-inner img { max-width: 100%; max-height: 90vh; display: block; }
+.card-lightbox-close {
+  position: absolute; top: -14px; right: -14px;
+  width: 28px; height: 28px;
+  background: var(--bg-dark); border: 1px solid var(--border-gold);
+  color: var(--gold-bright); font-size: 14px; cursor: pointer; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; z-index: 1;
+}
+
+/* ── Skill Browser ─────────────────────────────────────────────── */
+.skill-browser-tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  padding: 6px 14px; font-family: 'Cinzel', serif; font-size: 10px;
+  cursor: pointer; letter-spacing: 1px; opacity: .6; transition: opacity .15s;
+}
+.skill-browser-tab:hover { opacity: .9; }
+.skill-browser-tab.active { opacity: 1; }
+.skill-browser-card {
+  position: relative; width: 120px; flex-shrink: 0;
+  cursor: pointer; border: 2px solid transparent;
+  transition: border-color .15s, transform .1s;
+}
+.skill-browser-card img { width: 100%; display: block; }
+.skill-browser-card:not(.has-skill):hover {
+  border-color: var(--border-gold); transform: scale(1.04);
+}
+.skill-browser-card.has-skill { opacity: .45; cursor: default; }
+.skill-browser-add, .skill-browser-owned {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  font-size: 9px; text-align: center; padding: 3px 0;
+  font-family: 'Cinzel', serif; letter-spacing: .5px;
+}
+.skill-browser-add { background: rgba(138,98,24,.88); color: var(--gold-bright); }
+.skill-browser-owned { background: rgba(20,80,20,.88); color: #80d080; }
+.skill-browser-fallback {
+  width: 100%; height: 160px; background: var(--bg-raised);
+  border: 1px solid var(--border-dim);
+  align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 10px; text-align: center; padding: 8px;
 }
 .dun-card {
   width: 140px;
@@ -2843,6 +2902,16 @@ const ITEM_DB = [
   {id:207,name:"Sword of Light",cat:"magic_object",slot:"hands",cost:18,weight:5},
   {id:214,name:"Talisman of Fortune",cat:"magic_object",slot:"body",cost:15,weight:1},
   {id:224,name:"Vorpal Blade",cat:"magic_object",slot:"hands",cost:20,weight:3},
+  // Additional special objects from card files
+  {id:118,name:"Strength Potion",cat:"special_object",slot:"backpack",cost:2,weight:1,vp:1},
+  {id:287,name:"Green Beverage Potion",cat:"special_object",slot:"backpack",cost:1,weight:1,vp:1},
+  {id:294,name:"Scroll: Basic Spell",cat:"special_object",slot:"backpack",cost:3,weight:1,vp:1},
+  {id:299,name:"Bottled Darkness",cat:"special_object",slot:"backpack",cost:3,weight:1,vp:1},
+  {id:300,name:"Moonstone",cat:"special_object",slot:"backpack",cost:4,weight:1,vp:1},
+  {id:301,name:"Spare Part",cat:"special_object",slot:"backpack",cost:1,weight:1,vp:1},
+  {id:302,name:"Evil Twig",cat:"special_object",slot:"backpack",cost:2,weight:1,vp:1},
+  {id:304,name:"Explosive Runes",cat:"special_object",slot:"backpack",cost:4,weight:1,vp:1},
+  {id:308,name:"Invigorating Potion",cat:"special_object",slot:"backpack",cost:2,weight:1,vp:1},
 ];
 
 const ITEM_BY_ID   = Object.fromEntries(ITEM_DB.map(i => [i.id, i]));
@@ -2960,11 +3029,11 @@ const SKILL_DB = [
   {id:69,name:"Hide",type:"exploration"},{id:177,name:"Infiltrator",type:"exploration"},
   {id:83,name:"Initiative",type:"exploration"},{id:88,name:"Jumping",type:"exploration"},
   {id:174,name:"Light footed",type:"exploration"},{id:85,name:"Lock picking",type:"exploration"},
-  {id:84,name:"Lost in the Dark",type:"exploration"},{id:175,name:"Lycanthropy",type:"exploration"},
+  {id:126,name:"Lost in the Dark",type:"exploration"},{id:175,name:"Lycanthropy",type:"exploration"},
   {id:70,name:"Pathfinder",type:"exploration"},{id:87,name:"Pickpocket",type:"exploration"},
   {id:68,name:"Poisoner",type:"exploration"},{id:81,name:"Precise shot",type:"exploration"},
   {id:77,name:"Rider",type:"exploration"},{id:72,name:"Rope mastery",type:"exploration"},
-  {id:86,name:"Sailor",type:"exploration"},{id:64,name:"Sharp Senses",type:"exploration"},
+  {id:86,name:"Sailor",type:"exploration"},{id:132,name:"Sharp Senses",type:"exploration"},
   {id:74,name:"Slippery",type:"exploration"},{id:80,name:"Stealthy shot",type:"exploration"},
   {id:63,name:"Stealth",type:"exploration"},{id:75,name:"Swimmer",type:"exploration"},
   {id:82,name:"Tracker",type:"exploration"},{id:91,name:"Trap mastery",type:"exploration"},
@@ -2987,7 +3056,7 @@ const SKILL_DB = [
   {id:113,name:"Necromancy",type:"scholarly"},{id:112,name:"Object identification",type:"scholarly"},
   {id:102,name:"Onslaught",type:"scholarly"},{id:117,name:"Potion knowledge",type:"scholarly"},
   {id:108,name:"Regeneration",type:"scholarly"},{id:104,name:"Rune mastery",type:"scholarly"},
-  {id:92,name:"Skilled hands",type:"scholarly"},{id:129,name:"Sorcerer hunter",type:"scholarly"},
+  {id:80,name:"Skilled hands",type:"scholarly"},{id:129,name:"Sorcerer hunter",type:"scholarly"},
   {id:100,name:"Spell focus",type:"scholarly"},{id:101,name:"Spell shield",type:"scholarly"},
   {id:122,name:"Strategy",type:"scholarly"},{id:123,name:"Survival",type:"scholarly"},
   // NATURE
@@ -2995,7 +3064,7 @@ const SKILL_DB = [
   {id:143,name:"Clumsy hands",type:"nature"},{id:140,name:"Corrosive vomit",type:"nature"},
   {id:133,name:"Fearsome",type:"nature"},{id:135,name:"Flying",type:"nature"},
   {id:141,name:"Huge",type:"nature"},{id:136,name:"Invulnerable",type:"nature"},
-  {id:134,name:"Large",type:"nature"},{id:163,name:"Sharp Senses",type:"nature"},
+  {id:134,name:"Large",type:"nature"},{id:132,name:"Sharp Senses",type:"nature"},
   {id:164,name:"Small",type:"nature"},{id:165,name:"Small Size",type:"nature"},
   {id:166,name:"Slippery",type:"nature"},{id:167,name:"Stupid",type:"nature"},
   {id:168,name:"Sweep",type:"nature"},{id:169,name:"Tough",type:"nature"},
@@ -4111,30 +4180,53 @@ const SPELL_DESC = {
 };
 
 function renderDunCard(cfg) {
-  // Use the real card image if available, fall back to CSS card
   const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
   const imgUrl = cfg.imgPath ? base + cfg.imgPath : null;
+  const safeTitle = (cfg.title||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 
   if (imgUrl) {
-    return `<div class="dun-card-img-wrap">
-      <img src="${imgUrl}" alt="${cfg.title}" title="${cfg.title}"
-        onerror="this.parentElement.innerHTML=\`<div class='dun-card-fallback'>${cfg.title}</div>\`"
-        loading="lazy">
+    return `<div class="dun-card-img-wrap" onclick="showCardLightbox('${imgUrl}','${safeTitle}')" title="Click to enlarge">
+      <img src="${imgUrl}" alt="${cfg.title}" loading="lazy"
+        onerror="this.parentElement.innerHTML=\`<div class='dun-card-fallback'>${cfg.title}</div>\`">
     </div>`;
   }
 
-  // CSS fallback
   const typeLabel = {
     combat:'Combat Skill', exploration:'Exploration', scholarly:'Scholarly',
     nature:'Nature', spell:'Magic Spell', item:'Equipment', armor:'Armor & Shield'
   }[cfg.type] || cfg.type;
-  return `<div class="dun-card card-${cfg.type}">
+  return `<div class="dun-card card-${cfg.type}" onclick="showCardLightbox(null,'${safeTitle}','${(cfg.desc||'').replace(/'/g,"\\'")}')">
     <div class="dun-card-header">
       <div class="dun-card-type">${typeLabel}</div>
       <div class="dun-card-title">${cfg.title}</div>
     </div>
     <div class="dun-card-body">${cfg.desc || ''}</div>
   </div>`;
+}
+
+// ── Card Lightbox ─────────────────────────────────────────────────
+function showCardLightbox(imgUrl, title, desc) {
+  let el = document.getElementById('card-lightbox');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'card-lightbox';
+    el.className = 'card-lightbox';
+    el.onclick = () => el.classList.remove('open');
+    document.body.appendChild(el);
+  }
+  if (imgUrl) {
+    el.innerHTML = `<div class="card-lightbox-inner" onclick="event.stopPropagation()">
+      <button class="card-lightbox-close" onclick="document.getElementById('card-lightbox').classList.remove('open')">✕</button>
+      <img src="${imgUrl}" alt="${title}" style="max-width:100%;max-height:90vh;display:block;">
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="card-lightbox-inner" style="background:var(--bg-panel);padding:24px;max-width:400px;" onclick="event.stopPropagation()">
+      <button class="card-lightbox-close" onclick="document.getElementById('card-lightbox').classList.remove('open')">✕</button>
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);margin-bottom:12px;">${title}</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.6;">${desc||''}</div>
+    </div>`;
+  }
+  el.classList.add('open');
 }
 
 const SKILL_ICONS = {
@@ -4234,35 +4326,97 @@ function removeHeroSkill(heroId, skillName) {
 }
 
 function toggleSkillPicker(heroId) {
-  const picker = document.getElementById('skill-picker-' + heroId);
-  if (!picker) return;
-  if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+  // Open a full skill card browser modal
+  openSkillBrowser(heroId);
+}
 
+function openSkillBrowser(heroId) {
   const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
   const cls = CLASS_DB.find(c => c.id === h?.classId);
   const allowedTypes = CLASS_SKILL_TYPES[h?.classId] || ['combat','exploration','scholarly','nature'];
 
-  const sections = allowedTypes.map(type => {
-    const skills = SKILL_DB.filter(s => s.type === type && !(h.skills||[]).includes(s.name));
-    if (!skills.length) return '';
-    const color = TYPE_COLORS[type];
-    const chips = skills.map(s =>
-      `<span class="skill-chip" style="cursor:pointer;border-color:${color}"
-        onclick="addHeroSkill('${heroId}','${s.name.replace(/'/g,"\\'")}')">+ ${s.name}</span>`
-    ).join('');
-    return `<div style="margin-bottom:8px;">
-      <div style="font-size:8px;color:${color};letter-spacing:1px;font-family:'Cinzel',serif;margin-bottom:4px;">${TYPE_LABELS[type]}</div>
-      ${chips}
+  let el = document.getElementById('skill-browser-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'skill-browser-overlay';
+    el.className = 'creator-overlay';
+    el.innerHTML = '<div class="creator-modal" id="skill-browser-modal"></div>';
+    document.body.appendChild(el);
+  }
+  el.classList.add('open');
+
+  // Default to first allowed type
+  _skillBrowserHeroId = heroId;
+  _skillBrowserType = allowedTypes[0];
+  renderSkillBrowserContent();
+}
+
+let _skillBrowserHeroId = null;
+let _skillBrowserType = 'combat';
+
+function renderSkillBrowserContent() {
+  const heroId = _skillBrowserHeroId;
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  const allowedTypes = CLASS_SKILL_TYPES[h.classId] || ['combat','exploration','scholarly','nature'];
+
+  const tabs = allowedTypes.map(t => `
+    <button class="skill-browser-tab ${t === _skillBrowserType ? 'active' : ''}"
+      onclick="_skillBrowserType='${t}';renderSkillBrowserContent()"
+      style="color:${TYPE_COLORS[t]}${t === _skillBrowserType ? ';border-bottom:2px solid currentColor' : ''}">
+      ${TYPE_LABELS[t]}
+    </button>`).join('');
+
+  const skills = SKILL_DB.filter(s => s.type === _skillBrowserType);
+  const heroSkills = h.skills || [];
+  const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
+
+  const cards = skills.map(s => {
+    const alreadyHas = heroSkills.includes(s.name);
+    const imgUrl = `${base}skills/${s.id}.jpg`;
+    return `<div class="skill-browser-card ${alreadyHas ? 'has-skill' : ''}"
+      onclick="${alreadyHas ? '' : `addHeroSkillFromBrowser('${heroId}','${s.name.replace(/'/g,"\\'")}',this)`}"
+      title="${alreadyHas ? 'Already learned' : 'Click to add (+2 VP)'}">
+      <img src="${imgUrl}" alt="${s.name}" loading="lazy"
+        onerror="this.src='';this.parentElement.querySelector('.skill-browser-fallback').style.display='flex'">
+      <div class="skill-browser-fallback" style="display:none">
+        <div style="font-size:10px;text-align:center;padding:8px;">${s.name}</div>
+      </div>
+      ${alreadyHas ? '<div class="skill-browser-owned">✓ Owned</div>' : '<div class="skill-browser-add">+ Add</div>'}
     </div>`;
   }).join('');
 
-  picker.innerHTML = `<div style="background:var(--bg-dark);border:1px solid var(--panel-border);padding:10px;max-height:200px;overflow-y:auto;">
-    <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;font-style:italic;">
-      Click a skill to add it. Each upgrade = +2 VP.
+  const modal = document.getElementById('skill-browser-modal');
+  modal.innerHTML = `
+    <div class="creator-header">
+      <div class="creator-title">Browse Skills — ${h.name}</div>
+      <button class="creator-close" onclick="document.getElementById('skill-browser-overlay').classList.remove('open')">✕</button>
     </div>
-    ${sections || '<em style="font-size:10px;color:var(--text-muted)">All available skills already learned.</em>'}
-  </div>`;
-  picker.style.display = 'block';
+    <div style="display:flex;gap:16px;padding:12px 20px;border-bottom:1px solid var(--border-dim);flex-wrap:wrap;">
+      ${tabs}
+    </div>
+    <div style="padding:8px 16px;font-size:9px;color:var(--text-muted);font-style:italic;">
+      Click a card to add that skill (+2 VP). Click any card to enlarge and read the text.
+    </div>
+    <div class="creator-body" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;">
+      ${cards}
+    </div>`;
+}
+
+function addHeroSkillFromBrowser(heroId, skillName, cardEl) {
+  addHeroSkill(heroId, skillName);
+  // Visually mark as owned
+  if (cardEl) {
+    cardEl.classList.add('has-skill');
+    cardEl.querySelector('.skill-browser-add')?.remove();
+    const owned = document.createElement('div');
+    owned.className = 'skill-browser-owned';
+    owned.textContent = '✓ Owned';
+    cardEl.appendChild(owned);
+    cardEl.onclick = null;
+    cardEl.title = 'Already learned';
+  }
 }
 
 function addHeroSkill(heroId, skillName) {
