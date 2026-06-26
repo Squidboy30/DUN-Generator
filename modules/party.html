@@ -883,6 +883,12 @@ body {
   font-style: italic;
   line-height: 1.4;
 }
+.class-opt-card-btn {
+  font-size: 8px; color: var(--gold-bright); cursor: pointer;
+  margin-top: 3px; opacity: .65; text-decoration: underline; display: inline-block;
+}
+.class-opt-card-btn:hover { opacity: 1; }
+.class-opt.disabled { opacity: .35; cursor: default; pointer-events: none; }
 
 /* attr-builder — used by renderStepAttrs */
 .attr-builder { display: flex; flex-direction: column; gap: 4px; }
@@ -2153,55 +2159,55 @@ function removeCompanion(heroId, type, id) {
 // RACE DATA (extracted from worldofarasca.dungeonuniversalis.com)
 // ═══════════════════════════════════════════════════════════════
 const RACE_DB = [
-  { id:10, name:"Humans",          alignment:"neutral", size:"average", fortune:6,  cardRef:"RA 10/25",
+  { id:10, name:"Humans", cardSiteId:1,          alignment:"neutral", size:"average", fortune:6,  cardRef:"RA 10/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:2}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Lost in the Dark"], special:"Versatile and balanced. Begin with 'Lost in the Dark' and one more skill of player's choice. May learn 'Lycanthropy' (lose 2 fortune).", allowedClasses:["all"] },
-  { id:11, name:"Elves",           alignment:"good",    size:"average", fortune:5,  cardRef:"RA 05/25",
+  { id:11, name:"Elves", cardSiteId:2,           alignment:"good",    size:"average", fortune:5,  cardRef:"RA 05/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:4,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:{min:0,max:2,dc:1}, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:5,dc:2} },
     startingSkills:["Sharp Senses"], special:"Outstanding agility and speed. Skillful with melee and ranged. Great spellcasters. Cannot learn Corruption or Underworld spells.", allowedClasses:["warrior","paladin","gladiator","battle dancer","scout","ranger","bard","forester","wizard","animist"] },
-  { id:7,  name:"Dwarves",         alignment:"good",    size:"average", fortune:5,  cardRef:"RA 07/25",
+  { id:7,  name:"Dwarves", cardSiteId:12,         alignment:"good",    size:"average", fortune:5,  cardRef:"RA 07/25",
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:3}, agility:{min:2,max:5,dc:3}, intelligence:{min:4,max:5,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:5,max:7,dc:2} },
     startingSkills:["Tough","Hatred towards Orcs and Goblins","Skilled Hands"], special:"Slow but loyal and very tough.", allowedClasses:["barbarian","warrior","gladiator","assassin","scout","rogue","ranger","bard","runic master"] },
-  { id:12, name:"Dark Elves",      alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 06/25",
+  { id:12, name:"Dark Elves", cardSiteId:7,      alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 06/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:4,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:5,dc:2} },
     startingSkills:["Sharp Senses","Cruel"], special:"Outstanding agility and speed. Skillful with weapons.", allowedClasses:["warrior","paladin","gladiator","battle dancer","assassin","scout","rogue","bard","wizard","animist","sorcerer"] },
-  { id:13, name:"Halflings",       alignment:"good",    size:"small",   fortune:8,  cardRef:"RA 13/25",
+  { id:13, name:"Halflings", cardSiteId:17,       alignment:"good",    size:"small",   fortune:8,  cardRef:"RA 13/25",
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:2,max:3,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:4,dc:2} },
     startingSkills:["Small","Lost in the Dark"], special:"Small though very lucky.", allowedClasses:["warrior","scout","rogue","ranger","bard","animist"] },
-  { id:14, name:"Orcs",            alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 14/25",
+  { id:14, name:"Orcs", cardSiteId:20,            alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 14/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:4,max:6,dc:2}, shootingSkill:{min:3,max:4,dc:3}, agility:{min:3,max:4,dc:2}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:7,dc:2} },
     startingSkills:["Onslaught"], special:"Strong and aggressive fighters.", allowedClasses:["barbarian","warrior","assassin","gladiator","scout","ranger","animist","sorcerer"] },
-  { id:9,  name:"Goblins",         alignment:"evil",    size:"small",   fortune:7,  cardRef:"RA 09/25",
+  { id:9,  name:"Goblins", cardSiteId:14,         alignment:"evil",    size:"small",   fortune:7,  cardRef:"RA 09/25",
     attrs:{ movement:{min:4,max:5,dc:1}, combatSkill:{min:3,max:5,dc:3}, strength:{min:2,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:4,dc:1}, intelligence:{min:2,max:4,dc:2}, mana:null, courage:{min:2,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:4,dc:2} },
     startingSkills:["Small","Stealth","Dirty Fighter"], special:"Small though expert in dirty fighting.", allowedClasses:["warrior","assassin","scout","rogue","animist","sorcerer"] },
-  { id:15, name:"Ratfolk",         alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 15/25",
+  { id:15, name:"Ratfolk", cardSiteId:21,         alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 15/25",
     attrs:{ movement:{min:5,max:6,dc:1}, combatSkill:{min:3,max:5,dc:2}, strength:{min:2,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:3,max:5,dc:2}, mana:null, courage:{min:2,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:5,dc:2} },
     startingSkills:["Stealth","Dirty Fighter"], special:"Fast and sneaky. Expert at subterfuge.", allowedClasses:["warrior","assassin","scout","rogue","wizard","animist","sorcerer"] },
-  { id:8,  name:"Catfolk",         alignment:"neutral", size:"average", fortune:4,  cardRef:"RA 08/25",
+  { id:8,  name:"Catfolk", cardSiteId:13,         alignment:"neutral", size:"average", fortune:4,  cardRef:"RA 08/25",
     attrs:{ movement:{min:5,max:6,dc:1}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:3,max:5,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Sharp Senses"], special:"Outstanding agility, high potential strength. May use 'Claws'.", allowedClasses:["warrior","assassin","scout","ranger","animist","warrior monk","sorcerer"] },
-  { id:2,  name:"Dogfolk",         alignment:"neutral", size:"average", fortune:5,  cardRef:"RA 02/25",
+  { id:2,  name:"Dogfolk", cardSiteId:9,         alignment:"neutral", size:"average", fortune:5,  cardRef:"RA 02/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:3}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:4,dc:1}, intelligence:{min:3,max:5,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Sharp Senses","Tracker"], special:"Good sense of smell. Strong though not weapon-skillful. May use 'Fangs'.", allowedClasses:["warrior","scout","ranger","animist","sorcerer"] },
-  { id:1,  name:"Amphibians",      alignment:"neutral", size:"small",   fortune:7,  cardRef:"RA 01/25",
+  { id:1,  name:"Amphibians", cardSiteId:8,      alignment:"neutral", size:"small",   fortune:7,  cardRef:"RA 01/25",
     attrs:{ movement:{min:4,max:5,dc:1}, combatSkill:{min:3,max:4,dc:2}, strength:{min:2,max:3,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:4,max:5,dc:2}, intelligence:{min:2,max:5,dc:2}, mana:null, courage:{min:3,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:5,dc:2} },
     startingSkills:["Stealth","Small","Pathfinder (forest/swamp)"], special:"Small, sneaky and stealthy.", allowedClasses:["warrior","scout","ranger","wizard","animist","sorcerer"] },
-  { id:20, name:"Celestials",      alignment:"good",    size:"average", fortune:3,  cardRef:"RA 20/25",
+  { id:20, name:"Celestials", cardSiteId:10,      alignment:"good",    size:"average", fortune:3,  cardRef:"RA 20/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:3}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:2}, intelligence:{min:4,max:5,dc:2}, mana:{min:0,max:2,dc:1}, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Invulnerable"], special:"Blood of gods. May learn 'Flying (8)'. Cannot reach Intelligence 6.", allowedClasses:["warrior","paladin","scout","bard","runic master","wizard"] },
-  { id:17, name:"Centaurs",        alignment:"neutral", size:"large",   fortune:4,  cardRef:"RA 17/25",
+  { id:17, name:"Centaurs", cardSiteId:11,        alignment:"neutral", size:"large",   fortune:4,  cardRef:"RA 17/25",
     attrs:{ movement:{min:7,max:8,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:4,dc:2}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:3,max:4,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:5,max:8,dc:2} },
     startingSkills:["Large","Onslaught"], special:"Fast. +2 jumping/-2 climbing. Cannot use heavy armor.", allowedClasses:["warrior","scout","ranger","animist"] },
-  { id:19, name:"Treefolk",        alignment:"neutral", size:"large",   fortune:4,  cardRef:"RA 19/25",
+  { id:19, name:"Treefolk", cardSiteId:28,        alignment:"neutral", size:"large",   fortune:4,  cardRef:"RA 19/25",
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:3,dc:3}, agility:{min:2,max:3,dc:3}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:5,max:5,dc:0}, vitality:{min:4,max:7,dc:2} },
     startingSkills:["Vulnerable (fire)","Survival"], special:"Slow but tough. Cannot wear armor. May use 'Claws'.", allowedClasses:["warrior","scout","ranger","animist"] },
   { id:21, name:"Cyclops",         alignment:"neutral", size:"large",   fortune:6,  cardRef:"RA 21/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:2,max:4,dc:2}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:5,max:8,dc:2} },
     startingSkills:["Onslaught"], special:"Brave, strong and temperamental.", allowedClasses:["barbarian","warrior","gladiator","scout","animist","sorcerer","wizard"] },
-  { id:22, name:"Beastmen",        alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 22/25",
+  { id:22, name:"Beastmen", cardSiteId:15,        alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 22/25",
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:4,dc:3}, agility:{min:3,max:4,dc:2}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:7,dc:2} },
     startingSkills:["Onslaught"], special:"Not weapon-skillful but strong and hardy.", allowedClasses:["barbarian","warrior","scout","rogue","bard","forester","animist","sorcerer"] },
-  { id:23, name:"Infernals",       alignment:"evil",    size:"average", fortune:2,  cardRef:"RA 23/25",
+  { id:23, name:"Infernals", cardSiteId:16,       alignment:"evil",    size:"average", fortune:2,  cardRef:"RA 23/25",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:4,dc:3}, agility:{min:3,max:5,dc:2}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:7,dc:2} },
     startingSkills:["Invulnerable","Underworld","Fearsome"], special:"Lethal, very tough. May learn 'Flying (8)'. Cannot wear heavy armor. Uses 'Claws'.", allowedClasses:["warrior","scout"] },
   { id:24, name:"Birdfolk",        alignment:"neutral", size:"average", fortune:6,  cardRef:"RA 24/25",
@@ -2216,7 +2222,7 @@ const RACE_DB = [
   { id:32, name:"Aranhaiks",       alignment:"evil",    size:"average", fortune:4,  cardRef:"RA 28/35",
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:3,max:5,dc:2}, mana:null, courage:{min:3,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Pathfinder (spiderwebs)","Climber","Poisonous (Fangs)"], special:"Spider-folk. May use 'Fangs'.", allowedClasses:["warrior","assassin","scout","ranger","animist"] },
-  { id:18, name:"Vampires",        alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 18/25",
+  { id:18, name:"Vampires", cardSiteId:24,        alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 18/25",
     attrs:{ movement:{min:5,max:6,dc:1}, combatSkill:{min:4,max:6,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:4,dc:3}, agility:{min:3,max:5,dc:1}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:4,max:6,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:5,max:7,dc:2} },
     startingSkills:["Fearsome","Undead","Regeneration"], special:"Undead warriors. Thirst for blood. Choose one of: Regeneration, Fearsome, Magic Resistance, Berserker.", allowedClasses:["warrior","knight","necromancer","sorcerer"] },
   { id:33, name:"Kobolds",         alignment:"evil",    size:"small",   fortune:6,  cardRef:"RA 33/35",
@@ -2234,10 +2240,10 @@ const RACE_DB = [
   { id:41, name:"The Soulless",    alignment:"evil",    size:"average", fortune:5,  cardRef:"RA 26/35",
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:3,dc:3}, agility:{min:1,max:3,dc:3}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Undead","Fearsome"], special:"Risen dead heroes. May learn 'Regeneration'. Cannot recover vitality with common objects. Mana Potion also restores all vitality.", allowedClasses:["warrior","knight","necromancer","sorcerer"] },
-  { id:37, name:"Ogres",           alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 16/25",
+  { id:37, name:"Ogres", cardSiteId:19,           alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 16/25",
     attrs:{ movement:{min:6,max:7,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:6,max:8,dc:2}, shootingSkill:{min:2,max:3,dc:3}, agility:{min:2,max:4,dc:3}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:8,max:12,dc:2} },
     startingSkills:["Large","Fearsome","Onslaught"], special:"Mighty warriors. More versatile than similar Large creatures.", allowedClasses:["barbarian","warrior","gladiator","scout","ranger","animist","sorcerer"] },
-  { id:38, name:"Minotaurs",       alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 17/25",
+  { id:38, name:"Minotaurs", cardSiteId:18,       alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 17/25",
     attrs:{ movement:{min:6,max:7,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:6,max:8,dc:2}, shootingSkill:{min:1,max:2,dc:3}, agility:{min:2,max:3,dc:3}, intelligence:{min:2,max:3,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:8,max:14,dc:2} },
     startingSkills:["Large","Fearsome","Onslaught","Clumsy Hands","Berserker"], special:"Huge and uncontrollable.", allowedClasses:["barbarian","warrior"] },
   { id:30, name:"Mumaks",          alignment:"evil",    size:"large",   fortune:2,  cardRef:"RA 30/35",
@@ -2251,35 +2257,31 @@ const RACE_DB = [
 const CLASS_DB = [
   // FIGHTERS
   // FIGHTERS — each gets one free professional skill at creation (part of base 10 VP)
-  { id:"warrior",       name:"Warrior",        group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"combatSkill",  startingSkill:"Hardy",         desc:"Standard melee combatant. -1 cost on first Combat Skill increase." },
-  { id:"barbarian",     name:"Barbarian",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"strength",    startingSkill:"Berserker",      desc:"Savage power fighter. -1 cost on first Strength increase." },
-  { id:"knight",        name:"Knight",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:"courage",     startingSkill:"Bodyguard",      desc:"Armoured warrior with leadership qualities." },
-  { id:"paladin",       name:"Paladin",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          startingSkill:"Healing",        desc:"Holy warrior. Good alignment only." },
-  { id:"gladiator",     name:"Gladiator",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"agility",     startingSkill:"Combat master",  desc:"Arena fighter. -1 cost on first Agility increase." },
-  { id:"battle_dancer", name:"Battle Dancer",   group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"agility",     startingSkill:"Dance battler",  desc:"Acrobatic melee fighter. Elves and Dark Elves preferred." },
-  { id:"warrior_monk",  name:"Warrior Monk",    group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          startingSkill:"Martial arts",   desc:"Disciplined martial artist." },
+  { id:"warrior", cardSiteId:2,       name:"Warrior",        group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"combatSkill",  startingSkill:"Hardy",         desc:"Standard melee combatant. -1 cost on first Combat Skill increase." },
+  { id:"barbarian", cardSiteId:1,     name:"Barbarian",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"strength",    startingSkill:"Berserker",      desc:"Savage power fighter. -1 cost on first Strength increase." },
+  { id:"knight", cardSiteId:11,        name:"Knight",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:"courage",     startingSkill:"Bodyguard",      desc:"Armoured warrior with leadership qualities." },
+  { id:"paladin", cardSiteId:21,       name:"Paladin",          group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          startingSkill:"Healing",        desc:"Holy warrior. Good alignment only." },
+  { id:"gladiator", cardSiteId:13,     name:"Gladiator",       group:"fighter",  isCaster:false, skillRange:[1],   bonusAttr:"agility",     startingSkill:"Combat master",  desc:"Arena fighter. -1 cost on first Agility increase." },
+  { id:"battle_dancer", cardSiteId:7, name:"Battle Dancer",   group:"fighter",  isCaster:false, skillRange:[1,3], bonusAttr:"agility",     startingSkill:"Dance battler",  desc:"Acrobatic melee fighter. Elves and Dark Elves preferred." },
+  { id:"warrior_monk", cardSiteId:18,  name:"Warrior Monk",    group:"fighter",  isCaster:false, skillRange:[1,2], bonusAttr:null,          startingSkill:"Martial arts",   desc:"Disciplined martial artist." },
   // EXPLORERS
-  { id:"scout",         name:"Scout",           group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:"shootingSkill",startingSkill:"Ambush",        desc:"Versatile skirmisher. -1 cost on first Shooting Skill increase." },
-  { id:"ranger",        name:"Ranger",          group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           startingSkill:"Tracker",       desc:"Wilderness expert. Access to Nature skills." },
-  { id:"rogue",         name:"Rogue",           group:"explorer", isCaster:false, skillRange:[3],   bonusAttr:"agility",      startingSkill:"Thief",         desc:"Sneaky thief. -1 cost on first Agility increase." },
-  { id:"assassin",      name:"Assassin",        group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           startingSkill:"Lethal blow",   desc:"Precision striker. Expert in stealth attacks." },
-  { id:"bard",          name:"Bard",            group:"explorer", isCaster:false, skillRange:[2,3], bonusAttr:null,           startingSkill:"Inspiring",     desc:"Jack of all trades. Leadership and exploration." },
-  { id:"forester",      name:"Forester",        group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           startingSkill:"Survival",      desc:"Deep wilderness specialist." },
-  { id:"sorcerer_hunter",name:"Sorcerer Hunter",group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           startingSkill:"Magic resistance",desc:"Specialist in hunting magic users." },
+  { id:"scout", cardSiteId:3,         name:"Scout",           group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:"shootingSkill",startingSkill:"Ambush",        desc:"Versatile skirmisher. -1 cost on first Shooting Skill increase." },
+  { id:"ranger", cardSiteId:19,        name:"Ranger",          group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           startingSkill:"Tracker",       desc:"Wilderness expert. Access to Nature skills." },
+  { id:"rogue", cardSiteId:22,         name:"Rogue",           group:"explorer", isCaster:false, skillRange:[3],   bonusAttr:"agility",      startingSkill:"Thief",         desc:"Sneaky thief. -1 cost on first Agility increase." },
+  { id:"assassin", cardSiteId:6,      name:"Assassin",        group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           startingSkill:"Lethal blow",   desc:"Precision striker. Expert in stealth attacks." },
+  { id:"bard", cardSiteId:9,          name:"Bard",            group:"explorer", isCaster:false, skillRange:[2,3], bonusAttr:null,           startingSkill:"Inspiring",     desc:"Jack of all trades. Leadership and exploration." },
+  { id:"forester", cardSiteId:14,      name:"Forester",        group:"explorer", isCaster:false, skillRange:[3,4], bonusAttr:null,           startingSkill:"Survival",      desc:"Deep wilderness specialist." },
+  { id:"sorcerer_hunter", cardSiteId:12,name:"Sorcerer Hunter",group:"explorer", isCaster:false, skillRange:[1,3], bonusAttr:null,           startingSkill:"Magic resistance",desc:"Specialist in hunting magic users." },
   // SPELLCASTERS
-  { id:"wizard",        name:"Wizard",          group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:"intelligence", startingSkill:"Alchemist",     desc:"Scholarly magic user. -1 cost on first Intelligence increase.", startMana:8 },
-  { id:"sorcerer",      name:"Sorcerer",        group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           startingSkill:"Foresight",     desc:"Innate magic user. Some races: Tribal magic only.", startMana:6 },
-  { id:"animist",       name:"Animist",         group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           startingSkill:"Taming animals",desc:"Nature magic user. Access to Nature skills.", startMana:6 },
-  { id:"necromancer",   name:"Necromancer",     group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:null,           startingSkill:"Undead lore",   desc:"Death magic. Evil alignment. Humans become evil.", startMana:6 },
-  { id:"runic_master",  name:"Runic Master",    group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           startingSkill:"Runic lore",    desc:"Magic through runes. Dwarves preferred.", startMana:6 },
+  { id:"wizard", cardSiteId:4,        name:"Wizard",          group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:"intelligence", startingSkill:"Alchemist",     desc:"Scholarly magic user. -1 cost on first Intelligence increase.", startMana:8 },
+  { id:"sorcerer", cardSiteId:10,      name:"Sorcerer",        group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           startingSkill:"Foresight",     desc:"Innate magic user. Some races: Tribal magic only.", startMana:6 },
+  { id:"animist", cardSiteId:5,       name:"Animist",         group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           startingSkill:"Taming animals",desc:"Nature magic user. Access to Nature skills.", startMana:6 },
+  { id:"necromancer", cardSiteId:20,   name:"Necromancer",     group:"caster",   isCaster:true,  skillRange:[2],   bonusAttr:null,           startingSkill:"Undead lore",   desc:"Death magic. Evil alignment. Humans become evil.", startMana:6 },
+  { id:"runic_master", cardSiteId:16,  name:"Runic Master",    group:"caster",   isCaster:true,  skillRange:[2,4], bonusAttr:null,           startingSkill:"Runic lore",    desc:"Magic through runes. Dwarves preferred.", startMana:6 },
   { id:"battle_wizard", name:"Battle Wizard",   group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           startingSkill:"Hardy",         desc:"Combat-capable spellcaster.", startMana:5 },
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// ATTRIBUTE CONFIG
-// ═══════════════════════════════════════════════════════════════
-const ATTR_META = [
-  { key:"movement",      label:"Movement",       icon:"🥾", note:"squares per turn",      devPts:true  },
+,
   { key:"combatSkill",   label:"Combat Skill",   icon:"⚔",  note:"melee attacks",          devPts:true  },
   { key:"strength",      label:"Strength",       icon:"💪", note:"damage & carry",          devPts:true  },
   { key:"shootingSkill", label:"Shooting Skill", icon:"🎯", note:"ranged attacks",          devPts:true  },
@@ -2597,8 +2599,18 @@ function renderRaceDetail(race) {
     </div>`;
   }).join('');
 
+  const cardUrl = race.cardSiteId
+    ? `https://squidboy30.github.io/DUN-Generator/src/cards/races/${race.cardSiteId}.jpg`
+    : null;
+  const viewCardBtn = cardUrl
+    ? `<button class="btn-secondary" style="font-size:9px;padding:3px 10px;margin-top:6px;"
+        onclick="showCardLightbox('${cardUrl}','${race.name} Race Card')">🃏 View Race Card</button>`
+    : '';
+
   return `
-    <div class="race-detail-title">${race.name} <span class="race-align-badge align-${race.alignment}">${race.alignment}</span></div>
+    <div class="race-detail-title">${race.name} <span class="race-align-badge align-${race.alignment}">${race.alignment}</span>
+      ${viewCardBtn}
+    </div>
     <div class="attr-table">${rows}</div>
     <div class="race-skills-row"><strong>Starting skills:</strong> ${race.startingSkills.join(', ') || 'None'}</div>
     <div class="race-special">${race.special}</div>`;
@@ -2641,10 +2653,17 @@ function renderStepClass() {
       const ok = isAllowed(c.id) || isAllowed(c.name.toLowerCase());
       const sel = creatorState.classId === c.id ? 'selected' : '';
       const dis = !ok ? 'disabled' : '';
+      const cardUrl = c.cardSiteId
+        ? `https://squidboy30.github.io/DUN-Generator/src/cards/classes/${c.cardSiteId}.jpg`
+        : null;
+      const cardBtn = cardUrl
+        ? `<div class="class-opt-card-btn" onclick="event.stopPropagation();showCardLightbox('${cardUrl}','${c.name} Class Card')">🃏 View Card</div>`
+        : '';
       return `<div class="class-opt ${sel} ${dis}" data-class-id="${c.id}"
         onclick="${ok ? `selectClass('${c.id}')` : ''}">
         <div class="class-opt-name">${c.name}${c.isCaster ? ' ✨' : ''}</div>
         <div class="class-opt-desc">${c.desc}</div>
+        ${cardBtn}
       </div>`;
     }).join('');
     return `<div>${header}${opts}</div>`;
@@ -3736,6 +3755,13 @@ function openDetail(id) {
             : '<strong style="color:var(--gold-light);font-size:16px;">' + h.vp + '</strong>'}
         </div>
 
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+          ${race.cardSiteId ? `<button class="btn-secondary" style="font-size:8px;padding:3px 8px;"
+            onclick="showCardLightbox('https://squidboy30.github.io/DUN-Generator/src/cards/races/${race.cardSiteId}.jpg','${race.name} Race Card')">🃏 Race Card</button>` : ''}
+          ${cls.cardSiteId ? `<button class="btn-secondary" style="font-size:8px;padding:3px 8px;"
+            onclick="showCardLightbox('https://squidboy30.github.io/DUN-Generator/src/cards/classes/${cls.cardSiteId}.jpg','${cls.name} Class Card')">🃏 Class Card</button>` : ''}
+        </div>
+
         <hr class="section-divider">
         <div class="sheet-section-title">Fortune
           <span style="font-size:8px;margin-left:4px;color:var(--text-muted)">
@@ -4477,12 +4503,8 @@ function addHeroSkill(heroId, skillName) {
   // Refresh skill chips in sheet and VP badge on roster card
   const el = document.getElementById('hero-skills-' + heroId);
   if (el) el.innerHTML = renderHeroSkillChips(h);
-  // Update VP badge without full re-render
-  const badge = document.querySelector(`[onclick*="openDetail('${heroId}')"] .hero-vp-badge, #cards-btn-${heroId}`)?.closest('.hero-card')?.querySelector('.hero-vp-badge');
-  if (badge) badge.textContent = `VP ${h.vp}`;
-  // Update party VP banner
-  const partyBanner = document.querySelector('.party-vp-banner span');
-  if (partyBanner) partyBanner.textContent = calcPartyVP();
+  // Refresh the full party view so VP badges update
+  renderPartyView();
 }
 
 // ═══════════════════════════════════════════════════════════════
