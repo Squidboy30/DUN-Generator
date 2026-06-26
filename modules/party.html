@@ -509,6 +509,14 @@ body {
 }
 .skill-browser-add { background: rgba(138,98,24,.88); color: var(--gold-bright); }
 .skill-browser-owned { background: rgba(20,80,20,.88); color: #80d080; }
+.skill-browser-add-btn {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(138,98,24,.9); color: var(--gold-bright);
+  border: none; font-size: 9px; text-align: center; padding: 4px 0;
+  font-family: 'Cinzel', serif; letter-spacing: .5px; cursor: pointer;
+  transition: background .15s;
+}
+.skill-browser-add-btn:hover { background: rgba(168,118,44,1); }
 .skill-browser-fallback {
   width: 100%; height: 160px; background: var(--bg-raised);
   border: 1px solid var(--border-dim);
@@ -4335,10 +4343,27 @@ function renderHeroSkillChips(h) {
 function removeHeroSkill(heroId, skillName) {
   const h = heroes.find(h => h.id === heroId);
   if (!h) return;
+
+  // Determine if this skill was free (race or class starting skill — no VP cost)
+  const race = RACE_DB.find(r => r.id === h.raceId) || {};
+  const cls  = CLASS_DB.find(c => c.id === h.classId) || {};
+  const freeSkills = [...(race.startingSkills || []), cls.startingSkill].filter(Boolean);
+  const isFree = freeSkills.some(f => f.toLowerCase() === skillName.toLowerCase());
+
   h.skills = h.skills.filter(s => s !== skillName);
+
+  // Subtract VP only for non-free skills (rulebook p.80: each extra skill = +2VP)
+  if (!isFree) {
+    h.vp = Math.max(10, (h.vp || 10) - 2);
+  }
+
   save();
+  // Refresh chips and VP badge
   const el = document.getElementById('hero-skills-' + heroId);
   if (el) el.innerHTML = renderHeroSkillChips(h);
+  const partyBanner = document.getElementById('party-vp-total');
+  if (partyBanner) partyBanner.textContent = calcPartyVP();
+  renderPartyView();
 }
 
 function toggleSkillPicker(heroId) {
@@ -4391,15 +4416,20 @@ function renderSkillBrowserContent() {
   const cards = skills.map(s => {
     const alreadyHas = heroSkills.includes(s.name);
     const imgUrl = `${base}skills/${s.id}.jpg`;
+    const safeName = s.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     return `<div class="skill-browser-card ${alreadyHas ? 'has-skill' : ''}"
-      onclick="${alreadyHas ? '' : `addHeroSkillFromBrowser('${heroId}','${s.name.replace(/'/g,"\\'")}',this)`}"
-      title="${alreadyHas ? 'Already learned' : 'Click to add (+2 VP)'}">
+      onclick="showCardLightbox('${imgUrl}','${safeName}')"
+      title="Click to enlarge">
       <img src="${imgUrl}" alt="${s.name}" loading="lazy"
         onerror="this.src='';this.parentElement.querySelector('.skill-browser-fallback').style.display='flex'">
       <div class="skill-browser-fallback" style="display:none">
         <div style="font-size:10px;text-align:center;padding:8px;">${s.name}</div>
       </div>
-      ${alreadyHas ? '<div class="skill-browser-owned">✓ Owned</div>' : '<div class="skill-browser-add">+ Add</div>'}
+      ${alreadyHas
+        ? '<div class="skill-browser-owned">✓ Owned</div>'
+        : `<button class="skill-browser-add-btn"
+            onclick="event.stopPropagation();addHeroSkillFromBrowser('${heroId}','${safeName}',this.parentElement)"
+            title="Add skill (+2 VP)">+ Add</button>`}
     </div>`;
   }).join('');
 
@@ -4413,7 +4443,7 @@ function renderSkillBrowserContent() {
       ${tabs}
     </div>
     <div style="padding:8px 16px;font-size:9px;color:var(--text-muted);font-style:italic;">
-      Click a card to add that skill (+2 VP). Click any card to enlarge and read the text.
+      Click a card to enlarge and read the text. Click <strong style="color:var(--gold-bright)">+ Add</strong> to learn that skill (+2 VP).
     </div>
     <div class="creator-body" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;">
       ${cards}
@@ -4422,16 +4452,16 @@ function renderSkillBrowserContent() {
 
 function addHeroSkillFromBrowser(heroId, skillName, cardEl) {
   addHeroSkill(heroId, skillName);
-  // Visually mark as owned
+  // Swap the Add button for Owned label
   if (cardEl) {
     cardEl.classList.add('has-skill');
-    cardEl.querySelector('.skill-browser-add')?.remove();
-    const owned = document.createElement('div');
-    owned.className = 'skill-browser-owned';
-    owned.textContent = '✓ Owned';
-    cardEl.appendChild(owned);
-    cardEl.onclick = null;
-    cardEl.title = 'Already learned';
+    const btn = cardEl.querySelector('.skill-browser-add-btn');
+    if (btn) {
+      const owned = document.createElement('div');
+      owned.className = 'skill-browser-owned';
+      owned.textContent = '✓ Owned';
+      btn.replaceWith(owned);
+    }
   }
 }
 
