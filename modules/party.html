@@ -3722,8 +3722,12 @@ function openDetail(id) {
         <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
           Alignment: <span style="color:${h.alignment==='good'?'#6abf6a':h.alignment==='evil'?'#bf6a6a':'#bfbf6a'}">${h.alignment||'—'}</span>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
-          VP: <strong style="color:var(--gold-light);font-size:16px;">${h.vp}</strong>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:8px;">
+          VP: ${isEdit
+            ? `<input class="attr-edit-input" type="number" min="0" value="${h.vp}"
+                onchange="editVPDirect('${h.id}',this.value)"
+                style="width:50px;font-size:14px;">`
+            : `<strong style="color:var(--gold-light);font-size:16px;">${h.vp}</strong>`}
         </div>
 
         <hr class="section-divider">
@@ -3855,7 +3859,21 @@ function closeDetail() {
   renderRoster();
 }
 
-// Direct stat edit — used in manual edit mode on the detail sheet
+// Direct VP edit — used in manual edit mode
+function editVPDirect(heroId, rawVal) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  const val = parseInt(rawVal, 10);
+  if (isNaN(val) || val < 0) return;
+  h.vp = val;
+  save();
+  renderPartyView();
+  // Update VP badge in sheet without full re-render
+  const badge = document.querySelector(`#detail-modal .creator-title`);
+  // Party VP banner
+  const partyBanner = document.getElementById('party-vp-total');
+  if (partyBanner) partyBanner.textContent = calcPartyVP();
+}
 function editAttrDirect(heroId, key, rawVal) {
   const h = heroes.find(h => h.id === heroId);
   if (!h) return;
@@ -4614,41 +4632,98 @@ function removeEquipItem(heroId, itemId) {
 }
 
 function toggleItemPicker(heroId) {
-  const picker = document.getElementById('item-picker-' + heroId);
-  if (!picker) return;
-  if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+  openItemBrowser(heroId);
+}
 
+function openItemBrowser(heroId) {
+  let el = document.getElementById('item-browser-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'item-browser-overlay';
+    el.className = 'creator-overlay';
+    el.innerHTML = '<div class="creator-modal" id="item-browser-modal"></div>';
+    document.body.appendChild(el);
+  }
+  el.classList.add('open');
+  _itemBrowserHeroId = heroId;
+  _itemBrowserCat = 'melee_weapon';
+  renderItemBrowserContent();
+}
+
+let _itemBrowserHeroId = null;
+let _itemBrowserCat = 'melee_weapon';
+
+function renderItemBrowserContent() {
+  const heroId = _itemBrowserHeroId;
   const h = heroes.find(h => h.id === heroId);
-  const equippedIds = new Set(h.equippedItems || []);
+  if (!h) return;
+  const equippedIds = new Set([...(h.equippedItems||[]), ...(h.backpack||[])]);
+  const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
 
-  // Show item categories with a filter input
-  const sections = Object.entries(CAT_LABELS).map(([cat, label]) => {
-    const items = (ITEMS_BY_CAT[cat]||[]).filter(i => !equippedIds.has(i.id));
-    if (!items.length) return '';
-    const chips = items.map(item => {
-      const hasMods = item.attrMods && Object.keys(item.attrMods).length > 0;
-      const armorStr = item.armorBonus ? ` +${item.armorBonus}⚔` : '';
-      const modStr = hasMods ? ' ' + Object.entries(item.attrMods).map(([a,v])=>`${v>0?'+':''}${v}${a.slice(0,3)}`).join('') : '';
-      return `<span class="skill-chip" style="cursor:pointer;margin:2px;"
-        onclick="addEquipItem('${heroId}',${item.id})">
-        + ${item.name}${armorStr}${modStr}
-        <span style="font-size:8px;color:var(--text-muted)"> ${item.cost}gp·${item.weight}w</span>
-      </span>`;
-    }).join('');
-    return `<div style="margin-bottom:8px;">
-      <div style="font-size:8px;color:var(--text-muted);font-family:'Cinzel',serif;letter-spacing:1px;margin-bottom:4px;">${label}</div>
-      ${chips}
+  const cats = Object.keys(CAT_LABELS);
+  const tabs = cats.map(cat => `
+    <button class="skill-browser-tab ${cat === _itemBrowserCat ? 'active' : ''}"
+      onclick="_itemBrowserCat='${cat}';renderItemBrowserContent()"
+      style="${cat === _itemBrowserCat ? 'opacity:1;border-bottom:2px solid var(--gold-bright)' : ''}">
+      ${CAT_LABELS[cat]}
+    </button>`).join('');
+
+  const items = ITEMS_BY_CAT[_itemBrowserCat] || [];
+  const cards = items.map(item => {
+    const owned = equippedIds.has(item.id);
+    const imgUrl = `${base}items/${item.id}.jpg`;
+    const vpNote = item.vp ? ` · +${item.vp}VP` : '';
+    const modStr = item.attrMods ? ' ' + Object.entries(item.attrMods).map(([a,v])=>`${v>0?'+':''}${v} ${a.slice(0,3)}`).join(' ') : '';
+    const armorStr = item.armorBonus ? ` +${item.armorBonus} armor` : '';
+    return `<div class="skill-browser-card ${owned ? 'has-skill' : ''}"
+      onclick="${owned ? `showCardLightbox('${imgUrl}','${item.name}')` : `addEquipItemFromBrowser('${heroId}',${item.id},this)`}"
+      title="${owned ? 'Already equipped — click to enlarge' : `${item.cost}gp · ${item.weight}w${vpNote}${modStr}${armorStr}\nClick to add`}">
+      <img src="${imgUrl}" alt="${item.name}" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="skill-browser-fallback" style="display:none">
+        <div>
+          <div style="font-size:10px;font-weight:bold;margin-bottom:4px;">${item.name}</div>
+          <div style="font-size:9px;color:var(--text-dim)">${item.cost}gp · ${item.weight}w${vpNote}</div>
+          ${modStr ? `<div style="font-size:9px;color:#80c080">${modStr}</div>` : ''}
+        </div>
+      </div>
+      ${owned
+        ? '<div class="skill-browser-owned">✓ Equipped</div>'
+        : `<div class="skill-browser-add">${item.cost}gp · ${item.weight}w${vpNote}</div>`}
     </div>`;
   }).join('');
 
-  picker.innerHTML = `
-    <div style="background:var(--bg-dark);border:1px solid var(--panel-border);padding:10px;max-height:240px;overflow-y:auto;">
-      <div style="font-size:9px;color:var(--text-muted);margin-bottom:8px;font-style:italic;">
-        Items with ⚔ give armor bonus. Items with stat modifiers shown. Equipped items update current stats automatically.
-      </div>
-      ${sections}
+  const modal = document.getElementById('item-browser-modal');
+  modal.innerHTML = `
+    <div class="creator-header">
+      <div class="creator-title">Browse Items — ${h.name}</div>
+      <button class="creator-close"
+        onclick="document.getElementById('item-browser-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div style="display:flex;gap:4px;padding:10px 16px;border-bottom:1px solid var(--border-dim);flex-wrap:wrap;">
+      ${tabs}
+    </div>
+    <div style="padding:6px 16px;font-size:9px;color:var(--text-muted);font-style:italic;">
+      Click a card to add it. VP-granting items shown in gold. Click already-equipped cards to enlarge.
+    </div>
+    <div class="creator-body" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;">
+      ${cards || '<div style="color:var(--text-muted);font-style:italic;font-size:11px;">No items in this category.</div>'}
     </div>`;
-  picker.style.display = 'block';
+}
+
+function addEquipItemFromBrowser(heroId, itemId, cardEl) {
+  addEquipItem(heroId, itemId);
+  // Mark card as owned visually without closing
+  if (cardEl) {
+    cardEl.classList.add('has-skill');
+    const addLabel = cardEl.querySelector('.skill-browser-add');
+    if (addLabel) { addLabel.className = 'skill-browser-owned'; addLabel.textContent = '✓ Equipped'; }
+    // Switch onclick to lightbox only
+    const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
+    const item = ITEM_BY_ID[itemId];
+    cardEl.onclick = () => showCardLightbox(`${base}items/${itemId}.jpg`, item?.name||'');
+    cardEl.title = 'Already equipped — click to enlarge';
+  }
 }
 
 function addEquipItem(heroId, itemId) {
