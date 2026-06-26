@@ -811,6 +811,53 @@ body {
 
 /* Race/class cards in creator */
 .race-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 6px; }
+.race-img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.race-img-card {
+  position: relative; cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color .15s, transform .1s;
+  background: var(--bg-raised);
+}
+.race-img-card img { width: 100%; display: block; }
+.race-img-card:hover { border-color: var(--border-mid); transform: scale(1.03); }
+.race-img-card.selected { border-color: var(--gold-bright); }
+.race-img-card.not-recommended { opacity: .5; }
+.race-img-card.not-recommended.selected { opacity: 1; }
+.race-img-label {
+  font-family: 'Cinzel', serif; font-size: 8px;
+  text-align: center; padding: 3px 2px;
+  color: var(--text-muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.race-img-card.selected .race-img-label { color: var(--gold-bright); }
+.race-img-selected-badge {
+  position: absolute; top: 3px; right: 3px;
+  background: var(--gold-bright); color: #1a0800;
+  font-size: 9px; font-weight: bold;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.race-img-dim-badge {
+  position: absolute; top: 3px; left: 3px;
+  background: rgba(180,60,30,.85); color: white;
+  font-size: 9px; font-weight: bold;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.race-img-fallback {
+  width: 100%; min-height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 9px;
+  color: var(--text-muted); text-align: center; padding: 6px;
+  background: var(--bg-dark);
+}
 .race-card {
   background: var(--bg-raised);
   border: 1px solid var(--border-dim);
@@ -2568,22 +2615,33 @@ function clearPortrait(heroId) {
 
 // ─── Step 1: Race ──────────────────────────────────────────────
 function renderStepRace() {
+  const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/races/';
   const cards = RACE_DB.map(r => {
-    const alignLabel = r.alignment.charAt(0).toUpperCase() + r.alignment.slice(1);
-    return `<div class="race-card ${creatorState.raceId === r.id ? 'selected' : ''}"
-      data-race-id="${r.id}" onclick="selectRace(${r.id})">
-      <div class="race-card-name">${r.name}</div>
-      <span class="race-align-badge align-${r.alignment}">${alignLabel}</span>
-      <div class="race-stat-preview">
-        MOV ${r.attrs.movement.min}-${r.attrs.movement.max} · VIT ${r.attrs.vitality.min}-${r.attrs.vitality.max}<br>
-        Fortune ${r.fortune} · ${r.size}
-      </div>
+    const sel = creatorState.raceId === r.id;
+    const imgUrl = r.cardSiteId ? `${base}${r.cardSiteId}.jpg` : null;
+    return `<div class="race-img-card ${sel ? 'selected' : ''}"
+      data-race-id="${r.id}"
+      onclick="selectRace(${r.id})"
+      title="${r.name}">
+      ${imgUrl
+        ? `<img src="${imgUrl}" alt="${r.name}" loading="lazy"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+           <div class="race-img-fallback" style="display:none">${r.name}</div>`
+        : `<div class="race-img-fallback">${r.name}</div>`}
+      <div class="race-img-label">${r.name}</div>
+      ${sel ? '<div class="race-img-selected-badge">✓</div>' : ''}
     </div>`;
   }).join('');
 
-  const detail = creatorState.raceId ? renderRaceDetail(RACE_DB.find(r => r.id === creatorState.raceId)) : '<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;">Select a race to see details</div>';
+  const sel = creatorState.raceId ? RACE_DB.find(r => r.id === creatorState.raceId) : null;
+  const detail = sel ? renderRaceDetail(sel) : '<div style="color:var(--text-muted);text-align:center;padding:20px;font-style:italic;">Select a race to see details</div>';
 
-  return `<div class="race-grid">${cards}</div><div class="race-detail" id="race-detail">${detail}</div>`;
+  return `
+    <div style="font-size:9px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">
+      Click a card to select. Click again (or the 🔍 button) to enlarge and read the full card.
+    </div>
+    <div class="race-img-grid">${cards}</div>
+    <div class="race-detail" id="race-detail">${detail}</div>`;
 }
 
 function renderRaceDetail(race) {
@@ -2618,10 +2676,28 @@ function renderRaceDetail(race) {
 }
 
 function selectRace(id) {
+  if (creatorState.raceId === id) {
+    // Already selected — click again to zoom
+    const race = RACE_DB.find(r => r.id === id);
+    if (race?.cardSiteId) {
+      const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/races/';
+      showCardLightbox(`${base}${race.cardSiteId}.jpg`, race.name + ' Race Card');
+    }
+    return;
+  }
   creatorState.raceId = id;
-  document.querySelectorAll('.race-card').forEach(el =>
-    el.classList.toggle('selected', parseInt(el.dataset.raceId) === id)
-  );
+  document.querySelectorAll('.race-img-card').forEach(el => {
+    const sel = parseInt(el.dataset.raceId) === id;
+    el.classList.toggle('selected', sel);
+    // Update badge
+    el.querySelector('.race-img-selected-badge')?.remove();
+    if (sel) {
+      const badge = document.createElement('div');
+      badge.className = 'race-img-selected-badge';
+      badge.textContent = '✓';
+      el.appendChild(badge);
+    }
+  });
   document.getElementById('race-detail').innerHTML = renderRaceDetail(RACE_DB.find(r => r.id === id));
   initAttrsFromRace();
 }
@@ -2645,36 +2721,66 @@ function renderStepClass() {
   const race = RACE_DB.find(r => r.id === creatorState.raceId);
   const allowed = race ? race.allowedClasses : [];
   const isAllowed = (cid) => allowed.includes('all') || allowed.includes(cid) || allowed.includes(cid.replace('_',' '));
+  const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/classes/';
 
   const groups = ['fighter','explorer','caster'];
-  const cols = groups.map(g => {
+  const groupLabels = { fighter:'Fighters', explorer:'Explorers', caster:'Spellcasters' };
+  const sections = groups.map(g => {
     const classes = CLASS_DB.filter(c => c.group === g);
-    const header = `<div class="class-group-header ${g}">${g.toUpperCase()}S</div>`;
-    const opts = classes.map(c => {
+    const cards = classes.map(c => {
       const ok = isAllowed(c.id) || isAllowed(c.name.toLowerCase());
-      const sel = creatorState.classId === c.id ? 'selected' : '';
-      const dis = !ok ? 'disabled' : '';
-      const cardUrl = c.cardSiteId
-        ? `https://squidboy30.github.io/DUN-Generator/src/cards/classes/${c.cardSiteId}.jpg`
-        : null;
-      const cardBtn = cardUrl
-        ? `<div class="class-opt-card-btn" onclick="event.stopPropagation();showCardLightbox('${cardUrl}','${c.name} Class Card')">🃏 View Card</div>`
-        : '';
-      return `<div class="class-opt ${sel} ${dis}" data-class-id="${c.id}"
-        onclick="${ok ? `selectClass('${c.id}')` : ''}">
-        <div class="class-opt-name">${c.name}${c.isCaster ? ' ✨' : ''}</div>
-        <div class="class-opt-desc">${c.desc}</div>
-        ${cardBtn}
+      const sel = creatorState.classId === c.id;
+      const imgUrl = c.cardSiteId ? `${base}${c.cardSiteId}.jpg` : null;
+      return `<div class="race-img-card ${sel ? 'selected' : ''} ${!ok ? 'not-recommended' : ''}"
+        data-class-id="${c.id}"
+        onclick="selectClassCard('${c.id}')"
+        title="${c.name}${!ok ? ' (not recommended for this race)' : ''}${c.isCaster ? ' — Spellcaster' : ''}">
+        ${imgUrl
+          ? `<img src="${imgUrl}" alt="${c.name}" loading="lazy"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+             <div class="race-img-fallback" style="display:none">${c.name}</div>`
+          : `<div class="race-img-fallback">${c.name}</div>`}
+        <div class="race-img-label">${c.name}${c.isCaster ? ' ✨' : ''}</div>
+        ${sel ? '<div class="race-img-selected-badge">✓</div>' : ''}
+        ${!ok ? '<div class="race-img-dim-badge">!</div>' : ''}
       </div>`;
     }).join('');
-    return `<div>${header}${opts}</div>`;
+    return `<div style="margin-bottom:16px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--text-muted);
+        border-bottom:1px solid var(--border-dim);padding-bottom:4px;margin-bottom:8px;">${groupLabels[g]}</div>
+      <div class="race-img-grid">${cards}</div>
+    </div>`;
   }).join('');
 
-  return `<div class="class-columns">${cols}</div>
-    <div style="margin-top:12px;font-size:10px;color:var(--text-muted);font-style:italic;">
-      Greyed out classes are not recommended for your race (but you can override this rule).
-      ✨ = Spellcaster (has Mana pool from creation).
-    </div>`;
+  return `
+    <div style="font-size:9px;color:var(--text-muted);font-style:italic;margin-bottom:10px;">
+      Click to select. Click again to enlarge. ✨ = Spellcaster. ! = not recommended for your race.
+    </div>
+    ${sections}`;
+}
+
+function selectClassCard(id) {
+  if (creatorState.classId === id) {
+    // Already selected — zoom
+    const cls = CLASS_DB.find(c => c.id === id);
+    if (cls?.cardSiteId) {
+      const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/classes/';
+      showCardLightbox(`${base}${cls.cardSiteId}.jpg`, cls.name + ' Class Card');
+    }
+    return;
+  }
+  creatorState.classId = id;
+  document.querySelectorAll('.race-img-card[data-class-id]').forEach(el => {
+    const sel = el.dataset.classId === id;
+    el.classList.toggle('selected', sel);
+    el.querySelector('.race-img-selected-badge')?.remove();
+    if (sel) {
+      const badge = document.createElement('div');
+      badge.className = 'race-img-selected-badge';
+      badge.textContent = '✓';
+      el.appendChild(badge);
+    }
+  });
 }
 
 function selectClass(id) {
