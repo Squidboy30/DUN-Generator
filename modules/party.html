@@ -2281,7 +2281,8 @@ const CLASS_DB = [
   { id:"battle_wizard", name:"Battle Wizard",   group:"caster",   isCaster:true,  skillRange:[1,2], bonusAttr:null,           startingSkill:"Hardy",         desc:"Combat-capable spellcaster.", startMana:5 },
 ];
 
-,
+const ATTR_META = [
+  { key:"movement",      label:"Movement",       icon:"🥾", note:"squares per turn",           devPts:true  },
   { key:"combatSkill",   label:"Combat Skill",   icon:"⚔",  note:"melee attacks",          devPts:true  },
   { key:"strength",      label:"Strength",       icon:"💪", note:"damage & carry",          devPts:true  },
   { key:"shootingSkill", label:"Shooting Skill", icon:"🎯", note:"ranged attacks",          devPts:true  },
