@@ -3724,10 +3724,8 @@ function openDetail(id) {
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:8px;">
           VP: ${isEdit
-            ? `<input class="attr-edit-input" type="number" min="0" value="${h.vp}"
-                onchange="editVPDirect('${h.id}',this.value)"
-                style="width:50px;font-size:14px;">`
-            : `<strong style="color:var(--gold-light);font-size:16px;">${h.vp}</strong>`}
+            ? '<input class="attr-edit-input" type="number" min="0" value="' + h.vp + '" onchange="editVPDirect(\'' + h.id + '\',this.value)" style="width:50px;font-size:14px;">'
+            : '<strong style="color:var(--gold-light);font-size:16px;">' + h.vp + '</strong>'}
         </div>
 
         <hr class="section-divider">
