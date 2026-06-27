@@ -1762,7 +1762,8 @@ function renderDunHeroCard(h, inParty) {
   // Alignment pip
   const alignCls = race.alignment === 'good' ? 'align-good' : race.alignment === 'evil' ? 'align-evil' : 'align-neutral';
 
-  // Stat row builder: left col = [value][icon], right col = [icon][value]
+  // Stat row builder: icons on OUTSIDE, numbers next to portrait
+  // left col = [icon][value], right col = [value][icon]
   const statRow = (key, icon, side) => {
     const base = h.attrs[key] ?? 0;
     const val  = cur[key] ?? base;
@@ -1770,13 +1771,17 @@ function renderDunHeroCard(h, inParty) {
     const modCls = diff > 0 ? 'mod-up' : diff < 0 ? 'mod-down' : '';
     const box  = `<div class="stat-box ${modCls}">${val}</div>`;
     const ico  = `<div class="stat-dun-icon">${icon}</div>`;
-    return `<div class="stat-row ${side}">${side === 'left' ? box + ico : ico + box}</div>`;
+    // icons outside: left=[ico][box], right=[box][ico]
+    return `<div class="stat-row ${side}">${side === 'left' ? ico + box : box + ico}</div>`;
   };
 
   // DUN-accurate icons — matching physical card symbols
   const DUN_ICO = {
     // LEFT COLUMN: boot=Move, swords=CS, fist=Str, target=Shoot, breastplate=NA
-    movement:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="11.5" cy="3" r="1.7"/><line x1="11.5" y1="4.7" x2="10" y2="9.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="10.5" y1="6.5" x2="13.5" y2="9" stroke="white" stroke-width="1.3" stroke-linecap="round"/><line x1="10.5" y1="6.5" x2="7.5" y2="8.5" stroke="white" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="9.5" x2="12" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="14" x2="13.5" y2="17.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/><line x1="10" y1="9.5" x2="8" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="14" x2="6" y2="17.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+    movement:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <!-- side-profile boot/shoe -->
+      <path d="M4 15.5 H14.5 C15.5 15.5 16 15 16 14 C16 13.2 15.5 12.5 14.5 12.5 L12.5 12.5 L12.5 8 C12.5 7.5 12 7 11.5 7 L9.5 7 L9.5 5 C9.5 4.5 9 4 8.5 4 L7 4 C6.5 4 6 4.5 6 5 L6 12.5 L4 12.5 C3 12.5 3 13 3 13.5 L3 14.5 C3 15 3.5 15.5 4 15.5 Z"/>
+    </svg>`,
     combatSkill:  `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
       <path d="M3 2L10.5 12L16 18L14 18L9.5 13.5L3.5 4L3 2Z"/>
       <path d="M17 2L9.5 12L4 18L6 18L10.5 13.5L16.5 4L17 2Z"/>
@@ -5115,7 +5120,7 @@ renderPartiesList();
 const ATTR_ICONS = {
 
     // LEFT COLUMN: boot=Move, swords=CS, fist=Str, target=Shoot, breastplate=NA
-    movement:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="11.5" cy="3" r="1.7"/><line x1="11.5" y1="4.7" x2="10" y2="9.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="10.5" y1="6.5" x2="13.5" y2="9" stroke="white" stroke-width="1.3" stroke-linecap="round"/><line x1="10.5" y1="6.5" x2="7.5" y2="8.5" stroke="white" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="9.5" x2="12" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="14" x2="13.5" y2="17.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/><line x1="10" y1="9.5" x2="8" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="14" x2="6" y2="17.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+    movement:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M4 15.5 H14.5 C15.5 15.5 16 15 16 14 C16 13.2 15.5 12.5 14.5 12.5 L12.5 12.5 L12.5 8 C12.5 7.5 12 7 11.5 7 L9.5 7 L9.5 5 C9.5 4.5 9 4 8.5 4 L7 4 C6.5 4 6 4.5 6 5 L6 12.5 L4 12.5 C3 12.5 3 13 3 13.5 L3 14.5 C3 15 3.5 15.5 4 15.5 Z"/></svg>`,
     combatSkill:  `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
       <path d="M3 2L10.5 12L16 18L14 18L9.5 13.5L3.5 4L3 2Z"/>
       <path d="M17 2L9.5 12L4 18L6 18L10.5 13.5L16.5 4L17 2Z"/>
@@ -5129,17 +5134,9 @@ const ATTR_ICONS = {
     agility:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
       <path d="M15.5 9.5C13.5 5 11 3 8.5 3C7 3 6 4 6 5C6 5 8 4.5 9.5 6.5C9.5 6.5 8 6 7 7.5C7 7.5 9 7.5 10.5 9.5C10.5 9.5 8 9 7 11C7 11 9 10.5 11 12.5C11 12.5 8.5 12.5 7.5 14.5C7.5 14.5 10 14 12 16.5C13.5 15 14.5 12.5 15.5 9.5Z"/>
     </svg>`,
-    intelligence:  `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- main brain mass - left hemisphere side view -->
-      <path d="M4 11 C4 7 6 4 9 4 C11 4 12.5 5 13 6.5 C14 6 15.5 6.5 16 8 C17 8.5 17.5 10 17 11.5 C17.5 12.5 17 14 15.5 14.5 C15 15.5 13.5 16 12 15.5 C11 16.5 9 16.5 8 15.5 C6 15.5 4.5 14 4 12.5 Z" fill="white"/>
-      <!-- brain fold lines - characteristic wrinkles -->
-      <path d="M7 6.5 C7.5 7.5 7 9 7.5 10" stroke="#3a2010" stroke-width="0.7" stroke-linecap="round" fill="none"/>
-      <path d="M10 5 C10.5 6.5 10 8 10.5 9.5" stroke="#3a2010" stroke-width="0.7" stroke-linecap="round" fill="none"/>
-      <path d="M13 7 C13 8.5 12.5 10 13 11.5" stroke="#3a2010" stroke-width="0.7" stroke-linecap="round" fill="none"/>
-      <path d="M5.5 10 C6.5 10.5 8 10 9 11" stroke="#3a2010" stroke-width="0.7" stroke-linecap="round" fill="none"/>
-      <path d="M9 12 C10.5 12 12 12 13.5 12.5" stroke="#3a2010" stroke-width="0.7" stroke-linecap="round" fill="none"/>
-      <!-- brain stem -->
-      <path d="M8 15.5 L8 18 L10 18" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+    intelligence:  `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.5 4C5 4 4 5 4 6.5C4 7.5 4.5 8.3 5.2 8.8C4.5 9.3 4 10.1 4 11C4 12.5 5.2 13.5 6.5 13.5H7V16C7 16.6 7.4 17 8 17H12C12.6 17 13 16.6 13 16V13.5H13.5C14.8 13.5 16 12.5 16 11C16 10.1 15.5 9.3 14.8 8.8C15.5 8.3 16 7.5 16 6.5C16 5 15 4 13.5 4C13 4 12.5 4.2 12.1 4.5C11.6 4.2 11 4 10 4C9 4 8.4 4.2 7.9 4.5C7.5 4.2 7 4 6.5 4Z" fill="white"/>
+      <path d="M10 4V17M7 8H13M7 11H13" stroke="rgba(30,15,5,0.35)" stroke-width="0.8" fill="none"/>
     </svg>`,
     mana:         `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10 17 4 13 4 8C4 5.5 6.5 4 10 4C10 4 8 5.5 8 8C8 10 10 12 10 14.5C10 12 12 10 12 8C12 5.5 10 4 10 4C13.5 4 16 5.5 16 8C16 13 10 17 10 17z"/><path d="M10 4C10 4 9 5 9 7C9 8.5 10 10 10 10C10 10 11 8.5 11 7C11 5 10 4 10 4z" fill="#8a6020"/></svg>`,
     courage:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
