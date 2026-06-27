@@ -288,6 +288,42 @@ body {
 .stat-box.mod-up   { background: #b8f0b8; color: #0a3010; }
 .stat-box.mod-down { background: #f0b8b8; color: #3a0a0a; }
 
+/* Permanent upgrade (XP / skill bonus) — single green value */
+.stat-box.stat-permanent {
+  background: #1a3a1a; color: #80e080;
+  border-color: #3a8a3a;
+}
+
+/* Temporary equipment change — split box with diagonal */
+.stat-box.stat-split {
+  width: 36px; height: 24px; padding: 0;
+  position: relative; overflow: hidden;
+  font-size: 10px;
+}
+.stat-split-old {
+  position: absolute; left: 2px; bottom: 2px;
+  font-size: 9px; color: #7a5020; line-height: 1;
+}
+.stat-split-new {
+  position: absolute; right: 2px; top: 2px;
+  font-size: 11px; font-weight: 700; line-height: 1;
+}
+.stat-box.stat-split.equip-up   .stat-split-new { color: #0a3010; }
+.stat-box.stat-split.equip-down .stat-split-new { color: #3a0a0a; }
+.stat-box.stat-split.equip-up   { background: #d8f0d8; border-color: #4a8a4a; }
+.stat-box.stat-split.equip-down { background: #f0d8d8; border-color: #8a4a4a; }
+/* Diagonal line */
+.stat-split-divider {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 0.6px),
+    #8a6220 calc(50% - 0.6px),
+    #8a6220 calc(50% + 0.6px),
+    transparent calc(50% + 0.6px)
+  );
+}
+
 /* DUN icon cell */
 .stat-dun-icon {
   width: 24px; height: 24px; flex-shrink: 0;
@@ -1763,16 +1799,39 @@ function renderDunHeroCard(h, inParty) {
   const alignCls = race.alignment === 'good' ? 'align-good' : race.alignment === 'evil' ? 'align-evil' : 'align-neutral';
 
   // Stat row builder: icons on OUTSIDE, numbers next to portrait
-  // left col = [icon][value], right col = [value][icon]
+  // left col = [icon][box], right col = [box][icon]
   const statRow = (key, icon, side) => {
-    const base = h.attrs[key] ?? 0;
-    const val  = cur[key] ?? base;
-    const diff = val - base;
-    const modCls = diff > 0 ? 'mod-up' : diff < 0 ? 'mod-down' : '';
-    const box  = `<div class="stat-box ${modCls}">${val}</div>`;
-    const ico  = `<div class="stat-dun-icon">${icon}</div>`;
+    const base      = h.attrs[key] ?? 0;
+    const val       = cur[key] ?? base;
+    const equipMod  = (cur._equipDelta || {})[key] || 0;
+    const skillMod  = (cur._skillDelta || {})[key] || 0;
+    // XP permanent upgrade: base itself was raised, no delta in cur
+    const xpUpgraded = !!(h.xpUpgrades || {})[key];
+
+    let box;
+    if (equipMod !== 0) {
+      // Temporary equipment change — split box with diagonal line
+      // base (before equip) on left, current on right
+      const baseBeforeEquip = base - skillMod; // base without skills too? No: base is already h.attrs which includes XP upgrades and skills don't change h.attrs. Actually base = h.attrs[key] which is the permanent value. cur includes skill + equip mods.
+      const permVal = base + skillMod; // permanent value (base + skills)
+      const dispClass = equipMod > 0 ? 'equip-up' : 'equip-down';
+      box = `<div class="stat-box stat-split ${dispClass}" title="Base: ${permVal} | With equipment: ${val}">
+        <span class="stat-split-old">${permVal}</span>
+        <span class="stat-split-divider"></span>
+        <span class="stat-split-new">${val}</span>
+      </div>`;
+    } else if (skillMod !== 0 || xpUpgraded) {
+      // Permanent change (skill bonus or XP upgrade) — single green value
+      box = `<div class="stat-box stat-permanent" title="${xpUpgraded ? 'XP upgraded' : 'Skill bonus +'+skillMod}">${val}</div>`;
+    } else {
+      box = `<div class="stat-box">${val}</div>`;
+    }
+
+    const ico = `<div class="stat-dun-icon">${icon}</div>`;
     // icons outside: left=[ico][box], right=[box][ico]
+    // right col uses row-reverse CSS so box+ico renders as ico→box visually — keep consistent
     return `<div class="stat-row ${side}">${side === 'left' ? ico + box : box + ico}</div>`;
+  };
   };
 
   // DUN-accurate icons — matching physical card symbols
@@ -1867,7 +1926,7 @@ function renderDunHeroCard(h, inParty) {
         ${statRow('intelligence',  ICO.brain,        'right')}
         ${h.attrs.mana != null
           ? statRow('mana', ICO.mana, 'right')
-          : `<div class="stat-row right"><div class="stat-dun-icon" style="opacity:.4">${ICO.mana}</div><div class="stat-box" style="color:#888;font-size:11px;">—</div></div>`}
+          : `<div class="stat-row right"><div class="stat-box" style="color:#888;font-size:11px;">—</div><div class="stat-dun-icon" style="opacity:.4">${ICO.mana}</div></div>`}
         ${statRow('courage',       ICO.courage,      'right')}
         ${statRow('vitality',      ICO.vitality,     'right')}
       </div>
@@ -3272,30 +3331,41 @@ const SKILL_ATTR_BONUSES = {
 };
 
 function calcCurrentAttrs(baseAttrs, equippedItemIds, skillNames) {
-  const cur = { ...baseAttrs };
+  const cur      = { ...baseAttrs };
+  const equipDelta = {};   // temporary (equipment) — shown as split box
+  const skillDelta = {};   // permanent (skills) — shown as green single value
+
   cur.totalArmor = cur.naturalArmor || 0;
 
-  // Apply skill bonuses
+  // Skill bonuses — PERMANENT
   for (const skillName of (skillNames || [])) {
     const bonus = SKILL_ATTR_BONUSES[skillName];
     if (!bonus) continue;
     for (const [attr, mod] of Object.entries(bonus)) {
-      cur[attr] = (cur[attr] ?? 0) + mod;
+      cur[attr]        = (cur[attr]        ?? 0) + mod;
+      skillDelta[attr] = (skillDelta[attr] ?? 0) + mod;
       if (attr === 'naturalArmor') cur.totalArmor = (cur.totalArmor || 0) + mod;
     }
   }
 
-  // Apply equipment bonuses
+  // Equipment bonuses — TEMPORARY
   for (const itemId of (equippedItemIds || [])) {
     const item = ITEM_BY_ID[itemId];
     if (!item) continue;
     if (item.attrMods) {
       for (const [attr, mod] of Object.entries(item.attrMods)) {
-        cur[attr] = (cur[attr] ?? 0) + mod;
+        cur[attr]        = (cur[attr]        ?? 0) + mod;
+        equipDelta[attr] = (equipDelta[attr] ?? 0) + mod;
       }
     }
-    if (item.armorBonus) cur.totalArmor += item.armorBonus;
+    if (item.armorBonus) {
+      cur.totalArmor          += item.armorBonus;
+      equipDelta.naturalArmor  = (equipDelta.naturalArmor ?? 0) + item.armorBonus;
+    }
   }
+
+  cur._equipDelta = equipDelta;
+  cur._skillDelta = skillDelta;
   return cur;
 }
 
