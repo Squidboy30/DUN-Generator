@@ -2302,7 +2302,7 @@ const RACE_DB = [
     startingSkills:["Leech Vitality","Sharp Senses","Regeneration"], allowedClasses:["warrior","knight","necromancer","sorcerer"],
     special:"Masters of the skies. Cannot reach Intelligence 6. Lose Nature skills in daylight. Can use \"Fangs\"." },
 
-  { id:28, cardSiteId:None, name:"Renegade Dwarves", alignment:"evil",    size:"average", fortune:4,  naturalArmor:3,
+  { id:28, cardSiteId:null, name:"Renegade Dwarves", alignment:"evil",    size:"average", fortune:4,  naturalArmor:3,
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:2}, shootingSkill:{min:3,max:5,dc:3}, agility:{min:2,max:3,dc:3}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:5,max:7,dc:2} },
     startingSkills:["Tough","Cruel","Skilled Hands"], allowedClasses:["barbarian","warrior","paladin","gladiator","assassin","scout","rogue","ranger","bard","runic_master","sorcerer"],
     special:"Slow, dexterous, brave and very tough." },
@@ -2317,40 +2317,45 @@ const RACE_DB = [
     startingSkills:["Large","Fearsome","Onslaught","Clumsy Hands","Berserker"], allowedClasses:["barbarian","warrior"],
     special:"Huge and uncontrollable. Cannot wear heavy armor. Can use weapon \"Horns\"." },
 
-  { id:32, cardSiteId:None, name:"Aranhaiks",        alignment:"evil",    size:"average", fortune:4,  naturalArmor:3,
+  { id:32, cardSiteId:null, name:"Aranhaiks",        alignment:"evil",    size:"average", fortune:4,  naturalArmor:3,
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:3,max:5,dc:1}, intelligence:{min:3,max:5,dc:2}, mana:null, courage:{min:3,max:4,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Pathfinder (spiderwebs)","Climber","Poisonous (Fangs)"], allowedClasses:["warrior","assassin","scout","ranger","animist"],
     special:"Spider-folk. May use \"Fangs\"." },
 
-  { id:33, cardSiteId:None, name:"Kobolds",          alignment:"evil",    size:"small",   fortune:6,  naturalArmor:4,
+  { id:33, cardSiteId:null, name:"Kobolds",          alignment:"evil",    size:"small",   fortune:6,  naturalArmor:4,
     attrs:{ movement:{min:4,max:5,dc:1}, combatSkill:{min:3,max:4,dc:2}, strength:{min:2,max:3,dc:3}, shootingSkill:{min:2,max:4,dc:2}, agility:{min:3,max:4,dc:1}, intelligence:{min:3,max:4,dc:2}, mana:null, courage:{min:2,max:4,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:3,max:4,dc:2} },
     startingSkills:["Small","Stealth","Slippery"], allowedClasses:["warrior","assassin","scout","rogue","animist","sorcerer"],
     special:"Small reptilian subterfuge experts." },
 
-  { id:34, cardSiteId:None, name:"Zombies",          alignment:"evil",    size:"average", fortune:6,  naturalArmor:4,
+  { id:34, cardSiteId:null, name:"Zombies",          alignment:"evil",    size:"average", fortune:6,  naturalArmor:4,
     attrs:{ movement:{min:3,max:5,dc:2}, combatSkill:{min:3,max:4,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:1,max:3,dc:3}, agility:{min:1,max:3,dc:3}, intelligence:{min:2,max:3,dc:3}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:5,max:7,dc:2} },
     startingSkills:["Undead","Stupid"], allowedClasses:["warrior","gladiator","scout","animist"],
     special:"Decaying warriors. While searching corpses recover 1 vitality per 2 coins found." },
 
-  { id:35, cardSiteId:None, name:"Iron Souls",       alignment:"neutral", size:"average", fortune:3,  naturalArmor:5,
+  { id:35, cardSiteId:null, name:"Iron Souls",       alignment:"neutral", size:"average", fortune:3,  naturalArmor:5,
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:3,dc:2}, agility:{min:2,max:3,dc:2}, intelligence:{min:2,max:3,dc:2}, mana:null, courage:{min:3,max:5,dc:1}, naturalArmor:{min:5,max:5,dc:0}, vitality:{min:5,max:8,dc:1} },
     startingSkills:[], allowedClasses:["warrior","gladiator","scout","runic_master"],
     special:"Magic-forged beings. Cannot wear armor. Ignore \"Fearsome\" from size ≤ self." },
 
-  { id:36, cardSiteId:None, name:"Half-Elves",       alignment:"neutral", size:"average", fortune:5,  naturalArmor:3,
+  { id:36, cardSiteId:null, name:"Half-Elves",       alignment:"neutral", size:"average", fortune:5,  naturalArmor:3,
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:4,dc:2}, shootingSkill:{min:3,max:5,dc:2}, agility:{min:3,max:5,dc:2}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:5,dc:2} },
     startingSkills:[], allowedClasses:["warrior","paladin","gladiator","scout","ranger","bard","wizard","animist","sorcerer"],
     special:"Partially elven. Begin with one class-appropriate skill of player\'s choice." },
 
-  { id:41, cardSiteId:None, name:"The Soulless",     alignment:"evil",    size:"average", fortune:5,  naturalArmor:3,
+  { id:41, cardSiteId:null, name:"The Soulless",     alignment:"evil",    size:"average", fortune:5,  naturalArmor:3,
     attrs:{ movement:{min:4,max:5,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:2,max:3,dc:3}, agility:{min:1,max:3,dc:3}, intelligence:{min:2,max:4,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:4,max:6,dc:2} },
     startingSkills:["Undead","Fearsome"], allowedClasses:["warrior","knight","necromancer","sorcerer"],
     special:"Risen dead heroes. May learn \"Regeneration\". Cannot recover vitality with common objects." },
 
-  { id:30, cardSiteId:None, name:"Mumaks",           alignment:"evil",    size:"large",   fortune:2,  naturalArmor:4,
+  { id:30, cardSiteId:null, name:"Mumaks",           alignment:"evil",    size:"large",   fortune:2,  naturalArmor:4,
     attrs:{ movement:{min:5,max:6,dc:2}, combatSkill:{min:3,max:4,dc:3}, strength:{min:6,max:8,dc:2}, shootingSkill:{min:1,max:3,dc:3}, agility:{min:1,max:3,dc:3}, intelligence:{min:3,max:4,dc:3}, mana:null, courage:{min:3,max:5,dc:2}, naturalArmor:{min:4,max:4,dc:0}, vitality:{min:8,max:12,dc:2} },
     startingSkills:["Large","Sweep","Onslaught","Fearsome"], allowedClasses:["barbarian","warrior","gladiator","animist"],
     special:"Powerful. Fangs sweep enemies. Cannot reach Intelligence 6." },
+
+  { id:27, cardSiteId:null, name:"Shardminds",       alignment:"neutral", size:"average", fortune:6,  naturalArmor:3,
+    attrs:{ movement:{min:4,max:6,dc:2}, combatSkill:{min:3,max:5,dc:2}, strength:{min:3,max:5,dc:2}, shootingSkill:{min:3,max:4,dc:2}, agility:{min:2,max:4,dc:2}, intelligence:{min:4,max:5,dc:2}, mana:null, courage:{min:4,max:5,dc:2}, naturalArmor:{min:3,max:3,dc:0}, vitality:{min:3,max:6,dc:2} },
+    startingSkills:[], allowedClasses:["warrior","gladiator","scout","runic_master","wizard"],
+    special:"Extraordinary beings. Immune to poisons, diseases and offensive spells targeting Natural Armor. Critical hits negate armor benefits." },
 ];
 
 
