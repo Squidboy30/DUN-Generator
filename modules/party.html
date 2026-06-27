@@ -4933,6 +4933,9 @@ function learnSpellFromBrowser(heroId, spellName, cardEl) {
   save();
   renderPartyView();
   if (document.getElementById('xp-award-list')) renderXpView();
+
+  // Update card visually
+  if (cardEl) {
     cardEl.classList.add('has-skill');
     const btn = cardEl.querySelector('.skill-browser-add-btn');
     if (btn) {
