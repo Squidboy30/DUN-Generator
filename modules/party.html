@@ -634,6 +634,7 @@ body {
 .attr-sheet-row:hover { background: rgba(34,26,12,.5); }
 .attr-sheet-name { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
 .attr-sheet-name svg { width: 11px; height: 11px; flex-shrink: 0; }
+.attr-name svg { width: 12px; height: 12px; flex-shrink: 0; vertical-align: middle; }
 .attr-upgrade-btn {
   width: 22px; height: 22px;
   background: var(--bg-dark);
@@ -976,9 +977,10 @@ body {
   font-size: 11px;
   color: var(--text-bone);
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
 }
+.attr-builder-name svg { width: 14px; height: 14px; flex-shrink: 0; }
 .attr-builder-name em {
   font-size: 9px;
   color: var(--text-dim);
@@ -2020,7 +2022,7 @@ function renderXpView() {
 
         return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);${alreadyUsed?'opacity:.4':''}">
           <div style="flex:1;font-size:10px;color:${canUpgrade?'var(--text-bone)':'var(--text-dim)'};">
-            ${ATTR_ICONS[a.icon]||a.icon} ${a.label}
+            ${ATTR_ICONS[a.icon] ? `<span style="display:inline-flex;width:14px;height:14px;flex-shrink:0;vertical-align:middle;">${ATTR_ICONS[a.icon]}</span>` : a.icon} ${a.label}
             <span style="font-size:9px;color:var(--text-muted);margin-left:4px;">${cur} → ${cur+1}</span>
             ${alreadyUsed?'<span style="font-size:8px;color:#c06040;margin-left:4px;">✓ used (once only)</span>':''}
           </div>
@@ -2800,7 +2802,7 @@ function renderRaceDetail(race) {
     const dots = at.dc > 0 ? '●'.repeat(at.dc) : '—';
     const range = at.min === at.max ? `${at.min}` : `${at.min} – ${at.max}`;
     return `<div class="attr-row">
-      <span class="attr-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}</span>
+      <span class="attr-name">${ATTR_ICONS[a.icon] ? `<span style="display:inline-flex;width:14px;height:14px;flex-shrink:0;vertical-align:middle;">${ATTR_ICONS[a.icon]}</span>` : a.icon} ${a.label}</span>
       <span class="attr-range">${range}</span>
       <span class="attr-cost"><span class="attr-dots">${dots}</span></span>
     </div>`;
@@ -2952,7 +2954,7 @@ function renderStepAttrs() {
     // Dexterity and Perception: start at 0, skill-only, not on race card
     if (a.key === 'dexterity' || a.key === 'perception') {
       return `<div class="attr-builder-row">
-        <div class="attr-builder-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}<em>${a.note}</em></div>
+        <div class="attr-builder-name">${ATTR_ICONS[a.icon] ? `<span style="display:inline-flex;width:14px;height:14px;flex-shrink:0;vertical-align:middle;">${ATTR_ICONS[a.icon]}</span>` : a.icon} ${a.label}<em>${a.note}</em></div>
         <div class="attr-builder-val" style="color:var(--text-muted)">0</div>
         <div class="attr-builder-range" style="color:#6a5030">skill-only</div>
         <div class="attr-cost-label" style="font-size:9px;color:#6a5030">modified by skills</div>
@@ -2963,7 +2965,7 @@ function renderStepAttrs() {
       const val = creatorState.attrs[a.key] ?? at?.min ?? 0;
       if (!at) return '';
       return `<div class="attr-builder-row">
-        <div class="attr-builder-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}<em>${a.note}</em></div>
+        <div class="attr-builder-name">${ATTR_ICONS[a.icon] ? `<span style="display:inline-flex;width:14px;height:14px;flex-shrink:0;vertical-align:middle;">${ATTR_ICONS[a.icon]}</span>` : a.icon} ${a.label}<em>${a.note}</em></div>
         <div class="attr-builder-val" style="color:var(--text-muted)">${val}</div>
         <div class="attr-builder-range">(fixed)</div>
         <div class="attr-cost-label" style="font-size:9px;color:#6a5030">cannot change</div>
@@ -2979,7 +2981,7 @@ function renderStepAttrs() {
     const canDec = cur > at.min;
 
     return `<div class="attr-builder-row">
-      <div class="attr-builder-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}<em>${a.note}</em></div>
+      <div class="attr-builder-name">${ATTR_ICONS[a.icon] ? `<span style="display:inline-flex;width:14px;height:14px;flex-shrink:0;vertical-align:middle;">${ATTR_ICONS[a.icon]}</span>` : a.icon} ${a.label}<em>${a.note}</em></div>
       <button class="attr-btn" ${canDec ? '' : 'disabled'} onclick="changeAttr('${a.key}',-1)">−</button>
       <div class="attr-builder-val">${cur}</div>
       <button class="attr-btn" ${canInc ? '' : 'disabled'} onclick="changeAttr('${a.key}',1)">+</button>
@@ -3722,7 +3724,7 @@ function renderStepReview() {
     const val = creatorState.attrs[a.key];
     if (val == null) return '';
     return `<div class="attr-row">
-      <span class="attr-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}</span>
+      <span class="attr-name">${ATTR_ICONS[a.icon] ? `<span style="display:inline-flex;width:14px;height:14px;flex-shrink:0;vertical-align:middle;">${ATTR_ICONS[a.icon]}</span>` : a.icon} ${a.label}</span>
       <span class="attr-range" style="font-size:14px;color:var(--gold-light)">${val}</span>
     </div>`;
   }).join('');
@@ -3938,7 +3940,7 @@ function openDetail(id) {
     }
 
     return `<div class="attr-sheet-row" title="${note||''}">
-      <span class="attr-sheet-name">${icon} ${label}</span>
+      <span class="attr-sheet-name"><span style="display:inline-flex;width:13px;height:13px;flex-shrink:0;vertical-align:middle;">${icon}</span> ${label}</span>
       ${baseHTML}
       ${nowHTML}
       ${upgradeBtn}
