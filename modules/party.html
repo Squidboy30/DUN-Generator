@@ -1831,9 +1831,10 @@ function renderDunHeroCard(h, inParty) {
     }
 
     const ico = `<div class="stat-dun-icon">${icon}</div>`;
-    // icons outside: left=[ico][box], right=[box][ico]
-    // right col uses row-reverse CSS so box+ico renders as ico→box visually — keep consistent
-    return `<div class="stat-row ${side}">${side === 'left' ? ico + box : box + ico}</div>`;
+    // icons outside, numbers beside portrait:
+    // left col:  [ico][box]  → visually: ico | box | PORTRAIT
+    // right col: [ico][box] + row-reverse → visually: PORTRAIT | box | ico
+    return `<div class="stat-row ${side}">${ico}${box}</div>`;
   };
 
   // DUN-accurate icons — matching physical card symbols
