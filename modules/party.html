@@ -2073,23 +2073,23 @@ function renderXpView() {
   }
 
   el.innerHTML = `
-    <div style="background:var(--bg-raised);border:1px solid var(--border-dim);padding:10px 16px;margin-bottom:16px;font-size:10px;color:var(--text-muted);line-height:1.6;">
+    <div style="background:var(--bg-raised);border:1px solid var(--border-dim);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--text-muted);line-height:1.8;">
       <strong style="color:var(--text-bone);">Rulebook p.80 — Character Evolution:</strong>
       Every <strong style="color:var(--gold-bright)">3 XP</strong> = 1 Dev Point = 1 upgrade = <strong style="color:var(--gold-bright)">+2 VP</strong>.<br>
-      Upgrades: <em>attribute +1</em> (race max · <strong>once per attribute</strong> · costs dev pts per race card) ·
-      <em>skill</em> (max new = Int×2) · <em>+1 Fortune</em> (max +2 above initial, +1 for Large/Invulnerable/Fortune≤3) ·
-      <em>spell</em> (School of Magic, +2 Mana, limit Int×3).<br>
+      Upgrades: <em>attribute +1</em> (race max · <strong>once per attribute</strong>) ·
+      <em>skill</em> (max new = Int×2) · <em>+1 Fortune</em> (max +2 above initial) ·
+      <em>spell</em> (+2 Mana, limit Int×3).<br>
       Dexterity &amp; Perception: skills only. Natural Armor: permanent.
     </div>
     ${pool.map(h => {
       const race = RACE_DB.find(r=>r.id===h.raceId) || {};
       const cls  = CLASS_DB.find(c=>c.id===h.classId) || {};
-      const devPts     = Math.floor(h.xp / 3);
+      const devPts      = Math.floor(h.xp / 3);
       const xpRemainder = h.xp % 3;
 
-      // Build upgradable attributes with race-specific dev-point costs
-      // p.80: each attribute can only be raised ONCE via XP
       if (!h.xpUpgrades) h.xpUpgrades = {};
+
+      // ── Attribute rows ──────────────────────────────────────────
       const upgradeRows = ATTR_META.filter(a => {
         if (!a.devPts) return false;
         const at = race.attrs?.[a.key];
@@ -2097,89 +2097,118 @@ function renderXpView() {
         const cur = h.attrs[a.key] ?? at.min ?? 0;
         return cur < at.max;
       }).map(a => {
-        const at    = race.attrs[a.key];
-        const cur   = h.attrs[a.key] ?? at.min ?? 0;
-        let   dc    = at.dc;
+        const at         = race.attrs[a.key];
+        const cur        = h.attrs[a.key] ?? at.min ?? 0;
+        let   dc         = at.dc;
         if (cls.bonusAttr === a.key && cur === at.min) dc = Math.max(1, dc - 1);
         const xpNeeded   = dc * 3;
         const alreadyUsed = !!h.xpUpgrades[a.key];
         const canUpgrade  = !alreadyUsed && devPts >= dc;
 
-        return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);${alreadyUsed?'opacity:.4':''}">
-          <div style="flex:1;font-size:10px;color:${canUpgrade?'var(--text-bone)':'var(--text-dim)'};">
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-dim);${alreadyUsed?'opacity:.4':''}">
+          <div style="flex:1;font-size:13px;color:${canUpgrade?'var(--text-bone)':'var(--text-dim)'};">
             ${ATTR_ICONS[a.icon] ? `<span style="display:inline-flex;width:14px;height:14px;flex-shrink:0;vertical-align:middle;">${ATTR_ICONS[a.icon]}</span>` : a.icon} ${a.label}
-            <span style="font-size:9px;color:var(--text-muted);margin-left:4px;">${cur} → ${cur+1}</span>
-            ${alreadyUsed?'<span style="font-size:8px;color:#c06040;margin-left:4px;">✓ used (once only)</span>':''}
+            <span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${cur} → ${cur+1}</span>
+            ${alreadyUsed?'<span style="font-size:11px;color:#c06040;margin-left:6px;">✓ used (once only)</span>':''}
           </div>
-          <div style="font-size:9px;color:var(--text-muted);min-width:100px;text-align:right;">
+          <div style="font-size:12px;color:var(--text-muted);min-width:110px;text-align:right;">
             ${dc} dev pt${dc>1?'s':''} = ${xpNeeded} XP · +2 VP
           </div>
-          <button class="attr-btn" style="width:22px;height:22px;font-size:12px;"
+          <button class="attr-btn" style="width:26px;height:26px;font-size:14px;"
             ${canUpgrade?`onclick="spendXpOnAttr('${h.id}','${a.key}',${dc})"`:' disabled'}
-            title="${alreadyUsed?'Already upgraded (once only per attribute)':canUpgrade?'Spend '+xpNeeded+' XP to increase '+a.label:'Need '+xpNeeded+' XP ('+dc+' dev pts)'}">+</button>
+            title="${alreadyUsed?'Already upgraded (once only per attribute)':canUpgrade?'Spend '+xpNeeded+' XP':'Need '+xpNeeded+' XP'}">+</button>
         </div>`;
       }).join('');
 
-      // Fortune upgrade row (p.80)
-      const initFortune    = race.fortune ?? 4;
-      const isRestricted   = race.size === 'large'
+      // ── Fortune row ─────────────────────────────────────────────
+      const initFortune  = race.fortune ?? 4;
+      const isRestricted = race.size === 'large'
         || (race.startingSkills||[]).some(s => s.toLowerCase().includes('invulnerable'))
         || initFortune <= 3;
-      const maxFortBonus   = isRestricted ? 1 : 2;
+      const maxFortBonus = isRestricted ? 1 : 2;
       if (!h.fortuneXpBonuses) h.fortuneXpBonuses = 0;
-      const fortUsed       = h.fortuneXpBonuses >= maxFortBonus;
-      const canFort        = !fortUsed && h.xp >= 3;
-      const fortuneRow     = `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);${fortUsed?'opacity:.4':''}">
-        <div style="flex:1;font-size:10px;color:${canFort?'var(--gold-bright)':'var(--text-dim)'};">
-          <span style="display:inline-flex;align-items:center;gap:3px;"><svg viewBox="0 0 20 20" fill="white" width="12" height="12" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="2" width="10" height="8" rx="1"/><rect x="4" y="3.5" width="2" height="5" rx="0.5"/><rect x="14" y="3.5" width="2" height="5" rx="0.5"/><rect x="8.5" y="9.5" width="3" height="8" rx="0.5"/></svg> Fortune</span>
-          <span style="font-size:9px;color:var(--text-muted);margin-left:4px;">${h.fortune??initFortune} → ${(h.fortune??initFortune)+1}</span>
-          ${fortUsed?`<span style="font-size:8px;color:#c06040;margin-left:4px;">✓ max (+${maxFortBonus})</span>`:''}
-          <span style="font-size:8px;color:var(--text-dim);margin-left:4px;">(max +${maxFortBonus} above initial)</span>
+      const fortUsed     = h.fortuneXpBonuses >= maxFortBonus;
+      const canFort      = !fortUsed && h.xp >= 3;
+      const fortuneRow   = `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-dim);${fortUsed?'opacity:.4':''}">
+        <div style="flex:1;font-size:13px;color:${canFort?'var(--gold-bright)':'var(--text-dim)'};">
+          <span style="display:inline-flex;align-items:center;gap:3px;">${ATTR_ICONS['fortune']||'Fortune'} Fortune</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${h.fortune??initFortune} → ${(h.fortune??initFortune)+1}</span>
+          ${fortUsed?`<span style="font-size:11px;color:#c06040;margin-left:6px;">✓ max (+${maxFortBonus})</span>`:''}
+          <span style="font-size:11px;color:var(--text-dim);margin-left:6px;">(max +${maxFortBonus} above initial)</span>
         </div>
-        <div style="font-size:9px;color:var(--text-muted);min-width:100px;text-align:right;">3 XP · +2 VP</div>
-        <button class="attr-btn" style="width:22px;height:22px;font-size:12px;"
+        <div style="font-size:12px;color:var(--text-muted);min-width:110px;text-align:right;">3 XP · +2 VP</div>
+        <button class="attr-btn" style="width:26px;height:26px;font-size:14px;"
           ${canFort?`onclick="spendXpOnFortune('${h.id}')"`:' disabled'}>+</button>
       </div>`;
 
-      // Skill limit indicator (p.80: max new skills = Intelligence × 2)
-      const intVal   = h.attrs.intelligence ?? 3;
+      // ── Skill limit ─────────────────────────────────────────────
+      const intVal       = h.attrs.intelligence ?? 3;
       const maxNewSkills = intVal * 2;
       const freeSkills   = [...(race.startingSkills||[]), cls.startingSkill].filter(Boolean);
       const newSkills    = (h.skills||[]).filter(s => !freeSkills.some(f => f.toLowerCase()===s.toLowerCase()));
       const skillsUsed   = newSkills.length;
       const skillsLeft   = Math.max(0, maxNewSkills - skillsUsed);
+      const canLearnSkill = skillsLeft > 0 && devPts >= 1;
+
+      // ── Spell limit ─────────────────────────────────────────────
+      const maxMana       = intVal * 3;
+      const curMana       = h.attrs.mana ?? 0;
+      const canLearnSpell = h.attrs.mana != null && curMana < maxMana && devPts >= 1;
 
       return `<div class="xp-hero-row" style="flex-direction:column;align-items:stretch;gap:0;padding:0;">
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-raised);">
+
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg-raised);">
           <div style="flex:1;">
-            <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);">${h.name}</div>
-            <div style="font-size:10px;color:var(--text-muted);">${race.name||'?'} · ${cls.name||'?'} · VP ${h.vp}</div>
-            <div style="font-size:9px;color:${skillsLeft>0?'var(--text-muted)':'#c06040'};margin-top:2px;">
+            <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);">${h.name}</div>
+            <div style="font-size:12px;color:var(--text-muted);">${race.name||'?'} · ${cls.name||'?'} · VP ${h.vp}</div>
+            <div style="font-size:12px;color:${skillsLeft>0?'var(--text-muted)':'#c06040'};margin-top:3px;">
               Skills: ${skillsUsed}/${maxNewSkills} new (Int×2 limit)
               ${skillsLeft===0?'<span style="color:#c06040;"> — at maximum</span>':''}
+              ${h.attrs.mana!=null ? ` · Mana: ${curMana}/${maxMana}` : ''}
             </div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">XP</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">XP</div>
             <div style="display:flex;align-items:center;gap:6px;">
               <button class="qty-btn" onclick="awardXP('${h.id}',-1)">−</button>
-              <span style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-bright);min-width:28px;text-align:center;">${h.xp}</span>
+              <span style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold-bright);min-width:30px;text-align:center;">${h.xp}</span>
               <button class="qty-btn" onclick="awardXP('${h.id}',1)">+</button>
             </div>
           </div>
-          <div style="text-align:center;min-width:80px;">
-            <div style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">Dev Points</div>
-            <div style="font-family:'Cinzel',serif;font-size:18px;color:${devPts>0?'var(--gold-bright)':'var(--text-dim)'};">${devPts}</div>
-            ${xpRemainder>0?`<div style="font-size:8px;color:var(--text-dim);">(${xpRemainder} XP spare)</div>`:''}
+          <div style="text-align:center;min-width:90px;">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Dev Points</div>
+            <div style="font-family:'Cinzel',serif;font-size:20px;color:${devPts>0?'var(--gold-bright)':'var(--text-dim)'};">${devPts}</div>
+            ${xpRemainder>0?`<div style="font-size:11px;color:var(--text-dim);">(${xpRemainder} XP spare)</div>`:''}
           </div>
         </div>
+
         ${devPts > 0 ? `
-        <div style="padding:8px 12px;background:var(--bg-dark);border-top:1px solid var(--border-dim);">
-          <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;">
-            Spend Dev Points — Attributes (race max · once per attribute)
+        <div style="padding:10px 14px;background:var(--bg-dark);border-top:1px solid var(--border-dim);">
+
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">
+            Attributes (race max · once per attribute)
           </div>
-          ${upgradeRows || '<div style="font-size:9px;color:var(--text-dim);font-style:italic;">All attributes at racial maximum or already upgraded.</div>'}
+          ${upgradeRows || '<div style="font-size:12px;color:var(--text-dim);font-style:italic;">All attributes at racial maximum or already upgraded.</div>'}
           ${fortuneRow}
+
+          <div style="font-size:12px;color:var(--text-muted);margin:12px 0 8px;letter-spacing:1px;text-transform:uppercase;">
+            Skills — 1 dev point · +2 VP (${skillsLeft} slots remaining)
+          </div>
+          ${canLearnSkill
+            ? `<button class="btn-secondary" style="font-size:13px;padding:6px 14px;"
+                onclick="openSkillBrowser('${h.id}')">Browse &amp; Add Skill</button>`
+            : `<div style="font-size:12px;color:var(--text-dim);font-style:italic;">${skillsLeft===0?'Skill limit reached (Int×2).':'Need 1 dev point (3 XP).'}</div>`}
+
+          ${h.attrs.mana != null ? `
+          <div style="font-size:12px;color:var(--text-muted);margin:12px 0 8px;letter-spacing:1px;text-transform:uppercase;">
+            Spells — 1 dev point · +2 Mana · +2 VP (${maxMana - curMana} Mana slots remaining)
+          </div>
+          ${canLearnSpell
+            ? `<button class="btn-secondary" style="font-size:13px;padding:6px 14px;"
+                onclick="openSpellBrowser('${h.id}')">Browse &amp; Add Spell</button>`
+            : `<div style="font-size:12px;color:var(--text-dim);font-style:italic;">${curMana>=maxMana?'Mana limit reached (Int×3).':'Need 1 dev point (3 XP).'}</div>`}
+          ` : ''}
+
         </div>` : ''}
       </div>`;
     }).join('')}`;
@@ -4803,6 +4832,119 @@ function openSkillBrowser(heroId) {
 
 let _skillBrowserHeroId = null;
 let _skillBrowserType = 'combat';
+
+// ── Spell Browser ─────────────────────────────────────────────────
+function openSpellBrowser(heroId) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+
+  let el = document.getElementById('spell-browser-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'spell-browser-overlay';
+    el.className = 'creator-overlay';
+    el.innerHTML = '<div class="creator-modal" id="spell-browser-modal"></div>';
+    document.body.appendChild(el);
+  }
+  el.classList.add('open');
+  _spellBrowserHeroId = heroId;
+  _spellBrowserLore = null;
+  renderSpellBrowserContent();
+}
+
+let _spellBrowserHeroId = null;
+let _spellBrowserLore = null;
+
+function renderSpellBrowserContent() {
+  const heroId = _spellBrowserHeroId;
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+
+  const base = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
+  const knownSpells = h.knownSpells || [];
+  const lores = [...new Set(SPELL_DB.map(s => s.lore))].sort();
+  if (!_spellBrowserLore) _spellBrowserLore = lores[0];
+
+  const tabs = lores.map(lore =>
+    `<button class="skill-browser-tab ${lore === _spellBrowserLore ? 'active' : ''}"
+      onclick="_spellBrowserLore='${lore}';renderSpellBrowserContent()"
+      style="${lore===_spellBrowserLore?'opacity:1;border-bottom:2px solid var(--gold-bright)':''}">
+      ${lore}
+    </button>`).join('');
+
+  const spells = SPELL_DB.filter(s => s.lore === _spellBrowserLore);
+  const cards = spells.map(sp => {
+    const owned = knownSpells.includes(sp.name);
+    const imgUrl = `${base}spells/${sp.id}.jpg`;
+    const safeName = sp.name.replace(/'/g,"\\'");
+    return `<div class="skill-browser-card ${owned ? 'has-skill' : ''}"
+      onclick="showCardLightbox('${imgUrl}','${safeName}')"
+      title="Click to enlarge">
+      <img src="${imgUrl}" alt="${sp.name}" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="skill-browser-fallback" style="display:none">
+        <div style="font-size:10px;text-align:center;padding:8px;">${sp.name}</div>
+      </div>
+      ${owned
+        ? '<div class="skill-browser-owned">✓ Known</div>'
+        : `<button class="skill-browser-add-btn"
+            onclick="event.stopPropagation();learnSpellFromBrowser('${heroId}','${safeName}',this.parentElement)"
+            title="Learn spell (+2 Mana, +2 VP)">+ Learn</button>`}
+    </div>`;
+  }).join('');
+
+  const modal = document.getElementById('spell-browser-modal');
+  modal.innerHTML = `
+    <div class="creator-header">
+      <div class="creator-title">Browse Spells — ${h.name}</div>
+      <button class="creator-close"
+        onclick="document.getElementById('spell-browser-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div style="display:flex;gap:4px;padding:10px 16px;border-bottom:1px solid var(--border-dim);flex-wrap:wrap;">
+      ${tabs}
+    </div>
+    <div style="padding:6px 16px;font-size:12px;color:var(--text-muted);font-style:italic;">
+      Click a card to enlarge. Use <strong style="color:var(--gold-bright)">+ Learn</strong> to learn the spell (+2 Mana, +2 VP, costs 1 dev point).
+    </div>
+    <div class="creator-body" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;">
+      ${cards || '<div style="color:var(--text-muted);font-size:13px;font-style:italic;">No spells in this lore.</div>'}
+    </div>`;
+}
+
+function learnSpellFromBrowser(heroId, spellName, cardEl) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+  if (!h.knownSpells) h.knownSpells = [];
+  if (h.knownSpells.includes(spellName)) return;
+
+  // Cost: 1 dev point (3 XP)
+  if (h.xp < 3) { alert('Need 3 XP (1 dev point) to learn a spell.'); return; }
+
+  // Mana limit = Int × 3
+  const maxMana = (h.attrs.intelligence ?? 3) * 3;
+  if ((h.attrs.mana ?? 0) >= maxMana) { alert(`Mana limit reached (${maxMana}). Increase Intelligence to learn more spells.`); return; }
+
+  h.xp         -= 3;
+  h.xpSpent    = (h.xpSpent || 0) + 3;
+  h.knownSpells.push(spellName);
+  h.attrs.mana  = (h.attrs.mana ?? 0) + 2;  // +2 Mana per spell (p.80)
+  h.vp         += 2;
+
+  save();
+  renderPartyView();
+
+  // Update card visually
+  if (cardEl) {
+    cardEl.classList.add('has-skill');
+    const btn = cardEl.querySelector('.skill-browser-add-btn');
+    if (btn) {
+      const owned = document.createElement('div');
+      owned.className = 'skill-browser-owned';
+      owned.textContent = '✓ Known';
+      btn.replaceWith(owned);
+    }
+  }
+}
 
 function renderSkillBrowserContent() {
   const heroId = _skillBrowserHeroId;
