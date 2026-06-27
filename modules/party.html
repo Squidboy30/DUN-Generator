@@ -1900,7 +1900,7 @@ function renderDunHeroCard(h, inParty) {
 
     <div class="card-vp-badge">VP<span>${h.vp}</span></div>
 
-    <div class="card-scroll-header">
+    <div class="card-scroll-header" onclick="showHeroCardZoom('${h.id}')" style="cursor:pointer;" title="Click to enlarge">
       <div class="card-name">${h.name}</div>
       <div class="card-race-class">${race.name||'?'} · ${cls.name||'?'}</div>
     </div>
@@ -4612,7 +4612,31 @@ function renderDunCard(cfg) {
   </div>`;
 }
 
-// ── Card Lightbox ─────────────────────────────────────────────────
+// ── Hero Card Zoom ────────────────────────────────────────────────
+function showHeroCardZoom(heroId) {
+  const h = heroes.find(h => h.id === heroId);
+  if (!h) return;
+
+  let el = document.getElementById('hero-card-zoom-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'hero-card-zoom-overlay';
+    el.style.cssText = `
+      position:fixed;inset:0;z-index:600;
+      background:rgba(0,0,0,.82);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+    `;
+    el.onclick = () => el.remove();
+    document.body.appendChild(el);
+  }
+
+  // Render the card at larger scale
+  el.innerHTML = `<div style="transform:scale(1.9);transform-origin:center center;pointer-events:none;">
+    ${renderDunHeroCard(h, false)}
+  </div>`;
+  document.body.appendChild(el);
+}
 function showCardLightbox(imgUrl, title, desc) {
   let el = document.getElementById('card-lightbox');
   if (!el) {
