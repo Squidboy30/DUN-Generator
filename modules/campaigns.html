@@ -1136,6 +1136,58 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── CAMPAIGN TRAVEL ─────────────────────────────────────── */
+#territory-overlay {
+  overflow: visible;
+}
+.t-region {
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.t-region:hover .t-fill { opacity: 0.55; }
+.t-fill {
+  opacity: 0.18;
+  transition: opacity 0.15s, fill 0.15s;
+}
+.t-region.t-current .t-fill  { fill: #64b464 !important; opacity: 0.45; }
+.t-region.t-adjacent .t-fill { fill: #c8a060 !important; opacity: 0.28; }
+.t-region.t-selected .t-fill { fill: #c84040 !important; opacity: 0.38; }
+.t-region.t-current .t-stroke  { stroke: #4a9a4a; stroke-width: 2; }
+.t-region.t-adjacent .t-stroke { stroke: #a07820; stroke-width: 1.5; }
+.t-region.t-selected .t-stroke { stroke: #8b1a1a; stroke-width: 2; }
+.t-stroke { fill: none; stroke: rgba(200,160,80,0.4); stroke-width: 1; transition: stroke 0.15s; }
+.t-label {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  fill: rgba(255,230,160,0.75);
+  text-anchor: middle;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 3px #000;
+}
+.t-num {
+  font-family: 'Cinzel', serif;
+  font-size: 6px;
+  fill: rgba(255,220,120,0.6);
+  text-anchor: middle;
+  pointer-events: none;
+}
+/* Party marker */
+#party-marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  z-index: 20;
+  display: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  transition: left 0.4s ease, top 0.4s ease;
+}
+.map-toggle-btn.on {
+  border-color: var(--border-gold);
+  color: var(--gold-light);
+  background: rgba(139,105,20,0.15);
+}
 </style>
 </head>
 <body>
@@ -1233,31 +1285,110 @@ body {
 
   <!-- World Map Tab -->
   <div id="tab-map" class="map-tab-view">
-    <div class="map-container" id="map-container">
-      <div id="map-viewport">
-        <div id="map-world">
-          <img id="map-img" src="arasca-map.jpg" alt="World of Arasca" draggable="false">
-          <div id="map-pins-layer"></div>
+    <div style="display:flex;flex:1;overflow:hidden;">
+      <!-- Map area -->
+      <div class="map-container" id="map-container">
+        <div id="map-viewport">
+          <div id="map-world">
+            <img id="map-img" src="arasca-map.jpg" alt="World of Arasca" draggable="false">
+            <!-- Territory overlay SVG (campaign travel mode) -->
+            <svg id="territory-overlay" style="position:absolute;top:0;left:0;pointer-events:none;display:none;" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div id="map-pins-layer"></div>
+            <!-- Party marker -->
+            <div id="party-marker">
+              <svg width="22" height="30" viewBox="0 0 22 30" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 2 C6 2 2 6 2 11 C2 18 11 28 11 28 C11 28 20 18 20 11 C20 6 16 2 11 2 Z" fill="#e0b840" stroke="#1a1008" stroke-width="1.5"/>
+                <circle cx="11" cy="11" r="4" fill="#1a1008"/>
+                <text x="11" y="15" text-anchor="middle" fill="#e0b840" font-size="7" font-family="Cinzel,serif" font-weight="700">⚔</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="pin-mode-bar" id="pin-mode-bar">
+          <span id="pin-mode-label">📍 Click on the map to place pin for: <b id="pin-mode-mission"></b></span>
+          <button class="tool-btn" onclick="cancelPinMode()" style="background:rgba(0,0,0,0.3);color:#fff;border-color:rgba(255,255,255,0.3);">Cancel</button>
+        </div>
+        <div id="map-zoom-controls">
+          <button onclick="mapZoom(0.2)">+</button>
+          <button onclick="mapZoom(-0.2)">−</button>
+          <button onclick="mapResetView()" style="font-size:9px;letter-spacing:0;">Fit</button>
+        </div>
+        <!-- Travel mode toggle -->
+        <div style="position:absolute;top:10px;right:52px;z-index:15;">
+          <button class="map-toggle-btn" id="travel-mode-btn" onclick="toggleTravelMode()">⚔ Campaign Travel</button>
         </div>
       </div>
-      <div class="pin-mode-bar" id="pin-mode-bar">
-        <span id="pin-mode-label">📍 Click on the map to place pin for: <b id="pin-mode-mission"></b></span>
-        <button class="tool-btn" onclick="cancelPinMode()" style="background:rgba(0,0,0,0.3);color:#fff;border-color:rgba(255,255,255,0.3);">Cancel</button>
-      </div>
-      <div id="map-zoom-controls">
-        <button onclick="mapZoom(0.2)">+</button>
-        <button onclick="mapZoom(-0.2)">−</button>
-        <button onclick="mapResetView()" style="font-size:9px;letter-spacing:0;">Fit</button>
+
+      <!-- Campaign Travel Sidebar (shown in travel mode) -->
+      <div id="travel-sidebar" style="display:none;width:260px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--panel-border);display:none;flex-direction:column;overflow:hidden;">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--panel-border);">
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold-light);margin-bottom:10px;">CAMPAIGN TRAVEL</div>
+          <!-- Turn counter -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);">TURN</span>
+            <button onclick="travelState.turn=Math.max(1,travelState.turn-1);renderTravelSidebar()" style="width:20px;height:20px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:12px;line-height:1;">−</button>
+            <span id="travel-turn" style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-light);min-width:28px;text-align:center;">1</span>
+            <button onclick="travelState.turn++;renderTravelSidebar()" style="width:20px;height:20px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:12px;line-height:1;">+</button>
+            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-left:4px;">WEEK</span>
+          </div>
+          <!-- Current location -->
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);padding:8px 10px;margin-bottom:8px;">
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">CURRENT LOCATION</div>
+            <div id="travel-location" style="font-family:'IM Fell English',serif;font-size:13px;color:var(--text-light);">— Select a territory —</div>
+            <div id="travel-terrain" style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-muted);margin-top:2px;letter-spacing:1px;"></div>
+          </div>
+          <!-- Action buttons -->
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button class="tool-btn" id="btn-travel" onclick="confirmTravel()" style="flex:1;display:none;">Travel Here ↵</button>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="tool-btn" onclick="setPartyHere()" style="flex:1;font-size:9px;">Set Party Here</button>
+            <button class="tool-btn" onclick="travelRollEvent()" style="flex:1;font-size:9px;">Roll Event</button>
+          </div>
+        </div>
+
+        <!-- Selected territory info -->
+        <div id="travel-territory-info" style="padding:12px 14px;border-bottom:1px solid var(--panel-border);display:none;">
+          <div id="tti-name" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;color:var(--gold-light);margin-bottom:6px;"></div>
+          <div id="tti-type" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;"></div>
+          <div id="tti-settlements" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-light);line-height:1.6;"></div>
+          <div id="tti-notes" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);font-style:italic;margin-top:4px;line-height:1.5;"></div>
+        </div>
+
+        <!-- Travel event result -->
+        <div id="travel-event-result" style="padding:12px 14px;border-bottom:1px solid var(--panel-border);display:none;">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px;">TRAVEL EVENT</div>
+          <div id="ter-roll" style="font-family:'Cinzel',serif;font-size:22px;color:var(--gold-light);margin-bottom:4px;"></div>
+          <div id="ter-deck" style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px;"></div>
+          <div id="ter-result" style="font-family:'IM Fell English',serif;font-size:12px;color:var(--text-light);line-height:1.6;"></div>
+        </div>
+
+        <!-- Journey log -->
+        <div style="flex:1;overflow-y:auto;padding:10px 14px;">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+            JOURNEY LOG
+            <button onclick="travelState.log=[];renderTravelSidebar()" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);padding:2px 6px;cursor:pointer;">Clear</button>
+          </div>
+          <div id="travel-log" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);line-height:1.7;"></div>
+        </div>
+
+        <!-- Legend -->
+        <div style="padding:8px 14px;border-top:1px solid var(--panel-border);font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);line-height:2;">
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(100,180,100,0.35);border:1px solid #4a9a4a;margin-right:4px;vertical-align:middle;"></span>Current location&nbsp;&nbsp;
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(200,160,60,0.25);border:1px solid #a07820;margin-right:4px;vertical-align:middle;"></span>Adjacent&nbsp;&nbsp;
+          <span style="display:inline-block;width:10px;height:10px;background:rgba(180,80,80,0.2);border:1px solid #8b1a1a;margin-right:4px;vertical-align:middle;"></span>Selected
+        </div>
       </div>
     </div>
+
     <div class="map-toolbar">
       <button class="tool-btn" onclick="switchTab('designer')">← Back to Designer</button>
       <div class="map-legend">
-        <span class="map-legend-item">
+        <span class="map-legend-item" id="map-pin-legend">
           <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#a07820" stroke="#1a1008" stroke-width="1.5"/><text x="7" y="7" text-anchor="middle" dominant-baseline="central" fill="#1a1008" font-size="8" font-family="Cinzel,serif" font-weight="700">1</text></svg>
           Mission pin
         </span>
-        <span>Scroll to zoom · Drag to pan · Click map to place pin for selected mission</span>
+        <span id="map-legend-hint">Scroll to zoom · Drag to pan · Click map to place pin for selected mission</span>
       </div>
     </div>
   </div>
@@ -1644,6 +1775,7 @@ function switchTab(tab) {
     initMapInteraction();
     mapResetView();
     renderMapPins();
+    if (travelMode) { setTimeout(renderTerritoryOverlay, 100); }
   }
 }
 
@@ -3361,6 +3493,381 @@ if (_mapImg) {
     renderMapPins();
   });
   if (_mapImg.complete) { initMapInteraction(); renderMapPins(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CAMPAIGN TRAVEL — territories, adjacency, party movement
+// ═══════════════════════════════════════════════════════════════
+//
+// Territory polygons are defined relative to the 1000×722 map image.
+// coords: flat array [x1,y1, x2,y2, ...] in image pixels.
+// type: terrain type used for travel event deck.
+// adj: IDs of directly adjacent territories (land or sea crossing).
+// settlements: named places within this territory.
+// label: centroid for placing the label, [x, y].
+
+var TERRITORIES = [
+  // ── NORTHERN SEA & ISLANDS ─────────────────────────────────
+  { id:'m1',  name:'Northern Sea (NW)',   type:'sea',     label:[130,52],  adj:['m2','m3','m10','m11'],
+    settlements:[], coords:[0,0,270,0,270,100,0,100] },
+  { id:'m2',  name:'Northern Sea (N)',    type:'sea',     label:[500,40],  adj:['m1','m3','m4','t1'],
+    settlements:[], coords:[270,0,750,0,750,90,270,90] },
+  { id:'m3',  name:'Northern Sea (NE)',   type:'sea',     label:[860,52],  adj:['m2','m4','t9'],
+    settlements:[], coords:[750,0,1000,0,1000,100,750,100] },
+
+  // ── NORTHERN ISLANDS ───────────────────────────────────────
+  { id:'t1',  name:'Kingdom of Trecia',  type:'plain',   label:[115,280], adj:['m11','m12','m10'],
+    notes:'Island kingdom. Road runs through the main settlement.',
+    settlements:['Trecia (City)', 'Bronze Island', 'Argnon Island'],
+    coords:[20,210,220,185,260,230,230,330,165,360,80,345,30,300] },
+
+  // ── MAIN CONTINENT — NORTHERN COAST ───────────────────────
+  { id:'t2',  name:'Kingdom of Ascadia',type:'forest',   label:[390,190], adj:['t3','t4','t5','t8'],
+    notes:'Dense forests. Home of the Ascadia Forest.',
+    settlements:['Ascadia (City)', "The Bear's Den"],
+    coords:[310,130,430,110,490,140,470,230,420,250,350,240,310,200] },
+  { id:'t3',  name:'Icy Deserts',       type:'desert',   label:[570,140], adj:['t2','t4','t9','m2'],
+    notes:'Frozen wasteland. Difficult terrain.',
+    settlements:[],
+    coords:[490,100,700,100,720,170,660,210,560,200,490,155] },
+  { id:'t4',  name:'Northern Forest',   type:'forest',   label:[370,290], adj:['t2','t5','t6','t3'],
+    settlements:['Nordheim'],
+    coords:[310,240,430,230,475,270,450,330,380,345,315,310] },
+  { id:'t5',  name:'Pointy Mountains',  type:'mountain', label:[490,295], adj:['t2','t4','t6','t7','t8'],
+    notes:'High mountain range. Movement costs 2 turns unless mounted.',
+    settlements:['Gyptian Pass'],
+    coords:[430,240,560,220,590,270,570,350,490,360,440,320] },
+  { id:'t6',  name:'The Great Oak Grove',type:'forest',  label:[390,400], adj:['t4','t5','t7','t13','t14'],
+    settlements:['Oakenhaven'],
+    coords:[315,335,450,325,475,370,450,430,370,445,310,400] },
+
+  // ── PULSE EMPIRE / WESTERN PENINSULA ─────────────────────
+  { id:'t7',  name:'Pulse Empire (Core)',type:'plain',   label:[380,505], adj:['t6','t8','t13','t14','t15'],
+    notes:'Heart of the Pulse Empire. Good roads.',
+    settlements:['Pulsecity (Capital, City)', 'Sudfall (Town)', 'Norkfall Castle'],
+    coords:[310,430,460,415,490,460,470,530,400,565,325,545,300,490] },
+  { id:'t8',  name:'Mount Gyptian',      type:'mountain',label:[540,355], adj:['t2','t5','t7','t9','t10'],
+    notes:'Volcanic peak. Difficult terrain.',
+    settlements:['Gyptian Shrine'],
+    coords:[560,280,640,270,660,320,640,370,580,380,545,330] },
+  { id:'t9',  name:'Kyr Forest',         type:'forest',  label:[690,270], adj:['t3','t8','t10','t11','m3'],
+    settlements:['Kyrvale'],
+    coords:[650,190,780,175,800,220,790,285,720,300,660,285,645,240] },
+  { id:'t10', name:'Kingdom of Lesonia', type:'plain',   label:[680,380], adj:['t8','t9','t11','t12','t7'],
+    notes:'Fertile plains kingdom.',
+    settlements:['Lesonia (City)', 'Castellum (Castle)', 'Millford (Town)'],
+    coords:[620,300,790,280,820,340,800,420,720,440,640,420,610,360] },
+  { id:'t11', name:'Chattensum Forest',  type:'forest',  label:[800,390], adj:['t9','t10','t12','m3'],
+    settlements:[],
+    coords:[790,290,900,285,930,340,910,410,840,420,800,380] },
+  { id:'t12', name:'Kingdom of Alania',  type:'plain',   label:[770,480], adj:['t10','t11','t16','t17'],
+    notes:'Eastern lowlands. Green River runs through.',
+    settlements:['Alania (City)', 'Ashlan Bay (Town)', 'Green River Keep'],
+    coords:[720,435,910,415,940,480,920,540,830,560,720,535,700,475] },
+
+  // ── WESTERN PENINSULA ────────────────────────────────────
+  { id:'t13', name:'Western Peninsula (N)',type:'plain', label:[270,455], adj:['t6','t7','t14','m13'],
+    settlements:['Westport (Town)'],
+    coords:[210,415,320,405,325,460,305,510,235,520,205,465] },
+  { id:'t14', name:'Low Cape Forest',    type:'forest',  label:[270,540], adj:['t7','t13','t15','m13'],
+    settlements:[],
+    coords:[210,510,315,505,325,555,300,600,230,595,200,550] },
+  { id:'t15', name:'Western Mountains',  type:'mountain',label:[360,600], adj:['t7','t14','t16','m18'],
+    notes:'Mountain passes. Roads connect to Pulse Empire.',
+    settlements:['Mountain Gate (Castle)'],
+    coords:[310,565,460,555,475,620,440,660,365,665,310,625] },
+  { id:'t16', name:'Ariskar Forest',     type:'forest',  label:[540,545], adj:['t7','t12','t15','t17','m20'],
+    settlements:['Ariskar Refuge'],
+    coords:[470,510,620,495,640,560,610,610,525,625,465,575] },
+  { id:'t17', name:'Ashlan River Valley',type:'plain',   label:[650,540], adj:['t12','t16','t18','m20'],
+    notes:'Navigable river territory. Travel upstream costs extra turns.',
+    settlements:['Ashlan (Town)', 'River Crossing'],
+    coords:[620,510,740,500,760,560,735,610,650,620,615,565] },
+
+  // ── SOUTHERN TERRITORIES ─────────────────────────────────
+  { id:'t18', name:'Southern Delta',     type:'swamp',   label:[580,660], adj:['t15','t17','m18','m19','m20'],
+    notes:'Swampy lowlands. Difficult terrain.',
+    settlements:['Delta Village'],
+    coords:[490,630,680,615,700,670,660,705,570,715,490,680] },
+
+  // ── SEA ZONES — WEST & SOUTH ─────────────────────────────
+  { id:'m10', name:'Cloudy Sea (N)',     type:'sea',     label:[50,160],  adj:['m1','m11','m12','t1'],
+    settlements:[], coords:[0,100,165,100,165,230,0,230] },
+  { id:'m11', name:'Cloudy Sea (Mid)',   type:'sea',     label:[70,350],  adj:['m10','m12','t1','t13'],
+    settlements:[], coords:[0,230,165,230,170,450,0,450] },
+  { id:'m12', name:'Cloudy Sea (S)',     type:'sea',     label:[80,530],  adj:['m11','m13','t1','t13'],
+    settlements:[], coords:[0,450,165,450,175,600,0,600] },
+  { id:'m13', name:'Western Sea (N)',    type:'sea',     label:[120,640], adj:['m12','m14','t13','t14'],
+    settlements:[], coords:[0,600,175,600,185,700,0,700] },
+  { id:'m14', name:'Western Sea (Mid)',  type:'sea',     label:[50,760],  adj:['m13','m15','t14','t15'],
+    settlements:[], coords:[0,700,200,700,205,800,0,800] },
+  { id:'m15', name:'Western Sea (S)',    type:'sea',     label:[80,860],  adj:['m14','m16','t15'],
+    settlements:[], coords:[0,800,210,800,210,920,0,920] },
+  { id:'m16', name:'White Sea (W)',      type:'sea',     label:[200,940], adj:['m15','m17','m18'],
+    settlements:[], coords:[0,920,400,920,400,1000,0,1000] },
+  { id:'m17', name:'White Sea (C)',      type:'sea',     label:[500,950], adj:['m16','m18','m19','t18'],
+    settlements:[], coords:[400,920,700,920,700,1000,400,1000] },
+  { id:'m18', name:'White Sea (E)',      type:'sea',     label:[780,950], adj:['m17','m19','m20','t18'],
+    settlements:[], coords:[700,920,1000,920,1000,1000,700,1000] },
+  { id:'m19', name:'Northern Sea (E)',   type:'sea',     label:[900,700], adj:['m18','m20','t17','t12'],
+    settlements:[], coords:[900,550,1000,550,1000,920,900,920] },
+  { id:'m20', name:'Ashlan Bay',         type:'sea',     label:[840,590], adj:['m19','t12','t16','t17','t18'],
+    settlements:['Ashlan Bay Port'],
+    coords:[760,540,900,540,910,650,860,700,770,680,740,600] }
+];
+
+// Territory type → colour for overlay fill
+var TERRAIN_COLORS = {
+  forest:   '#2a6a20',
+  plain:    '#c8a060',
+  mountain: '#8a7a6a',
+  swamp:    '#3a5a2a',
+  desert:   '#c8a840',
+  sea:      '#1a4a7a',
+  city:     '#c8a060'
+};
+
+// Travel event outcomes by terrain type (abbreviated — full DUN deck not reproduced)
+var TRAVEL_EVENTS = {
+  plain:    ['Uneventful journey — nothing impedes your progress.',
+             'Travelling merchants spotted on the road — possible trade.',
+             'Bandits ambush the road! (Epic Event available)',
+             'A local farmer offers shelter for the night. Recover 1 Vitality.',
+             'Heavy rain slows movement — the road turns to mud.',
+             'You discover an old shrine. May invoke a blessing (Fortune +1).'],
+  forest:   ['The forest is quiet. You pass without incident.',
+             'Strange lights in the trees — a will-o-wisp leads you astray. Lose 1 turn.',
+             'Ambush from the undergrowth! (Epic Event available)',
+             'A hermit offers medicinal herbs. Remove one Diseased condition.',
+             'You find a hidden cache — draw from the Treasure deck.',
+             'Predators stalk the party overnight. No rest this turn.'],
+  mountain: ['The pass is clear. No events.',
+             'Rockslide blocks the route — must turn back or spend 1 extra turn.',
+             'Mountain bandits demand a toll of 2 coins or fight! (Epic Event)',
+             'A mountain guide offers to lead you for 1 coin.',
+             'Treacherous ice — one hero risks Wounded (roll 1D6, 1-2: apply).',
+             'You spot a distant fortress. Possible side quest.'],
+  swamp:    ['The swamp fog is thick but you navigate safely.',
+             'Quicksand trap — one hero must pass a test or become Knocked Out.',
+             'Undead rise from the bog! (Epic Event available)',
+             'Disease lurks in the water. Each hero rolls 1D6 — 1: Diseased.',
+             'A potion floats in the mire. Could be valuable or cursed.',
+             'Flash flood — lose all progress this turn.'],
+  desert:   ['Scorching sands but your supplies hold.',
+             'Sandstorm reduces visibility — lose 1 turn.',
+             'Nomads offer trade. May buy rations at normal cost.',
+             'Heat exhaustion. Each hero loses 1 Vitality.',
+             'Mirage lures party off course — lose 1 turn.',
+             'Ancient ruins discovered. (Epic Event available)'],
+  sea:      ['Fair winds — move an extra icon if on a navigable river.',
+             'Storm damages the vessel — lose 1 Structure point.',
+             'Pirates intercept the ship! (Epic Event available)',
+             'Fog banks slow navigation — move only 1 icon this turn.',
+             'Friendly merchant vessel — may buy/sell equipment.',
+             'Sea monster sighted — vessel takes 1 damage die vs Structure.']
+};
+
+// ── State ────────────────────────────────────────────────────
+var travelMode = false;
+var travelState = {
+  turn: 1,
+  partyTerritoryId: null,
+  selectedTerritoryId: null,
+  log: []
+};
+
+function toggleTravelMode() {
+  travelMode = !travelMode;
+  var btn = document.getElementById('travel-mode-btn');
+  var sidebar = document.getElementById('travel-sidebar');
+  var overlay = document.getElementById('territory-overlay');
+  var legend = document.getElementById('map-legend-hint');
+  var pinLegend = document.getElementById('map-pin-legend');
+
+  btn.classList.toggle('on', travelMode);
+  sidebar.style.display = travelMode ? 'flex' : 'none';
+  overlay.style.display = travelMode ? 'block' : 'none';
+
+  if (travelMode) {
+    legend.textContent = 'Click a territory to select it · Green = party location · Gold = adjacent';
+    pinLegend.style.display = 'none';
+    renderTerritoryOverlay();
+    renderTravelSidebar();
+  } else {
+    legend.textContent = 'Scroll to zoom · Drag to pan · Click map to place pin for selected mission';
+    pinLegend.style.display = '';
+    renderTravelSidebar();
+  }
+}
+
+function renderTerritoryOverlay() {
+  var img = document.getElementById('map-img');
+  var iw = img.naturalWidth  || 1000;
+  var ih = img.naturalHeight || 722;
+  var dw = img.offsetWidth   || iw;
+  var dh = img.offsetHeight  || ih;
+
+  var overlay = document.getElementById('territory-overlay');
+  overlay.setAttribute('width',  dw);
+  overlay.setAttribute('height', dh);
+  overlay.setAttribute('viewBox', '0 0 ' + iw + ' ' + ih);
+  overlay.style.width  = dw + 'px';
+  overlay.style.height = dh + 'px';
+
+  var partyId    = travelState.partyTerritoryId;
+  var selectedId = travelState.selectedTerritoryId;
+  var adjIds     = partyId ? (TERRITORIES.find(function(t){ return t.id===partyId; }) || {adj:[]}).adj : [];
+
+  overlay.innerHTML = TERRITORIES.map(function(t) {
+    var pts = [];
+    for (var i = 0; i < t.coords.length; i += 2) pts.push(t.coords[i] + ',' + t.coords[i+1]);
+    var cls = 't-region';
+    if (t.id === partyId)    cls += ' t-current';
+    else if (t.id === selectedId) cls += ' t-selected';
+    else if (adjIds.indexOf(t.id) !== -1) cls += ' t-adjacent';
+
+    var baseColor = TERRAIN_COLORS[t.type] || '#888';
+    var lx = t.label[0], ly = t.label[1];
+    var shortName = t.name.length > 20 ? t.name.substring(0,18)+'…' : t.name;
+
+    return '<g class="' + cls + '" id="treg-' + t.id + '" onclick="selectTerritory(\'' + t.id + '\')" style="pointer-events:all;">' +
+      '<polygon class="t-fill" points="' + pts.join(' ') + '" fill="' + baseColor + '"/>' +
+      '<polygon class="t-stroke" points="' + pts.join(' ') + '"/>' +
+      (t.type !== 'sea' ? '<text class="t-label" x="' + lx + '" y="' + ly + '">' + shortName + '</text>' : '') +
+    '</g>';
+  }).join('');
+
+  // Party marker
+  updatePartyMarker();
+}
+
+function updatePartyMarker() {
+  var marker = document.getElementById('party-marker');
+  if (!marker) return;
+  var pid = travelState.partyTerritoryId;
+  if (!pid) { marker.style.display = 'none'; return; }
+  var t = TERRITORIES.find(function(x){ return x.id === pid; });
+  if (!t) { marker.style.display = 'none'; return; }
+
+  var img = document.getElementById('map-img');
+  var iw = img.naturalWidth || 1000;
+  var ih = img.naturalHeight || 722;
+  var dw = img.offsetWidth || iw;
+  var dh = img.offsetHeight || ih;
+  var sx = dw / iw, sy = dh / ih;
+
+  marker.style.display = 'block';
+  marker.style.left = (t.label[0] * sx) + 'px';
+  marker.style.top  = (t.label[1] * sy) + 'px';
+}
+
+function selectTerritory(id) {
+  if (!travelMode) return;
+  travelState.selectedTerritoryId = travelState.selectedTerritoryId === id ? null : id;
+  renderTerritoryOverlay();
+  renderTravelSidebar();
+}
+
+function setPartyHere() {
+  var sid = travelState.selectedTerritoryId;
+  if (!sid) { alert('Select a territory first.'); return; }
+  var t = TERRITORIES.find(function(x){ return x.id === sid; });
+  if (!t) return;
+  var prev = travelState.partyTerritoryId;
+  travelState.partyTerritoryId = sid;
+  travelState.selectedTerritoryId = null;
+  if (prev) {
+    var from = TERRITORIES.find(function(x){ return x.id === prev; });
+    travelState.log.unshift('Turn ' + travelState.turn + ': Party moved to ' + t.name + (from ? ' from ' + from.name : '') + '.');
+  } else {
+    travelState.log.unshift('Turn ' + travelState.turn + ': Party placed at ' + t.name + '.');
+  }
+  renderTerritoryOverlay();
+  renderTravelSidebar();
+}
+
+function confirmTravel() {
+  var sid = travelState.selectedTerritoryId;
+  if (!sid) return;
+  var t = TERRITORIES.find(function(x){ return x.id === sid; });
+  if (!t) return;
+  var partyId = travelState.partyTerritoryId;
+  var adjIds = partyId ? (TERRITORIES.find(function(x){ return x.id===partyId; })||{adj:[]}).adj : [];
+  if (partyId && adjIds.indexOf(sid) === -1) {
+    alert('You can only travel to an adjacent territory. Select an adjacent (gold) territory.');
+    return;
+  }
+  var prev = partyId ? (TERRITORIES.find(function(x){ return x.id===partyId; })||{name:'unknown'}).name : 'start';
+  travelState.partyTerritoryId = sid;
+  travelState.selectedTerritoryId = null;
+  travelState.turn++;
+  travelState.log.unshift('Turn ' + (travelState.turn-1) + ': Travelled to ' + t.name + ' from ' + prev + '.');
+  renderTerritoryOverlay();
+  renderTravelSidebar();
+}
+
+function travelRollEvent() {
+  var sid = travelState.selectedTerritoryId || travelState.partyTerritoryId;
+  if (!sid) { alert('Select or set a territory first.'); return; }
+  var t = TERRITORIES.find(function(x){ return x.id === sid; });
+  if (!t) return;
+  var type = t.type === 'sea' ? 'sea' : t.type;
+  var pool = TRAVEL_EVENTS[type] || TRAVEL_EVENTS['plain'];
+  var roll = Math.ceil(Math.random() * 6);
+  var result = pool[roll - 1];
+  var resultDiv = document.getElementById('travel-event-result');
+  resultDiv.style.display = 'block';
+  document.getElementById('ter-roll').textContent = '⚀ ' + roll;
+  document.getElementById('ter-deck').textContent = t.name.toUpperCase() + ' · ' + type.toUpperCase() + ' DECK';
+  document.getElementById('ter-result').textContent = result;
+  travelState.log.unshift('Turn ' + travelState.turn + ': ' + t.name + ' event (roll ' + roll + '): ' + result);
+  renderTravelLog();
+}
+
+function renderTravelSidebar() {
+  document.getElementById('travel-turn').textContent = travelState.turn;
+
+  var pid = travelState.partyTerritoryId;
+  var pt  = pid ? TERRITORIES.find(function(x){ return x.id===pid; }) : null;
+  document.getElementById('travel-location').textContent = pt ? pt.name : '— Select a territory —';
+  document.getElementById('travel-terrain').textContent  = pt ? pt.type.toUpperCase() : '';
+
+  var sid = travelState.selectedTerritoryId;
+  var st  = sid ? TERRITORIES.find(function(x){ return x.id===sid; }) : null;
+  var infoDiv = document.getElementById('travel-territory-info');
+  var travelBtn = document.getElementById('btn-travel');
+
+  if (st) {
+    infoDiv.style.display = 'block';
+    document.getElementById('tti-name').textContent = st.name;
+    document.getElementById('tti-type').textContent = st.type.toUpperCase() + (st.type === 'sea' ? ' ZONE' : ' TERRITORY');
+    var adjIds = pid ? (TERRITORIES.find(function(x){ return x.id===pid; })||{adj:[]}).adj : [];
+    var isAdj  = pid && adjIds.indexOf(sid) !== -1;
+    var isCurr = sid === pid;
+    document.getElementById('tti-settlements').innerHTML = st.settlements && st.settlements.length
+      ? '🏰 ' + st.settlements.join('<br>🏰 ')
+      : '<span style="color:var(--text-muted);font-style:italic;">No named settlements</span>';
+    document.getElementById('tti-notes').textContent = st.notes || '';
+    travelBtn.style.display = (isAdj && !isCurr) ? 'block' : 'none';
+    travelBtn.textContent = 'Travel to ' + st.name + ' ↵';
+  } else {
+    infoDiv.style.display = 'none';
+    travelBtn.style.display = 'none';
+  }
+
+  renderTravelLog();
+}
+
+function renderTravelLog() {
+  var logDiv = document.getElementById('travel-log');
+  if (!logDiv) return;
+  if (!travelState.log.length) {
+    logDiv.innerHTML = '<span style="color:var(--text-muted);font-style:italic;">No journey events yet.</span>';
+  } else {
+    logDiv.innerHTML = travelState.log.slice(0, 20).map(function(entry) {
+      return '<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.05);">' + entry + '</div>';
+    }).join('');
+  }
 }
 </script>
 
