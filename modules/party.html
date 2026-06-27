@@ -4932,9 +4932,7 @@ function learnSpellFromBrowser(heroId, spellName, cardEl) {
 
   save();
   renderPartyView();
-
-  // Update card visually
-  if (cardEl) {
+  if (document.getElementById('xp-award-list')) renderXpView();
     cardEl.classList.add('has-skill');
     const btn = cardEl.querySelector('.skill-browser-add-btn');
     if (btn) {
@@ -5001,7 +4999,7 @@ function renderSkillBrowserContent() {
 }
 
 function addHeroSkillFromBrowser(heroId, skillName, cardEl) {
-  addHeroSkill(heroId, skillName);
+  addHeroSkill(heroId, skillName, true); // spendXp=true — post-creation spend
   // Swap the Add button for Owned label
   if (cardEl) {
     cardEl.classList.add('has-skill');
@@ -5015,14 +5013,13 @@ function addHeroSkillFromBrowser(heroId, skillName, cardEl) {
   }
 }
 
-function addHeroSkill(heroId, skillName) {
+function addHeroSkill(heroId, skillName, spendXp = false) {
   const h = heroes.find(h => h.id === heroId);
   if (!h) return;
   if (!h.skills) h.skills = [];
   if (h.skills.includes(skillName)) return;
 
   // p.78/80: max new skills after creation = Intelligence × 2
-  // Count only skills added after creation (not free race/class starting skills)
   const race       = RACE_DB.find(r => r.id === h.raceId) || {};
   const cls        = CLASS_DB.find(c => c.id === h.classId) || {};
   const freeSkills = [...(race.startingSkills||[]), cls.startingSkill].filter(Boolean);
@@ -5034,13 +5031,21 @@ function addHeroSkill(heroId, skillName) {
     return;
   }
 
+  // Deduct XP when called from post-creation spend (p.80: 1 dev point = 3 XP per skill)
+  if (spendXp) {
+    if (h.xp < 3) { alert('Need 3 XP (1 dev point) to learn a skill.'); return; }
+    h.xp      -= 3;
+    h.xpSpent  = (h.xpSpent || 0) + 3;
+  }
+
   h.skills.push(skillName);
   h.vp += 2;
   save();
   const el = document.getElementById('hero-skills-' + heroId);
   if (el) el.innerHTML = renderHeroSkillChips(h);
   renderPartyView();
-}
+  // Refresh XP view if open (XP counter changed)
+  if (document.getElementById('xp-award-list')) renderXpView();
 
 // ═══════════════════════════════════════════════════════════════
 // SPELL MANAGEMENT (hero detail)
