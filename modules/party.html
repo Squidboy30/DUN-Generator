@@ -1986,11 +1986,13 @@ function renderXpView() {
   }
 
   el.innerHTML = `
-    <div style="background:var(--bg-raised);border:1px solid var(--border-dim);padding:10px 16px;margin-bottom:16px;font-size:10px;color:var(--text-muted);">
-      <strong style="color:var(--text-bone);">Rulebook (p.80):</strong>
-      Every <strong style="color:var(--gold-bright)">3 XP</strong> = 1 Development Point → spend on attribute increase or skill/spell/fortune.
-      Each upgrade costs <strong style="color:var(--gold-bright)">+2 VP</strong> regardless of dev points spent.
-      Attribute dev-point cost varies by race (shown on race card).
+    <div style="background:var(--bg-raised);border:1px solid var(--border-dim);padding:10px 16px;margin-bottom:16px;font-size:10px;color:var(--text-muted);line-height:1.6;">
+      <strong style="color:var(--text-bone);">Rulebook p.80 — Character Evolution:</strong>
+      Every <strong style="color:var(--gold-bright)">3 XP</strong> = 1 Dev Point = 1 upgrade = <strong style="color:var(--gold-bright)">+2 VP</strong>.<br>
+      Upgrades: <em>attribute +1</em> (race max · <strong>once per attribute</strong> · costs dev pts per race card) ·
+      <em>skill</em> (max new = Int×2) · <em>+1 Fortune</em> (max +2 above initial, +1 for Large/Invulnerable/Fortune≤3) ·
+      <em>spell</em> (School of Magic, +2 Mana, limit Int×3).<br>
+      Dexterity &amp; Perception: skills only. Natural Armor: permanent.
     </div>
     ${pool.map(h => {
       const race = RACE_DB.find(r=>r.id===h.raceId) || {};
@@ -1999,39 +2001,76 @@ function renderXpView() {
       const xpRemainder = h.xp % 3;
 
       // Build upgradable attributes with race-specific dev-point costs
+      // p.80: each attribute can only be raised ONCE via XP
+      if (!h.xpUpgrades) h.xpUpgrades = {};
       const upgradeRows = ATTR_META.filter(a => {
         if (!a.devPts) return false;
         const at = race.attrs?.[a.key];
         if (!at) return false;
         const cur = h.attrs[a.key] ?? at.min ?? 0;
-        return cur < at.max; // only show if can still increase
+        return cur < at.max;
       }).map(a => {
-        const at   = race.attrs[a.key];
-        const cur  = h.attrs[a.key] ?? at.min ?? 0;
-        let   dc   = at.dc;
-        // Class discount on first increase of bonusAttr
+        const at    = race.attrs[a.key];
+        const cur   = h.attrs[a.key] ?? at.min ?? 0;
+        let   dc    = at.dc;
         if (cls.bonusAttr === a.key && cur === at.min) dc = Math.max(1, dc - 1);
-        const canUpgrade = devPts >= dc;
         const xpNeeded   = dc * 3;
-        return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);">
+        const alreadyUsed = !!h.xpUpgrades[a.key];
+        const canUpgrade  = !alreadyUsed && devPts >= dc;
+
+        return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);${alreadyUsed?'opacity:.4':''}">
           <div style="flex:1;font-size:10px;color:${canUpgrade?'var(--text-bone)':'var(--text-dim)'};">
             ${a.icon} ${a.label}
-            <span style="font-size:9px;color:var(--text-dim);margin-left:4px;">${cur} → ${cur+1}</span>
+            <span style="font-size:9px;color:var(--text-muted);margin-left:4px;">${cur} → ${cur+1}</span>
+            ${alreadyUsed?'<span style="font-size:8px;color:#c06040;margin-left:4px;">✓ used (once only)</span>':''}
           </div>
           <div style="font-size:9px;color:var(--text-muted);min-width:100px;text-align:right;">
             ${dc} dev pt${dc>1?'s':''} = ${xpNeeded} XP · +2 VP
           </div>
           <button class="attr-btn" style="width:22px;height:22px;font-size:12px;"
             ${canUpgrade?`onclick="spendXpOnAttr('${h.id}','${a.key}',${dc})"`:' disabled'}
-            title="${canUpgrade?'Spend '+xpNeeded+' XP to increase '+a.label:'Need '+xpNeeded+' XP ('+dc+' dev pts)'}">+</button>
+            title="${alreadyUsed?'Already upgraded (once only per attribute)':canUpgrade?'Spend '+xpNeeded+' XP to increase '+a.label:'Need '+xpNeeded+' XP ('+dc+' dev pts)'}">+</button>
         </div>`;
       }).join('');
+
+      // Fortune upgrade row (p.80)
+      const initFortune    = race.fortune ?? 4;
+      const isRestricted   = race.size === 'large'
+        || (race.startingSkills||[]).some(s => s.toLowerCase().includes('invulnerable'))
+        || initFortune <= 3;
+      const maxFortBonus   = isRestricted ? 1 : 2;
+      if (!h.fortuneXpBonuses) h.fortuneXpBonuses = 0;
+      const fortUsed       = h.fortuneXpBonuses >= maxFortBonus;
+      const canFort        = !fortUsed && h.xp >= 3;
+      const fortuneRow     = `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);${fortUsed?'opacity:.4':''}">
+        <div style="flex:1;font-size:10px;color:${canFort?'var(--gold-bright)':'var(--text-dim)'};">
+          ⭐ Fortune
+          <span style="font-size:9px;color:var(--text-muted);margin-left:4px;">${h.fortune??initFortune} → ${(h.fortune??initFortune)+1}</span>
+          ${fortUsed?`<span style="font-size:8px;color:#c06040;margin-left:4px;">✓ max (+${maxFortBonus})</span>`:''}
+          <span style="font-size:8px;color:var(--text-dim);margin-left:4px;">(max +${maxFortBonus} above initial)</span>
+        </div>
+        <div style="font-size:9px;color:var(--text-muted);min-width:100px;text-align:right;">3 XP · +2 VP</div>
+        <button class="attr-btn" style="width:22px;height:22px;font-size:12px;"
+          ${canFort?`onclick="spendXpOnFortune('${h.id}')"`:' disabled'}>+</button>
+      </div>`;
+
+      // Skill limit indicator (p.80: max new skills = Intelligence × 2)
+      const intVal   = h.attrs.intelligence ?? 3;
+      const maxNewSkills = intVal * 2;
+      const freeSkills   = [...(race.startingSkills||[]), cls.startingSkill].filter(Boolean);
+      const newSkills    = (h.skills||[]).filter(s => !freeSkills.some(f => f.toLowerCase()===s.toLowerCase()));
+      const skillsUsed   = newSkills.length;
+      const skillsLeft   = Math.max(0, maxNewSkills - skillsUsed);
 
       return `<div class="xp-hero-row" style="flex-direction:column;align-items:stretch;gap:0;padding:0;">
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-raised);">
           <div style="flex:1;">
             <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);">${h.name}</div>
             <div style="font-size:10px;color:var(--text-muted);">${race.name||'?'} · ${cls.name||'?'} · VP ${h.vp}</div>
+            <div style="font-size:9px;color:${skillsLeft>0?'var(--text-muted)':'#c06040'};margin-top:2px;">
+              Skills: ${skillsUsed}/${maxNewSkills} new (Int×2 limit)
+              ${skillsLeft===0?'<span style="color:#c06040;"> — at maximum</span>':''}
+            </div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:9px;color:var(--text-muted);margin-bottom:2px;">XP</div>
@@ -2050,9 +2089,10 @@ function renderXpView() {
         ${devPts > 0 ? `
         <div style="padding:8px 12px;background:var(--bg-dark);border-top:1px solid var(--border-dim);">
           <div style="font-size:9px;color:var(--text-muted);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;">
-            Spend Dev Points — Attributes (race max limits apply)
+            Spend Dev Points — Attributes (race max · once per attribute)
           </div>
-          ${upgradeRows || '<div style="font-size:9px;color:var(--text-dim);font-style:italic;">All attributes at racial maximum.</div>'}
+          ${upgradeRows || '<div style="font-size:9px;color:var(--text-dim);font-style:italic;">All attributes at racial maximum or already upgraded.</div>'}
+          ${fortuneRow}
         </div>` : ''}
       </div>`;
     }).join('')}`;
@@ -2075,18 +2115,49 @@ function spendXpOnAttr(heroId, attrKey, devPtCost) {
   const cur = h.attrs[attrKey] ?? at.min ?? 0;
   if (cur >= at.max) return;
 
-  // Rulebook p.80: each upgrade = +2 VP, costs the required XP
-  h.xp         -= xpCost;
-  h.xpSpent    += xpCost;
-  h.attrs[attrKey] = cur + 1;
-  h.vp         += 2;
+  // Rulebook p.80: each attribute can only be raised ONCE via XP after creation
+  if (!h.xpUpgrades) h.xpUpgrades = {};
+  if (h.xpUpgrades[attrKey]) return; // already upgraded this attribute via XP
 
-  // Keep current vitality in sync if vitality upgraded
+  h.xp              -= xpCost;
+  h.xpSpent         += xpCost;
+  h.attrs[attrKey]   = cur + 1;
+  h.vp              += 2;
+  h.xpUpgrades[attrKey] = true; // mark as used
+
   if (attrKey === 'vitality') h.currentVitality = Math.min(h.currentVitality + 1, h.attrs.vitality);
 
   save();
   renderXpView();
-  renderPartyView(); // refresh cards
+  renderPartyView();
+}
+
+// p.80: spend 3 XP to gain +1 Fortune permanently
+// max +2 above initial; max +1 for Large / Invulnerable / initial Fortune ≤ 3
+function spendXpOnFortune(heroId) {
+  const h    = heroes.find(h=>h.id===heroId);
+  const race = RACE_DB.find(r=>r.id===h.raceId);
+  if (!h || !race) return;
+
+  if (h.xp < 3) return;
+
+  const initFortune = race.fortune ?? 4;
+  const isRestricted = race.size === 'large'
+    || (race.startingSkills||[]).some(s => s.toLowerCase().includes('invulnerable'))
+    || initFortune <= 3;
+  const maxBonus = isRestricted ? 1 : 2;
+  if (!h.fortuneXpBonuses) h.fortuneXpBonuses = 0;
+  if (h.fortuneXpBonuses >= maxBonus) return;
+
+  h.xp -= 3;
+  h.xpSpent += 3;
+  h.fortune = (h.fortune ?? initFortune) + 1;
+  h.fortuneXpBonuses++;
+  h.vp += 2;
+
+  save();
+  renderXpView();
+  renderPartyView();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3812,12 +3883,17 @@ function openDetail(id) {
     if (!isFixed && !isSkillOnly && raceAt) {
       let dc = raceAt.dc;
       if (cls.bonusAttr === key && base === raceAt.min) dc = Math.max(1, dc - 1);
-      const xpCost  = dc * 3;
+      const xpCost         = dc * 3;
       const devPtsAvailNow = Math.floor(h.xp / 3);
-      const canUp   = devPtsAvailNow >= dc && base < raceAt.max;
+      const alreadyUsed    = !!(h.xpUpgrades||{})[key]; // p.80: once only
+      const canUp          = !alreadyUsed && devPtsAvailNow >= dc && base < raceAt.max;
+      const reason         = alreadyUsed ? 'Already upgraded (once per attr, p.80)'
+                           : base >= raceAt.max ? 'At racial maximum'
+                           : `Need ${xpCost} XP (${dc} dev pts)`;
       upgradeBtn = `<button class="attr-upgrade-btn ${canUp ? 'can-upgrade' : ''}"
         ${canUp ? `onclick="spendXpOnAttr('${h.id}','${key}',${dc});openDetail('${h.id}')"` : 'disabled'}
-        title="${canUp ? `Spend ${xpCost} XP (+2 VP)` : (base >= raceAt.max ? 'At maximum' : `Need ${xpCost} XP`)}">+</button>`;
+        title="${canUp ? `Spend ${xpCost} XP (+2 VP)` : reason}"
+        style="${alreadyUsed ? 'text-decoration:line-through;' : ''}">+</button>`;
     }
 
     // Edit mode: show input instead of static value
@@ -4664,15 +4740,26 @@ function addHeroSkill(heroId, skillName) {
   const h = heroes.find(h => h.id === heroId);
   if (!h) return;
   if (!h.skills) h.skills = [];
-  if (!h.skills.includes(skillName)) {
-    h.skills.push(skillName);
-    h.vp += 2; // each skill learned = +2 VP (rulebook p.80)
+  if (h.skills.includes(skillName)) return;
+
+  // p.78/80: max new skills after creation = Intelligence × 2
+  // Count only skills added after creation (not free race/class starting skills)
+  const race       = RACE_DB.find(r => r.id === h.raceId) || {};
+  const cls        = CLASS_DB.find(c => c.id === h.classId) || {};
+  const freeSkills = [...(race.startingSkills||[]), cls.startingSkill].filter(Boolean);
+  const newSkills  = h.skills.filter(s => !freeSkills.some(f => f.toLowerCase() === s.toLowerCase()));
+  const intVal     = h.attrs?.intelligence ?? 3;
+  const maxNew     = intVal * 2;
+  if (newSkills.length >= maxNew) {
+    alert(`Skill limit reached (max ${maxNew} new skills for Intelligence ${intVal}). Increase Intelligence to learn more.`);
+    return;
   }
+
+  h.skills.push(skillName);
+  h.vp += 2;
   save();
-  // Refresh skill chips in sheet and VP badge on roster card
   const el = document.getElementById('hero-skills-' + heroId);
   if (el) el.innerHTML = renderHeroSkillChips(h);
-  // Refresh the full party view so VP badges update
   renderPartyView();
 }
 
