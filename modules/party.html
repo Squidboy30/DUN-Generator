@@ -2020,7 +2020,7 @@ function renderXpView() {
 
         return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);${alreadyUsed?'opacity:.4':''}">
           <div style="flex:1;font-size:10px;color:${canUpgrade?'var(--text-bone)':'var(--text-dim)'};">
-            ${a.icon} ${a.label}
+            ${ATTR_ICONS[a.icon]||a.icon} ${a.label}
             <span style="font-size:9px;color:var(--text-muted);margin-left:4px;">${cur} → ${cur+1}</span>
             ${alreadyUsed?'<span style="font-size:8px;color:#c06040;margin-left:4px;">✓ used (once only)</span>':''}
           </div>
@@ -2044,7 +2044,7 @@ function renderXpView() {
       const canFort        = !fortUsed && h.xp >= 3;
       const fortuneRow     = `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);${fortUsed?'opacity:.4':''}">
         <div style="flex:1;font-size:10px;color:${canFort?'var(--gold-bright)':'var(--text-dim)'};">
-          ⭐ Fortune
+          <span style="display:inline-flex;align-items:center;gap:3px;"><svg viewBox="0 0 20 20" fill="white" width="12" height="12" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="2" width="10" height="8" rx="1"/><rect x="4" y="3.5" width="2" height="5" rx="0.5"/><rect x="14" y="3.5" width="2" height="5" rx="0.5"/><rect x="8.5" y="9.5" width="3" height="8" rx="0.5"/></svg> Fortune</span>
           <span style="font-size:9px;color:var(--text-muted);margin-left:4px;">${h.fortune??initFortune} → ${(h.fortune??initFortune)+1}</span>
           ${fortUsed?`<span style="font-size:8px;color:#c06040;margin-left:4px;">✓ max (+${maxFortBonus})</span>`:''}
           <span style="font-size:8px;color:var(--text-dim);margin-left:4px;">(max +${maxFortBonus} above initial)</span>
@@ -2462,18 +2462,18 @@ const CLASS_DB = [
 ];
 
 const ATTR_META = [
-  { key:"movement",      label:"Movement",       icon:"🥾", note:"squares per turn",           devPts:true  },
-  { key:"combatSkill",   label:"Combat Skill",   icon:"⚔",  note:"melee attacks",          devPts:true  },
-  { key:"strength",      label:"Strength",       icon:"💪", note:"damage & carry",          devPts:true  },
-  { key:"shootingSkill", label:"Shooting Skill", icon:"🎯", note:"ranged attacks",          devPts:true  },
-  { key:"agility",       label:"Agility",        icon:"🌬", note:"dodge & jump",            devPts:true  },
-  { key:"intelligence",  label:"Intelligence",   icon:"🧠", note:"spells & traps",          devPts:true  },
-  { key:"mana",          label:"Mana",           icon:"✨", note:"spell power",             devPts:true  },
-  { key:"courage",       label:"Courage",        icon:"🚩", note:"resist fear",             devPts:true  },
-  { key:"naturalArmor",  label:"Natural Armor",  icon:"🛡", note:"fixed (skin/endurance)",  devPts:false },
-  { key:"vitality",      label:"Vitality",       icon:"❤",  note:"hit points",              devPts:true  },
-  { key:"dexterity",     label:"Dexterity",      icon:"🖐", note:"traps & locks (skill-only)", devPts:false },
-  { key:"perception",    label:"Perception",     icon:"👁", note:"detect & initiative (skill-only)", devPts:false },
+  { key:"movement",      label:"Movement",       icon:"movement",      note:"squares per turn",              devPts:true  },
+  { key:"combatSkill",   label:"Combat Skill",   icon:"combatSkill",   note:"melee attacks",                 devPts:true  },
+  { key:"strength",      label:"Strength",       icon:"strength",      note:"damage & carry",                devPts:true  },
+  { key:"shootingSkill", label:"Shooting Skill", icon:"shootingSkill", note:"ranged attacks",                devPts:true  },
+  { key:"agility",       label:"Agility",        icon:"agility",       note:"dodge & jump",                  devPts:true  },
+  { key:"intelligence",  label:"Intelligence",   icon:"intelligence",  note:"spells & traps",                devPts:true  },
+  { key:"mana",          label:"Mana",           icon:"mana",          note:"spell power",                   devPts:true  },
+  { key:"courage",       label:"Courage",        icon:"courage",       note:"resist fear",                   devPts:true  },
+  { key:"naturalArmor",  label:"Natural Armor",  icon:"naturalArmor",  note:"fixed (skin/endurance)",        devPts:false },
+  { key:"vitality",      label:"Vitality",       icon:"vitality",      note:"hit points",                    devPts:true  },
+  { key:"dexterity",     label:"Dexterity",      icon:"dexterity",     note:"traps & locks (skill-only)",    devPts:false },
+  { key:"perception",    label:"Perception",     icon:"perception",    note:"detect & initiative (skill-only)", devPts:false },
 ];
 
 // Portrait emoji options
@@ -2771,7 +2771,7 @@ function renderStepRace() {
 
   return `
     <div style="font-size:9px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">
-      Click a card to select. Click again (or the 🔍 button) to enlarge and read the full card.
+      Click a card to select. Click again (or the zoom button) to enlarge and read the full card.
     </div>
     <div class="race-img-grid">${cards}</div>
     <div class="race-detail" id="race-detail">${detail}</div>`;
@@ -2785,7 +2785,7 @@ function renderRaceDetail(race) {
     const dots = at.dc > 0 ? '●'.repeat(at.dc) : '—';
     const range = at.min === at.max ? `${at.min}` : `${at.min} – ${at.max}`;
     return `<div class="attr-row">
-      <span class="attr-name">${a.icon} ${a.label}</span>
+      <span class="attr-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}</span>
       <span class="attr-range">${range}</span>
       <span class="attr-cost"><span class="attr-dots">${dots}</span></span>
     </div>`;
@@ -2796,7 +2796,7 @@ function renderRaceDetail(race) {
     : null;
   const viewCardBtn = cardUrl
     ? `<button class="btn-secondary" style="font-size:9px;padding:3px 10px;margin-top:6px;"
-        onclick="showCardLightbox('${cardUrl}','${race.name} Race Card')">🃏 View Race Card</button>`
+        onclick="showCardLightbox('${cardUrl}','${race.name} Race Card')">View Race Card</button>`
     : '';
 
   return `
@@ -2937,7 +2937,7 @@ function renderStepAttrs() {
     // Dexterity and Perception: start at 0, skill-only, not on race card
     if (a.key === 'dexterity' || a.key === 'perception') {
       return `<div class="attr-builder-row">
-        <div class="attr-builder-name">${a.icon} ${a.label}<em>${a.note}</em></div>
+        <div class="attr-builder-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}<em>${a.note}</em></div>
         <div class="attr-builder-val" style="color:var(--text-muted)">0</div>
         <div class="attr-builder-range" style="color:#6a5030">skill-only</div>
         <div class="attr-cost-label" style="font-size:9px;color:#6a5030">modified by skills</div>
@@ -2948,7 +2948,7 @@ function renderStepAttrs() {
       const val = creatorState.attrs[a.key] ?? at?.min ?? 0;
       if (!at) return '';
       return `<div class="attr-builder-row">
-        <div class="attr-builder-name">${a.icon} ${a.label}<em>${a.note}</em></div>
+        <div class="attr-builder-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}<em>${a.note}</em></div>
         <div class="attr-builder-val" style="color:var(--text-muted)">${val}</div>
         <div class="attr-builder-range">(fixed)</div>
         <div class="attr-cost-label" style="font-size:9px;color:#6a5030">cannot change</div>
@@ -2964,7 +2964,7 @@ function renderStepAttrs() {
     const canDec = cur > at.min;
 
     return `<div class="attr-builder-row">
-      <div class="attr-builder-name">${a.icon} ${a.label}<em>${a.note}</em></div>
+      <div class="attr-builder-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}<em>${a.note}</em></div>
       <button class="attr-btn" ${canDec ? '' : 'disabled'} onclick="changeAttr('${a.key}',-1)">−</button>
       <div class="attr-builder-val">${cur}</div>
       <button class="attr-btn" ${canInc ? '' : 'disabled'} onclick="changeAttr('${a.key}',1)">+</button>
@@ -3360,72 +3360,72 @@ function renderStepSkills() {
   const race = RACE_DB.find(r => r.id === creatorState.raceId);
   const cls  = CLASS_DB.find(c => c.id === creatorState.classId);
 
-  const allowedTypes = CLASS_SKILL_TYPES[creatorState.classId] || ['combat'];
-  const intVal = creatorState.attrs.intelligence || 3;
-  const maxNewSkills = intVal * 2; // lifetime max new professional skills after creation
+  const allowedTypes  = CLASS_SKILL_TYPES[creatorState.classId] || ['combat'];
+  const intVal        = creatorState.attrs.intelligence || 3;
+  const maxExtraSkills = intVal * 2;
+  const racialSkills  = race ? race.startingSkills : [];
+  const classSkill    = cls.startingSkill || null;
+  const extraSkills   = creatorState.skills || [];
+  const vpCurrent     = 10 + (extraSkills.length * 2);
+  const base          = 'https://squidboy30.github.io/DUN-Generator/src/cards/';
 
-  // Free skills (part of base 10 VP — not selectable, already assigned)
-  const racialSkills = race ? race.startingSkills : [];
-  const classSkill   = cls.startingSkill || null;
+  // Tab state stored on creatorState
+  if (!creatorState._skillTab) creatorState._skillTab = allowedTypes[0];
+  const activeType = allowedTypes.includes(creatorState._skillTab)
+    ? creatorState._skillTab : allowedTypes[0];
 
-  const extraSkills = creatorState.skills || []; // manually chosen — each costs +2 VP
+  const tabs = allowedTypes.map(t =>
+    `<button class="skill-browser-tab ${t === activeType ? 'active' : ''}"
+      onclick="creatorState._skillTab='${t}';document.getElementById('creator-body').innerHTML=renderStepSkills()"
+      style="color:${TYPE_COLORS[t]};${t===activeType?'opacity:1;border-bottom:2px solid '+TYPE_COLORS[t]:''}">
+      ${TYPE_LABELS[t]}
+    </button>`).join('');
 
-  const vpCurrent = 10 + (extraSkills.length * 2);
+  const skills = SKILL_DB.filter(s => s.type === activeType);
+  const cards  = skills.map(s => {
+    const isRacial = racialSkills.some(r => r.toLowerCase() === s.name.toLowerCase());
+    const isClass  = classSkill && classSkill.toLowerCase() === s.name.toLowerCase();
+    const isFree   = isRacial || isClass;
+    const isSel    = extraSkills.includes(s.name);
+    const safeName = s.name.replace(/'/g,"\\'");
+    const imgUrl   = `${base}skills/${s.id}.jpg`;
+    const badge    = isFree
+      ? `<div class="skill-browser-owned" style="background:rgba(20,60,20,.88)">${isRacial?'Race':'Class'} skill</div>`
+      : isSel
+        ? `<div class="skill-browser-owned">✓ +2 VP</div>`
+        : `<button class="skill-browser-add-btn" onclick="event.stopPropagation();toggleSkill('${safeName}')">+ Add +2VP</button>`;
 
-  const sections = allowedTypes.map(type => {
-    const skills = SKILL_DB.filter(s => s.type === type);
-    const color  = TYPE_COLORS[type];
-    const chips  = skills.map(s => {
-      const isRacial = racialSkills.some(r => r.toLowerCase() === s.name.toLowerCase());
-      const isClass  = classSkill && classSkill.toLowerCase() === s.name.toLowerCase();
-      const isFree   = isRacial || isClass;
-      const isSel    = extraSkills.includes(s.name);
-      const freeLabel = isRacial ? '(race)' : isClass ? '(class)' : '';
-      const safeName  = s.name.replace(/'/g, "\\'");
-      return `<div class="skill-opt ${isSel ? 'selected' : ''} ${isFree ? 'free-skill' : ''}"
-        ${!isFree ? `onclick="toggleSkill('${safeName}')"` : ''}
-        title="${isFree ? `Free ${freeLabel} — already assigned, no VP cost` : `+2 VP if selected`}">
-        <div class="skill-name">${s.name}
-          ${isFree ? `<em class="skill-tag">${freeLabel} — free</em>` : ''}
-          ${isSel  ? `<em class="skill-tag vp-cost">+2 VP</em>` : ''}
-        </div>
-      </div>`;
-    }).join('');
-
-    return `<div style="margin-bottom:16px;">
-      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;color:${color};
-        border-bottom:2px solid ${color};padding-bottom:4px;margin-bottom:8px;">
-        ${TYPE_LABELS[type]} (${skills.length})
+    return `<div class="skill-browser-card ${isSel||isFree ? 'has-skill' : ''}"
+      onclick="showCardLightbox('${imgUrl}','${safeName}')"
+      title="${isFree ? 'Free skill — included in base VP' : isSel ? 'Click to enlarge' : 'Click to enlarge, use + Add button to select'}">
+      <img src="${imgUrl}" alt="${s.name}" loading="lazy"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="skill-browser-fallback" style="display:none">
+        <div style="font-size:10px;text-align:center;padding:8px;">${s.name}</div>
       </div>
-      <div class="skills-grid">${chips}</div>
+      ${badge}
     </div>`;
   }).join('');
 
   return `
-    <div style="margin-bottom:12px;background:var(--bg-dark);border:1px solid var(--border-gold);
-      padding:10px 16px;">
+    <div style="background:var(--bg-dark);border:1px solid var(--border-gold);padding:10px 16px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);">
-          VP: <strong>${vpCurrent}</strong>
-        </div>
+        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);">VP: <strong>${vpCurrent}</strong></div>
         <div style="font-size:10px;color:var(--text-muted);">
-          Extra skills: <strong style="color:var(--gold-bright)">${extraSkills.length}</strong>
-          × 2 VP = +${extraSkills.length * 2} VP
+          Extra: <strong style="color:var(--gold-bright)">${extraSkills.length}</strong>/${maxExtraSkills} max (Int×2)
         </div>
       </div>
       <div style="font-size:10px;color:var(--text-muted);">
-        <strong style="color:var(--text-bone)">Free (included in base 10 VP):</strong>
-        Race: ${racialSkills.map(s => `<span class="skill-chip">${s}</span>`).join(' ')}
-        ${classSkill ? `· Class: <span class="skill-chip">${classSkill}</span>` : ''}
+        <strong style="color:var(--text-bone)">Free (base 10 VP):</strong>
+        ${racialSkills.map(s=>`<span class="skill-chip">${s}</span>`).join(' ')}
+        ${classSkill?`· <span class="skill-chip">${classSkill}</span>`:''}
       </div>
     </div>
-    <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-bottom:12px;">
-      Click a skill below to add it as an <strong>extra skill (+2 VP each)</strong>.
-      Class: <strong>${cls.name}</strong> can learn: 
-      ${allowedTypes.map(t => `<span style="color:${TYPE_COLORS[t]}">${TYPE_LABELS[t]}</span>`).join(', ')}.
-      Lifetime max new professional skills: INT×2 = ${maxNewSkills}.
+    <div style="font-size:9px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">
+      Click a card to enlarge and read. Use <strong style="color:var(--gold-bright)">+ Add +2VP</strong> to select extra skills.
     </div>
-    ${sections}`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">${tabs}</div>
+    <div class="race-img-grid" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr));">${cards}</div>`;
 }
 
 function toggleSkill(name) {
@@ -3707,7 +3707,7 @@ function renderStepReview() {
     const val = creatorState.attrs[a.key];
     if (val == null) return '';
     return `<div class="attr-row">
-      <span class="attr-name">${a.icon} ${a.label}</span>
+      <span class="attr-name">${ATTR_ICONS[a.icon]||a.icon} ${a.label}</span>
       <span class="attr-range" style="font-size:14px;color:var(--gold-light)">${val}</span>
     </div>`;
   }).join('');
@@ -3941,18 +3941,18 @@ function openDetail(id) {
   </div>`;
 
   const attrRows = [
-    attrRow('movement','Movement','🥾','squares per turn'),
-    attrRow('combatSkill','Combat Skill','⚔','melee attacks'),
-    attrRow('strength','Strength','💪','damage & carry'),
-    attrRow('shootingSkill','Shooting Skill','🎯','ranged attacks'),
-    attrRow('agility','Agility','🌬','dodge & jump'),
-    attrRow('intelligence','Intelligence','🧠','spells & traps'),
-    h.attrs.mana != null ? attrRow('mana','Mana','✨','spell power') : '',
-    attrRow('courage','Courage','🚩','resist fear'),
-    attrRow('naturalArmor','Natural Armor','🛡','fixed — skin toughness'),
-    attrRow('vitality','Vitality','❤','hit points'),
-    attrRow('dexterity','Dexterity','🖐','traps & locks'),
-    attrRow('perception','Perception','👁','detect & initiative'),
+    attrRow('movement','Movement',ATTR_ICONS['movement']||'movement','squares per turn'),
+    attrRow('combatSkill','Combat Skill',ATTR_ICONS['combatSkill']||'combatSkill','melee attacks'),
+    attrRow('strength','Strength',ATTR_ICONS['strength']||'strength','damage & carry'),
+    attrRow('shootingSkill','Shooting Skill',ATTR_ICONS['shootingSkill']||'shootingSkill','ranged attacks'),
+    attrRow('agility','Agility',ATTR_ICONS['agility']||'agility','dodge & jump'),
+    attrRow('intelligence','Intelligence',ATTR_ICONS['intelligence']||'intelligence','spells & traps'),
+    h.attrs.mana != null ? attrRow('mana','Mana',ATTR_ICONS['mana']||'mana','spell power') : '',
+    attrRow('courage','Courage',ATTR_ICONS['courage']||'courage','resist fear'),
+    attrRow('naturalArmor','Natural Armor',ATTR_ICONS['naturalArmor']||'naturalArmor','fixed — skin toughness'),
+    attrRow('vitality','Vitality',ATTR_ICONS['vitality']||'vitality','hit points'),
+    attrRow('dexterity','Dexterity',ATTR_ICONS['dexterity']||'dexterity','traps & locks'),
+    attrRow('perception','Perception',ATTR_ICONS['perception']||'perception','detect & initiative'),
   ].join('') + totalArmorRow;
 
   // Fortune pips — show fortuneBase and current max (can be raised +2)
@@ -3981,7 +3981,7 @@ function openDetail(id) {
           onclick="window._detailEditMode=!window._detailEditMode;openDetail('${h.id}')"
           style="font-size:9px;padding:4px 10px;${isEdit ? 'border-color:var(--gold-bright);color:var(--gold-bright)' : ''}"
           title="Toggle manual edit mode — directly change any stat value">
-          ✏ ${isEdit ? 'EDITING' : 'Edit'}
+          ${isEdit ? 'EDITING' : 'Edit'}
         </button>
         <button class="creator-close" onclick="closeDetail()">✕</button>
       </div>
@@ -4002,9 +4002,9 @@ function openDetail(id) {
 
         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
           ${race.cardSiteId ? `<button class="btn-secondary" style="font-size:8px;padding:3px 8px;"
-            onclick="showCardLightbox('https://squidboy30.github.io/DUN-Generator/src/cards/races/${race.cardSiteId}.jpg','${race.name} Race Card')">🃏 Race Card</button>` : ''}
+            onclick="showCardLightbox('https://squidboy30.github.io/DUN-Generator/src/cards/races/${race.cardSiteId}.jpg','${race.name} Race Card')">Race Card</button>` : ''}
           ${cls.cardSiteId ? `<button class="btn-secondary" style="font-size:8px;padding:3px 8px;"
-            onclick="showCardLightbox('https://squidboy30.github.io/DUN-Generator/src/cards/classes/${cls.cardSiteId}.jpg','${cls.name} Class Card')">🃏 Class Card</button>` : ''}
+            onclick="showCardLightbox('https://squidboy30.github.io/DUN-Generator/src/cards/classes/${cls.cardSiteId}.jpg','${cls.name} Class Card')">Class Card</button>` : ''}
         </div>
 
         <hr class="section-divider">
@@ -4120,9 +4120,9 @@ function openDetail(id) {
           onchange="updateNotes('${h.id}',this.value)">${h.notes || ''}</textarea>
 
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn-secondary" onclick="restHero('${h.id}');closeDetail()">⛺ Rest (restore all)</button>
+          <button class="btn-secondary" onclick="restHero('${h.id}');closeDetail()">Rest (restore all)</button>
           <button class="btn-secondary" style="color:#bf4040;border-color:#7a2020;margin-left:auto;"
-            onclick="if(confirm('Delete ${h.name} permanently?')){deleteHero('${h.id}');closeDetail()}">🗑 Delete Hero</button>
+            onclick="if(confirm('Delete ${h.name} permanently?')){deleteHero('${h.id}');closeDetail()}">Delete Hero</button>
         </div>
       </div>
     </div>`;
@@ -4525,7 +4525,7 @@ function showCardLightbox(imgUrl, title, desc) {
 }
 
 const SKILL_ICONS = {
-  combat:'⚔', exploration:'🌲', scholarly:'📖', nature:'🐾'
+  combat:'CM', exploration:'EX', scholarly:'SC', nature:'NA'
 };
 const LORE_ICONS = {
   Fire:'🔥', Water:'💧', Air:'💨', Earth:'🪨',
@@ -4790,7 +4790,7 @@ function renderSpellSection(h, race, cls) {
         const safeName = s.name.replace(/'/g,"\\'");
         return `<span class="skill-chip spell-chip" style="cursor:pointer;"
           onclick="removeHeroSpell('${h.id}','${safeName}')">
-          ${s.name} <span style="color:#c090ff;font-size:8px;">${s.manaCost > 1 ? '★' : ''}✨</span>
+          ${s.name} <span style="color:#c090ff;font-size:8px;">${''}✨</span>
           <span style="color:#c06060;font-size:9px;margin-left:4px"> ✕</span>
         </span>`;
       }).join('')}
@@ -4850,7 +4850,7 @@ function toggleSpellPicker(heroId) {
     const color = LORE_COLORS[lore] || '#888';
     const chips = spells.map(s => {
       const safeName = s.name.replace(/'/g,"\\'");
-      const manaTag = s.manaCost > 1 ? ' ★' : '';
+      const manaTag = '';
       return `<span class="skill-chip" style="cursor:pointer;border-color:${color};margin:2px;"
         onclick="learnSpell('${heroId}','${safeName}')">
         + ${s.name}${manaTag}
@@ -5075,4 +5075,51 @@ if (activePartyId) {
 renderPartiesList();
 </script>
 </body>
-</html>
+</html>// Global attribute icon SVGs (DUN official icons from race/class cards)
+const ATTR_ICONS = {
+
+    // LEFT COLUMN: boot=Move, swords=CS, fist=Str, target=Shoot, breastplate=NA
+    movement:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 1.5h5v2h1.5v3h-1v1.5H8V6.5H7v-3h0.5v-2zM6 7h8l1 2.5v9H5v-9L6 7z"/><path d="M7 10h6M7 12.5h6M7 15h6" stroke="#8a6020" stroke-width="0.5" fill="none"/></svg>`,
+    combatSkill:  `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 2L10.5 12L16 18L14 18L9.5 13.5L3.5 4L3 2Z"/>
+      <path d="M17 2L9.5 12L4 18L6 18L10.5 13.5L16.5 4L17 2Z"/>
+      <rect x="2.5" y="1.5" width="2.5" height="4" rx="0.5" transform="rotate(-45 4 2)"/>
+      <rect x="15" y="1.5" width="2.5" height="4" rx="0.5" transform="rotate(45 16 2)"/>
+    </svg>`,
+    strength:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 14.5v-3.5c0-0.8 0.3-1.5 0.8-2L10 7.5l2.7 1.5c0.5 0.5 0.8 1.2 0.8 2v3.5H12V11c0-0.6-0.4-1-0.9-1.2L10 9.3l-1.1 0.5C8.4 10 8 10.4 8 11v3.5H6.5z"/><path d="M7 9.5C6.3 9 6 8.2 6 7.3 6 5.5 7.8 4 10 4s4 1.5 4 3.3c0 0.9-0.3 1.7-1 2.2"/><path d="M8 8.5 C7.5 8 7.2 7.5 7.2 7 7.2 5.9 8.5 5 10 5s2.8 0.9 2.8 2c0 0.5-0.3 1-0.8 1.5" fill="#5a3a10"/></svg>`,
+    shootingSkill:`<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="11" r="7" stroke="white" stroke-width="1.5"/><circle cx="9" cy="11" r="4.5" stroke="white" stroke-width="1.2"/><circle cx="9" cy="11" r="2" stroke="white" stroke-width="1"/><circle cx="9" cy="11" r="0.7" fill="white"/><path d="M15 3L18 3L18 6M18 3L13 8" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    naturalArmor: `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M4 6.5C4 6.5 5.5 5 10 5C14.5 5 16 6.5 16 6.5L17 9C17 9 14.5 8 10 8C5.5 8 3 9 3 9L4 6.5z"/><path d="M3 9C3 9 2 10.5 2 12C2 15 5.5 17 10 17C14.5 17 18 15 18 12C18 10.5 17 9 17 9C17 9 14.5 10.5 10 10.5C5.5 10.5 3 9 3 9z"/><path d="M10 10.5V17M7 11C6.5 12 6.5 13.5 7 14.5M13 11C13.5 12 13.5 13.5 13 14.5" stroke="#7a5010" stroke-width="0.8" fill="none"/></svg>`,
+    // RIGHT COLUMN: wing=Agl, brain=Int, swirl=Mana, banner=Courage, heart=Vit
+    agility:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15.5 9.5C13.5 5 11 3 8.5 3C7 3 6 4 6 5C6 5 8 4.5 9.5 6.5C9.5 6.5 8 6 7 7.5C7 7.5 9 7.5 10.5 9.5C10.5 9.5 8 9 7 11C7 11 9 10.5 11 12.5C11 12.5 8.5 12.5 7.5 14.5C7.5 14.5 10 14 12 16.5C13.5 15 14.5 12.5 15.5 9.5Z"/>
+    </svg>`,
+    intelligence: `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.5 4C5 4 4 5 4 6.5C4 7.5 4.5 8.3 5.2 8.8C4.5 9.3 4 10.1 4 11C4 12.5 5.2 13.5 6.5 13.5H7V16C7 16.6 7.4 17 8 17H12C12.6 17 13 16.6 13 16V13.5H13.5C14.8 13.5 16 12.5 16 11C16 10.1 15.5 9.3 14.8 8.8C15.5 8.3 16 7.5 16 6.5C16 5 15 4 13.5 4C13 4 12.5 4.2 12.1 4.5C11.6 4.2 11 4 10 4C9 4 8.4 4.2 7.9 4.5C7.5 4.2 7 4 6.5 4Z" fill="white"/>
+      <path d="M10 4V17M7 8H13M7 11H13" stroke="rgba(30,15,5,0.35)" stroke-width="0.8" fill="none"/>
+    </svg>`,
+    mana:         `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 17C10 17 4 13 4 8C4 5.5 6.5 4 10 4C10 4 8 5.5 8 8C8 10 10 12 10 14.5C10 12 12 10 12 8C12 5.5 10 4 10 4C13.5 4 16 5.5 16 8C16 13 10 17 10 17z"/><path d="M10 4C10 4 9 5 9 7C9 8.5 10 10 10 10C10 10 11 8.5 11 7C11 5 10 4 10 4z" fill="#8a6020"/></svg>`,
+    courage:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <rect x="9" y="2" width="1.5" height="16" rx="0.5"/>
+      <path d="M10.5 3H17V13H10.5V3Z"/>
+      <path d="M10.5 13L17 13L13.75 17L10.5 13Z"/>
+    </svg>`,
+    vitality:     `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 17C10 17 2 12 2 7C2 4.8 3.8 3 6 3C7.5 3 8.8 3.8 9.5 5C9.8 4.5 10 4.2 10 4.2C10 4.2 10.2 4.5 10.5 5C11.2 3.8 12.5 3 14 3C16.2 3 18 4.8 18 7C18 12 10 17 10 17Z"/>
+      <path d="M3.5 10.5H6.5L8 7.5L10 13.5L11.5 9.5L12.5 10.5H16.5" fill="none" stroke="#2a1808" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    // BOTTOM ROW
+    armor:        `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L17.5 5V10C17.5 14.5 14 17.5 10 19C6 17.5 2.5 14.5 2.5 10V5L10 2z"/><path d="M10 4L15.5 6.5V10C15.5 13.5 13 16 10 17.3C7 16 4.5 13.5 4.5 10V6.5L10 4z" fill="#5a3a10"/></svg>`,
+    dexterity:    `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5L11.8 4.2C12.7 3.9 13.7 3.9 14.6 4.4L16.5 2.5L18 4L16.1 5.9C16.6 6.8 16.6 7.8 16.1 8.7L18.5 10L17 12.5L14.5 11.5C13.8 12.2 12.9 12.6 12 12.8L11.5 15.5H8.5L8 12.8C7.1 12.6 6.2 12.2 5.5 11.5L3 12.5L1.5 10L3.9 8.7C3.4 7.8 3.4 6.8 3.9 5.9L2 4L3.5 2.5L5.4 4.4C6.3 3.9 7.3 3.9 8.2 4.2L10 1.5Z" fill="none" stroke="white" stroke-width="1.2"/><circle cx="10" cy="9" r="3.8" fill="white"/><circle cx="10" cy="7.8" r="1.4" fill="#1a0800"/><path d="M7.2 12.5C7.2 10.6 8.5 9.8 10 9.8C11.5 9.8 12.8 10.6 12.8 12.5" fill="#1a0800"/></svg>`,
+    perception:   `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5L19 15.5H1L10 1.5z"/><path d="M10 1.5L19 15.5H1L10 1.5z" fill="#3a2010" clip-path="inset(55% 0 0 0)"/><ellipse cx="10" cy="13" rx="4.5" ry="3.5" fill="#1a0800"/><ellipse cx="10" cy="13" rx="3" ry="2.2" fill="white"/><circle cx="10.8" cy="12.4" r="1.1" fill="#1a0800"/><circle cx="11.3" cy="12" r="0.4" fill="white"/></svg>`,
+    fortune:      `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="2" width="10" height="8" rx="1"/><rect x="4" y="3.5" width="2" height="5" rx="0.5"/><rect x="14" y="3.5" width="2" height="5" rx="0.5"/><rect x="8.5" y="9.5" width="3" height="8" rx="0.5"/><line x1="6" y1="5" x2="14" y2="5" stroke="#4a3010" stroke-width="0.7"/><line x1="6" y1="7" x2="14" y2="7" stroke="#4a3010" stroke-width="0.7"/></svg>`,
+    xp:           `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5L12.5 8H19.5L14 12L16.5 19L10 15L3.5 19L6 12L0.5 8H7.5L10 1.5Z"/></svg>`,
+    weight:       `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M7 4C7 2.9 8.3 2 10 2C11.7 2 13 2.9 13 4C13 4.8 12.4 5.5 11.5 5.8L12.5 8H7.5L8.5 5.8C7.6 5.5 7 4.8 7 4Z"/><path d="M5 8H15L16.5 18H3.5L5 8Z"/></svg>`,
+    coins:        `<svg viewBox="0 0 20 20" fill="white" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="15" rx="6" ry="2.2"/><rect x="4" y="11" width="12" height="4" fill="white"/><ellipse cx="10" cy="11" rx="6" ry="2.2"/><rect x="4" y="7.5" width="12" height="3.5" fill="white"/><ellipse cx="10" cy="7.5" rx="6" ry="2.2"/><ellipse cx="10" cy="7.5" rx="6" ry="2.2" fill="#c8a020"/><ellipse cx="10" cy="11" rx="6" ry="2.2" fill="#c8a020"/><ellipse cx="10" cy="15" rx="6" ry="2.2"/></svg>`,
+    brain:        `<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.5 4C5 4 4 5 4 6.5C4 7.5 4.5 8.3 5.2 8.8C4.5 9.3 4 10.1 4 11C4 12.5 5.2 13.5 6.5 13.5H7V16C7 16.6 7.4 17 8 17H12C12.6 17 13 16.6 13 16V13.5H13.5C14.8 13.5 16 12.5 16 11C16 10.1 15.5 9.3 14.8 8.8C15.5 8.3 16 7.5 16 6.5C16 5 15 4 13.5 4C13 4 12.5 4.2 12.1 4.5C11.6 4.2 11 4 10 4C9 4 8.4 4.2 7.9 4.5C7.5 4.2 7 4 6.5 4Z" fill="white"/>
+      <path d="M10 4V17M7 8H13M7 11H13" stroke="rgba(30,15,5,0.35)" stroke-width="0.8" fill="none"/>
+    </svg>`,
+
+};
+
+
