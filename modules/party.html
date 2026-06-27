@@ -1929,7 +1929,7 @@ function renderDunHeroCard(h, inParty) {
         ${statRow('intelligence',  ICO.brain,        'right')}
         ${h.attrs.mana != null
           ? statRow('mana', ICO.mana, 'right')
-          : `<div class="stat-row right"><div class="stat-box" style="color:#888;font-size:11px;">—</div><div class="stat-dun-icon" style="opacity:.4">${ICO.mana}</div></div>`}
+          : `<div class="stat-row right"><div class="stat-dun-icon" style="opacity:.4">${ICO.mana}</div><div class="stat-box" style="color:#888;font-size:11px;">—</div></div>`}
         ${statRow('courage',       ICO.courage,      'right')}
         ${statRow('vitality',      ICO.vitality,     'right')}
       </div>
