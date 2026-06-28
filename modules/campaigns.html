@@ -1325,31 +1325,44 @@ body {
       </div>
 
       <!-- Campaign Travel Sidebar (shown in travel mode) -->
-      <div id="travel-sidebar" style="display:none;width:260px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--panel-border);display:none;flex-direction:column;overflow:hidden;">
+      <div id="travel-sidebar" style="display:none;width:260px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--panel-border);flex-direction:column;overflow:hidden;">
         <div style="padding:12px 14px;border-bottom:1px solid var(--panel-border);">
-          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold-light);margin-bottom:10px;">CAMPAIGN TRAVEL</div>
-          <!-- Turn counter -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);">TURN</span>
-            <button onclick="travelState.turn=Math.max(1,travelState.turn-1);renderTravelSidebar()" style="width:20px;height:20px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:12px;line-height:1;">−</button>
-            <span id="travel-turn" style="font-family:'Cinzel',serif;font-size:18px;color:var(--gold-light);min-width:28px;text-align:center;">1</span>
-            <button onclick="travelState.turn++;renderTravelSidebar()" style="width:20px;height:20px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:12px;line-height:1;">+</button>
-            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-left:4px;">WEEK</span>
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold-light);margin-bottom:8px;">CAMPAIGN TRAVEL</div>
+
+          <!-- How to use hint -->
+          <div id="travel-hint" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);font-style:italic;margin-bottom:10px;line-height:1.5;padding:6px 8px;background:rgba(255,255,255,0.03);border-left:2px solid var(--border-gold);">
+            Click any territory on the map to select it.
           </div>
+
+          <!-- Turn counter -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);">TURN</span>
+            <button onclick="travelState.turn=Math.max(1,travelState.turn-1);renderTravelSidebar()" style="width:22px;height:22px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;">−</button>
+            <span id="travel-turn" style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold-light);min-width:32px;text-align:center;">1</span>
+            <button onclick="travelState.turn++;renderTravelSidebar()" style="width:22px;height:22px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;">+</button>
+            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);">WEEK</span>
+          </div>
+
           <!-- Current location -->
-          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);padding:8px 10px;margin-bottom:8px;">
-            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">CURRENT LOCATION</div>
-            <div id="travel-location" style="font-family:'IM Fell English',serif;font-size:13px;color:var(--text-light);">— Select a territory —</div>
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);padding:8px 10px;margin-bottom:10px;">
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">PARTY LOCATION</div>
+            <div id="travel-location" style="font-family:'IM Fell English',serif;font-size:13px;color:var(--text-light);">Not placed</div>
             <div id="travel-terrain" style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-muted);margin-top:2px;letter-spacing:1px;"></div>
           </div>
-          <!-- Action buttons -->
-          <div style="display:flex;gap:6px;margin-bottom:6px;">
-            <button class="tool-btn" id="btn-travel" onclick="confirmTravel()" style="flex:1;display:none;">Travel Here ↵</button>
-          </div>
-          <div style="display:flex;gap:6px;">
-            <button class="tool-btn" onclick="setPartyHere()" style="flex:1;font-size:9px;">Set Party Here</button>
-            <button class="tool-btn" onclick="travelRollEvent()" style="flex:1;font-size:9px;">Roll Event</button>
-          </div>
+
+          <!-- Primary action button — context-sensitive -->
+          <button class="tool-btn" id="btn-place-party" onclick="setPartyHere()"
+            style="width:100%;margin-bottom:6px;display:none;border-color:var(--gold-light);color:var(--gold-light);">
+            ⚑ Place Party Here
+          </button>
+          <button class="tool-btn" id="btn-travel" onclick="confirmTravel()"
+            style="width:100%;margin-bottom:6px;display:none;border-color:#64c864;color:#64c864;">
+            ➜ Travel Here (advances turn)
+          </button>
+          <button class="tool-btn" id="btn-roll-event" onclick="travelRollEvent()"
+            style="width:100%;margin-bottom:0;display:none;">
+            ⚄ Roll Travel Event
+          </button>
         </div>
 
         <!-- Selected territory info -->
@@ -1878,38 +1891,55 @@ function initMapInteraction() {
     mapDragOffY = mapOffY;
     container.classList.add('panning');
   });
+  var _mapMoved = false;
   document.addEventListener('mousemove', function(e) {
     if (!mapDragging) return;
-    mapOffX = mapDragOffX + (e.clientX - mapDragStartX);
-    mapOffY = mapDragOffY + (e.clientY - mapDragStartY);
+    var dx = e.clientX - mapDragStartX;
+    var dy = e.clientY - mapDragStartY;
+    if (!_mapMoved && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+    _mapMoved = true;
+    mapOffX = mapDragOffX + dx;
+    mapOffY = mapDragOffY + dy;
     applyMapTransform();
   });
   document.addEventListener('mouseup', function() {
     if (!mapDragging) return;
     mapDragging = false;
+    _mapMoved = false;
     var container = document.getElementById('map-container');
     if (container) container.classList.remove('panning');
   });
 
-  // Click to place pin
+  // Click to place pin OR select territory in travel mode
   container.addEventListener('click', function(e) {
-    if (!pinModeNodeId) return;
-    if (mapDragging) return;
-    // Ignore clicks on existing pin markers
+    if (_mapMoved) return;
     if (e.target.closest && e.target.closest('.map-pin-marker')) return;
+
+    var rect = container.getBoundingClientRect();
+    var imgX = (e.clientX - rect.left  - mapOffX) / mapScale;
+    var imgY = (e.clientY - rect.top   - mapOffY) / mapScale;
+
+    // Travel mode: hit-test territories
+    if (travelMode) {
+      var hit = null;
+      for (var ti = 0; ti < TERRITORIES.length; ti++) {
+        if (pointInPolygon(imgX, imgY, TERRITORIES[ti].coords)) {
+          hit = TERRITORIES[ti].id;
+          break;
+        }
+      }
+      if (hit) selectTerritory(hit);
+      return;
+    }
+
+    // Pin mode
+    if (!pinModeNodeId) return;
     var img = document.getElementById('map-img');
     if (!img) return;
-    var rect = container.getBoundingClientRect();
-    // Convert screen coords to image-space normalised coords
-    var screenX = e.clientX - rect.left;
-    var screenY = e.clientY - rect.top;
-    var imgX = (screenX - mapOffX) / mapScale;
-    var imgY = (screenY - mapOffY) / mapScale;
-    var iw = img.naturalWidth || 2000;
+    var iw = img.naturalWidth || 1000;
     var ih = img.naturalHeight || 722;
     var nx = imgX / iw;
     var ny = imgY / ih;
-    // Clamp to image bounds
     if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
     var node = activeCampaign.nodes.find(function(n){ return n.id === pinModeNodeId; });
     if (!node) return;
@@ -3681,6 +3711,21 @@ var TRAVEL_EVENTS = {
              'Flash flood — lose all progress this turn.']
 };
 
+// Ray-casting point-in-polygon test
+// coords: flat [x1,y1, x2,y2, ...]
+function pointInPolygon(px, py, coords) {
+  var inside = false;
+  var n = coords.length / 2;
+  for (var i = 0, j = n - 1; i < n; j = i++) {
+    var xi = coords[i*2], yi = coords[i*2+1];
+    var xj = coords[j*2], yj = coords[j*2+1];
+    if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
 // ── State ─────────────────────────────────────────────────────
 var travelMode = false;
 var travelState = {
@@ -3704,6 +3749,9 @@ function toggleTravelMode() {
     ? 'display:flex;flex-direction:column;width:260px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--panel-border);overflow:hidden;'
     : 'display:none;';
   overlay.style.display  = travelMode ? 'block' : 'none';
+  // In travel mode territories are clickable — set cursor accordingly
+  var mc = document.getElementById('map-container');
+  if (mc) mc.style.cursor = travelMode ? 'pointer' : 'grab';
 
   if (travelMode) {
     legend.textContent = 'Click a territory to select · Green = party · Gold = reachable · Red = selected';
@@ -3767,14 +3815,12 @@ function selectTerritory(id) {
 
 function setPartyHere() {
   var sid = travelState.selectedTerritoryId;
-  if (!sid) { alert('Select a territory first.'); return; }
+  if (!sid) { alert('Click a territory on the map first.'); return; }
   var t = TERRITORIES.find(function(x){ return x.id===sid; });
   if (!t) return;
-  var prev = travelState.partyTerritoryId;
-  travelState.partyTerritoryId   = sid;
+  travelState.partyTerritoryId    = sid;
   travelState.selectedTerritoryId = null;
-  var from = prev ? (TERRITORIES.find(function(x){ return x.id===prev; })||{name:'unknown'}).name : null;
-  travelState.log.unshift('Turn '+travelState.turn+': Party '+(from?'moved to':'placed at')+' '+t.name+(from?' from '+from:'')+'.');
+  travelState.log.unshift('Turn '+travelState.turn+': Party placed at '+t.name+'.');
   renderTerritoryOverlay();
   renderTravelSidebar();
 }
@@ -3822,39 +3868,65 @@ function renderTravelSidebar() {
 
   var pid = travelState.partyTerritoryId;
   var pt  = pid ? TERRITORIES.find(function(x){ return x.id===pid; }) : null;
+
+  // Party location display
   var locEl = document.getElementById('travel-location');
   var terEl = document.getElementById('travel-terrain');
-  if (locEl) locEl.textContent = pt ? pt.name : '— Select a territory —';
+  if (locEl) locEl.textContent = pt ? pt.name : 'Not placed';
   if (terEl) terEl.textContent = pt ? pt.type.toUpperCase() : '';
 
   var sid = travelState.selectedTerritoryId;
   var st  = sid ? TERRITORIES.find(function(x){ return x.id===sid; }) : null;
-  var infoDiv   = document.getElementById('travel-territory-info');
-  var travelBtn = document.getElementById('btn-travel');
+  var adjIds = pid ? (TERRITORIES.find(function(x){ return x.id===pid; })||{adj:[]}).adj : [];
+  var isAdj  = st && pid && adjIds.indexOf(sid) >= 0;
+  var isCurr = sid === pid;
 
+  // Hint text
+  var hint = document.getElementById('travel-hint');
+  if (hint) {
+    if (!sid && !pid)      hint.textContent = 'Click a territory on the map to select it, then place your party.';
+    else if (!sid && pid)  hint.textContent = 'Click an adjacent territory (shown in gold) to travel there.';
+    else if (isCurr)       hint.textContent = 'This is your current location. Click another territory to move.';
+    else if (isAdj)        hint.textContent = st.name+' is reachable. Travel there or roll a travel event first.';
+    else if (sid && !pid)  hint.textContent = 'Click "Place Party Here" to start your campaign at '+st.name+'.';
+    else                   hint.textContent = st.name+' is not adjacent. You must travel through connected regions.';
+  }
+
+  // Button visibility
+  var btnPlace  = document.getElementById('btn-place-party');
+  var btnTravel = document.getElementById('btn-travel');
+  var btnRoll   = document.getElementById('btn-roll-event');
+
+  if (btnPlace)  btnPlace.style.display  = (st && !isCurr && !pid) ? 'block' : 'none';
+  if (btnTravel) {
+    btnTravel.style.display = (st && isAdj && !isCurr) ? 'block' : 'none';
+    if (st) btnTravel.textContent = '➜ Travel to '+st.name+' (advances turn)';
+  }
+  if (btnRoll)   btnRoll.style.display   = (st || pid) ? 'block' : 'none';
+
+  // Selected territory info panel
+  var infoDiv = document.getElementById('travel-territory-info');
   if (st) {
     if (infoDiv) infoDiv.style.display = 'block';
     var nameEl = document.getElementById('tti-name');
     var typeEl = document.getElementById('tti-type');
     var settEl = document.getElementById('tti-settlements');
     var noteEl = document.getElementById('tti-notes');
-    if (nameEl) nameEl.textContent = st.name;
-    if (typeEl) typeEl.textContent = st.type.toUpperCase()+' TERRITORY';
-    var adjIds = pid ? (TERRITORIES.find(function(x){ return x.id===pid; })||{adj:[]}).adj : [];
-    var isAdj  = pid && adjIds.indexOf(sid) >= 0;
-    var isCurr = sid === pid;
+    if (nameEl) nameEl.textContent = st.name + (isCurr ? ' ★' : '');
+    if (typeEl) {
+      var tLabel = st.type.toUpperCase()+' TERRITORY';
+      if (isCurr) tLabel += ' · CURRENT';
+      else if (isAdj) tLabel += ' · ADJACENT';
+      typeEl.textContent = tLabel;
+    }
     if (settEl) settEl.innerHTML = st.settlements && st.settlements.length
       ? st.settlements.map(function(s){ return '🏰 '+s; }).join('<br>')
       : '<span style="color:var(--text-muted);font-style:italic;">No named settlements</span>';
     if (noteEl) noteEl.textContent = st.notes || '';
-    if (travelBtn) {
-      travelBtn.style.display = (isAdj && !isCurr) ? 'block' : 'none';
-      travelBtn.textContent   = 'Travel to '+st.name+' ↵';
-    }
   } else {
-    if (infoDiv)   infoDiv.style.display   = 'none';
-    if (travelBtn) travelBtn.style.display = 'none';
+    if (infoDiv) infoDiv.style.display = 'none';
   }
+
   renderTravelLog();
 }
 
