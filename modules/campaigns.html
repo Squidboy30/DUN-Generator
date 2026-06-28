@@ -1297,6 +1297,7 @@ body {
                  width="1000" height="722"
                  viewBox="0 0 1000 722"
                  style="position:absolute;top:0;left:0;display:none;overflow:visible;"
+                 pointer-events="all"
                  xmlns="http://www.w3.org/2000/svg">
               <!-- Party marker group — positioned by renderTerritoryOverlay() -->
               <g id="party-marker-g" style="display:none;" pointer-events="none">
@@ -3647,26 +3648,38 @@ function renderTravelOverlay() {
     var isSelected = t.id === selectedId;
     var isAdj      = adjIds.indexOf(t.id) >= 0;
 
-    // Ring colour
-    var ring = isParty    ? '#64c864'   // green — current
-             : isSelected ? '#e04040'   // red — selected
-             : isAdj      ? '#e0b840'   // gold — reachable
-             :               'rgba(200,180,120,0.5)'; // dim — inactive
+    var ring   = isParty    ? '#64c864'
+               : isSelected ? '#e04040'
+               : isAdj      ? '#e0b840'
+               :               'rgba(200,180,120,0.6)';
+    var ringW  = (isParty || isSelected) ? 3 : (isAdj ? 2 : 1.5);
+    var r      = isSelected ? 14 : 12;
+    var fillOp = isParty ? 0.35 : isSelected ? 0.35 : isAdj ? 0.25 : 0.12;
 
-    var ringW = (isParty || isSelected) ? 2.5 : 1.5;
-    var r     = isSelected ? 13 : 11;
-
-    // Party marker: filled gold circle above the node
-    var partyMarker = isParty
-      ? '<circle cx="'+t.x+'" cy="'+(t.y-20)+'" r="8" fill="#e0b840" stroke="#1a1008" stroke-width="1.5"/>'
-        +'<text x="'+t.x+'" y="'+(t.y-16)+'" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#1a1008">⚔</text>'
+    var marker = isParty
+      ? '<circle cx="' + t.x + '" cy="' + (t.y - 22) + '" r="9" fill="#e0b840" stroke="#1a1008" stroke-width="1.5"/>'
+        + '<text x="' + t.x + '" y="' + (t.y - 22) + '" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#1a1008">\u2694</text>'
       : '';
 
-    return '<g class="t-node" id="tn-'+t.id+'" style="cursor:pointer;" onclick="selectTerritoryNode(\''+t.id+'\')">'
-      + partyMarker
-      + '<circle cx="'+t.x+'" cy="'+t.y+'" r="'+r+'" fill="'+ring+'" fill-opacity="'+(isParty||isSelected||isAdj?0.3:0.15)+'" stroke="'+ring+'" stroke-width="'+ringW+'"/>'
+    return '<g data-tid="' + t.id + '">'
+      + marker
+      + '<circle cx="' + t.x + '" cy="' + t.y + '" r="16" fill="transparent" style="cursor:pointer;"/>'
+      + '<circle cx="' + t.x + '" cy="' + t.y + '" r="' + r + '" fill="' + ring + '" fill-opacity="' + fillOp + '" stroke="' + ring + '" stroke-width="' + ringW + '"/>'
       + '</g>';
   }).join('');
+
+  // Delegated click listener — avoids onclick attribute issues inside innerHTML
+  if (ov._travelClick) ov.removeEventListener('click', ov._travelClick);
+  ov._travelClick = function(e) {
+    if (!travelMode) return;
+    var el = e.target;
+    while (el && el !== ov) {
+      var tid = el.getAttribute && el.getAttribute('data-tid');
+      if (tid) { e.stopPropagation(); selectTerritoryNode(tid); return; }
+      el = el.parentNode;
+    }
+  };
+  ov.addEventListener('click', ov._travelClick);
 }
 
 function selectTerritoryNode(id) {
