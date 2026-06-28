@@ -3823,10 +3823,20 @@ function renderTravelOverlay() {
     var r      = isSelected ? 14 : 12;
     var fillOp = isParty ? 0.35 : isSelected ? 0.35 : isAdj ? 0.25 : 0.12;
 
-    var marker = isParty
-      ? '<circle cx="' + t.x + '" cy="' + (t.y - 22) + '" r="9" fill="#e0b840" stroke="#1a1008" stroke-width="1.5"/>'
-        + '<text x="' + t.x + '" y="' + (t.y - 22) + '" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#1a1008">\u2694</text>'
-      : '';
+    var marker = '';
+    if (isParty) {
+      var mx = t.x, my = t.y;
+      marker = '<g pointer-events="none">'
+        + '<ellipse cx="' + (mx+3) + '" cy="' + (my-14) + '" rx="9" ry="4" fill="rgba(0,0,0,0.45)"/>'
+        + '<path d="M' + mx + ',' + (my-14) + ' C' + (mx-15) + ',' + (my-28) + ' ' + (mx-18) + ',' + (my-40) + ' ' + (mx-18) + ',' + (my-48) + ' A18,18 0 1,1 ' + (mx+18) + ',' + (my-48) + ' C' + (mx+18) + ',' + (my-40) + ' ' + (mx+15) + ',' + (my-28) + ' ' + mx + ',' + (my-14) + 'Z" fill="#e02020" stroke="#fff" stroke-width="2"/>'
+        + '<circle cx="' + mx + '" cy="' + (my-48) + '" r="10" fill="#ff5555"/>'
+        + '<text x="' + mx + '" y="' + (my-48) + '" text-anchor="middle" dominant-baseline="central" font-size="14" fill="#fff">&#x2694;</text>'
+        + '<circle cx="' + mx + '" cy="' + (my-48) + '" r="22" fill="none" stroke="#ff4444" stroke-width="2.5">'
+          + '<animate attributeName="r" values="20;30;20" dur="1.8s" repeatCount="indefinite"/>'
+          + '<animate attributeName="opacity" values="0.7;0;0.7" dur="1.8s" repeatCount="indefinite"/>'
+        + '</circle>'
+        + '</g>';
+    }
 
     return '<g data-tid="' + t.id + '">'
       + marker
