@@ -1478,15 +1478,78 @@ body {
       </div>
     </div>
 
-    <div class="map-toolbar">
-      <button class="tool-btn" onclick="switchTab('designer')">← Back to Designer</button>
-      <div class="map-legend">
-        <span class="map-legend-item" id="map-pin-legend">
-          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#a07820" stroke="#1a1008" stroke-width="1.5"/><text x="7" y="7" text-anchor="middle" dominant-baseline="central" fill="#1a1008" font-size="8" font-family="Cinzel,serif" font-weight="700">1</text></svg>
-          Mission pin
-        </span>
-        <span id="map-legend-hint">Scroll to zoom · Drag to pan · Click map to place pin for selected mission</span>
+    <div class="map-toolbar" style="gap:8px;flex-wrap:wrap;">
+      <button class="tool-btn" onclick="switchTab('designer')">← Back</button>
+      <!-- Campaign travel controls always visible in toolbar -->
+      <div style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap;">
+        <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--gold-light);white-space:nowrap;">⚔ CAMPAIGN:</span>
+        <select id="travel-start-select"
+          style="background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'IM Fell English',serif;font-size:11px;padding:3px 6px;cursor:pointer;max-width:220px;">
+          <option value="">— Select starting territory —</option>
+          <option value="t1">T1 — Trecia North</option>
+          <option value="t2">T2 — Trecia South</option>
+          <option value="t3">T3 — Ascadia (W)</option>
+          <option value="t4">T4 — Ascadia (E)</option>
+          <option value="t5">T5 — Icy Deserts (W)</option>
+          <option value="t6">T6 — Icy Deserts (E)</option>
+          <option value="t7">T7 — Frost Wood (W)</option>
+          <option value="t8">T8 — Frost Wood (E)</option>
+          <option value="t9">T9 — Northern Forest</option>
+          <option value="t10">T10 — Pointy Mtns (W)</option>
+          <option value="t11">T11 — Pointy Mtns (E)</option>
+          <option value="t12">T12 — Mount Gyptian</option>
+          <option value="t13">T13 — Kyr Forest</option>
+          <option value="t14">T14 — Great Oak Grove</option>
+          <option value="t15">T15 — Lesonia (NW)</option>
+          <option value="t16">T16 — Lesonia (N)</option>
+          <option value="t17">T17 — Lesonia (C)</option>
+          <option value="t18">T18 — Lesonia (E)</option>
+          <option value="t19">T19 — Chattensum Forest</option>
+          <option value="t20">T20 — W Peninsula (N)</option>
+          <option value="t21">T21 — W Peninsula (S)</option>
+          <option value="t22">T22 — Pulse Empire (N)</option>
+          <option value="t23">T23 — Pulse Empire (S)</option>
+          <option value="t24">T24 — Low Cape Forest</option>
+          <option value="t25">T25 — Western Mountains</option>
+          <option value="t26">T26 — Alania (NW)</option>
+          <option value="t27">T27 — Alania (NE)</option>
+          <option value="t28">T28 — Alania (SE)</option>
+          <option value="t29">T29 — Ariskar Forest</option>
+          <option value="t30">T30 — Ashlan Bay</option>
+          <option value="t31">T31 — Southern Coast</option>
+          <option value="t32">T32 — Isle of Howl</option>
+          <option value="t33">T33 — Lance Peninsula</option>
+          <option value="t34">T34 — Lycanthrope Lands</option>
+          <option value="t35">T35 — Toreth Forest</option>
+          <option value="t36">T36 — Kingdom of Bibal</option>
+          <option value="t37">T37 — Bibal Lake</option>
+          <option value="t38">T38 — Frozen Moor</option>
+          <option value="t39">T39 — Alania Guardian Hills</option>
+          <option value="t40">T40 — Alania River</option>
+          <option value="t41">T41 — Grey Mountains</option>
+          <option value="t42">T42 — Blood Kingdom</option>
+          <option value="t43">T43 — Kingdom of Asthalien</option>
+          <option value="t44">T44 — Kingdom of Hamaer</option>
+          <option value="t45">T45 — Kurgan Clans</option>
+          <option value="t46">T46 — Orign Island</option>
+          <option value="t47">T47 — Muddy Hills</option>
+          <option value="t48">T48 — Barbarian Steppe</option>
+          <option value="t49">T49 — Gagarian Tribes</option>
+          <option value="t50">T50 — Cave Hills</option>
+          <option value="t51">T51 — Drugin Tribes</option>
+          <option value="t52">T52 — Wild Boar Forest</option>
+          <option value="t53">T53 — Tamar Forest</option>
+          <option value="t54">T54 — Thai Shang Empire</option>
+          <option value="t55">T55 — Kingdom of Krog</option>
+          <option value="t56">T56 — Kingdom of the Reborn</option>
+          <option value="t57">T57 — Kingdom of Bandmer</option>
+        </select>
+        <button class="tool-btn" onclick="travelSetStart()" style="white-space:nowrap;border-color:var(--gold-light);color:var(--gold-light);">⚑ Place Party</button>
+        <span id="travel-location-inline" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);white-space:nowrap;display:none;">📍 <span id="travel-loc-text"></span></span>
+        <button class="tool-btn" id="btn-travel-inline" onclick="travelMove()" style="display:none;white-space:nowrap;border-color:#64c864;color:#64c864;">➜ Travel Here</button>
+        <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);white-space:nowrap;">TURN <span id="travel-turn-inline" style="color:var(--gold-light);">—</span></span>
       </div>
+      <button class="map-toggle-btn" id="travel-mode-btn" onclick="toggleTravelMode()">⚔ Show Nodes</button>
     </div>
   </div>
 
@@ -3787,10 +3850,19 @@ function renderTravelOverlay() {
 }
 
 function selectTerritoryNode(id) {
-  if (!travelMode) return;
   travelState.selectedId = (travelState.selectedId === id) ? null : id;
-  renderTravelOverlay();
-  renderTravelSidebar();
+  // Show inline Travel Here if selected node is adjacent to party
+  var pid    = travelState.partyId;
+  var sid    = travelState.selectedId;
+  var st     = sid ? TERRITORIES.find(function(x){ return x.id===sid; }) : null;
+  var adjIds = pid ? (TERRITORIES.find(function(x){ return x.id===pid; })||{adj:[]}).adj : [];
+  var isAdj  = st && pid && adjIds.indexOf(sid) >= 0 && sid !== pid;
+  var btnT   = document.getElementById('btn-travel-inline');
+  if (btnT) {
+    btnT.style.display   = isAdj ? 'inline-block' : 'none';
+    if (isAdj) btnT.textContent = '➜ Travel to '+st.name;
+  }
+  if (travelMode) { renderTravelOverlay(); renderTravelSidebar(); }
 }
 
 function travelSetStart() {
@@ -3801,8 +3873,16 @@ function travelSetStart() {
   travelState.partyId    = t.id;
   travelState.selectedId = null;
   travelState.log.unshift('Turn 1: Campaign started at ' + t.id.toUpperCase() + ' — ' + t.name + ' (' + t.region + ').');
-  renderTravelOverlay();
-  renderTravelSidebar();
+  // Show on toolbar
+  var loc = document.getElementById('travel-location-inline');
+  var txt = document.getElementById('travel-loc-text');
+  var trn = document.getElementById('travel-turn-inline');
+  if (loc) loc.style.display = 'inline';
+  if (txt) txt.textContent = t.id.toUpperCase() + ' ' + t.name;
+  if (trn) trn.textContent = travelState.turn;
+  // Enable travel mode so nodes show
+  if (!travelMode) toggleTravelMode();
+  else { renderTravelOverlay(); renderTravelSidebar(); }
 }
 
 function travelReset() {
@@ -3840,6 +3920,12 @@ function travelMove() {
   travelState.selectedId = null;
   travelState.turn++;
   travelState.log.unshift('Turn '+(travelState.turn-1)+': Moved to '+dest.name+' ('+dest.region+')'+(from?' from '+from.name:'')+'.');
+  var txt = document.getElementById('travel-loc-text');
+  var trn = document.getElementById('travel-turn-inline');
+  if (txt) txt.textContent = dest.id.toUpperCase()+' '+dest.name;
+  if (trn) trn.textContent = travelState.turn;
+  var btnT = document.getElementById('btn-travel-inline');
+  if (btnT) btnT.style.display = 'none';
   renderTravelOverlay();
   renderTravelSidebar();
 }
