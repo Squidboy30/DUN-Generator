@@ -1292,17 +1292,21 @@ body {
         <div id="map-viewport">
           <div id="map-world">
             <img id="map-img" src="arasca-map.jpg" alt="World of Arasca" draggable="false">
-            <!-- Territory overlay SVG (campaign travel mode) -->
-            <svg id="territory-overlay" style="position:absolute;top:0;left:0;pointer-events:none;display:none;" xmlns="http://www.w3.org/2000/svg"></svg>
+            <!-- Territory overlay: fixed 1000×722 — rides the map transform -->
+            <svg id="territory-overlay"
+                 width="1000" height="722"
+                 viewBox="0 0 1000 722"
+                 style="position:absolute;top:0;left:0;display:none;overflow:visible;"
+                 xmlns="http://www.w3.org/2000/svg">
+              <!-- Party marker group — positioned by renderTerritoryOverlay() -->
+              <g id="party-marker-g" style="display:none;" pointer-events="none">
+                <circle r="14" fill="#e0b840" fill-opacity="0.25" stroke="#e0b840" stroke-width="1.5"/>
+                <path d="M0 -10 C-5 -10 -8 -7 -8 -3 C-8 3 0 12 0 12 C0 12 8 3 8 -3 C8 -7 5 -10 0 -10 Z"
+                      fill="#e0b840" stroke="#1a1008" stroke-width="1"/>
+                <circle cy="-3" r="3" fill="#1a1008"/>
+              </g>
+            </svg>
             <div id="map-pins-layer"></div>
-            <!-- Party marker -->
-            <div id="party-marker">
-              <svg width="22" height="30" viewBox="0 0 22 30" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11 2 C6 2 2 6 2 11 C2 18 11 28 11 28 C11 28 20 18 20 11 C20 6 16 2 11 2 Z" fill="#e0b840" stroke="#1a1008" stroke-width="1.5"/>
-                <circle cx="11" cy="11" r="4" fill="#1a1008"/>
-                <text x="11" y="15" text-anchor="middle" fill="#e0b840" font-size="7" font-family="Cinzel,serif" font-weight="700">⚔</text>
-              </svg>
-            </div>
           </div>
         </div>
         <div class="pin-mode-bar" id="pin-mode-bar">
@@ -3500,142 +3504,151 @@ if (_mapImg) {
 // CAMPAIGN TRAVEL — territories, adjacency, party movement
 // ═══════════════════════════════════════════════════════════════
 //
-// Territory polygons are defined relative to the 1000×722 map image.
-// coords: flat array [x1,y1, x2,y2, ...] in image pixels.
-// type: terrain type used for travel event deck.
-// adj: IDs of directly adjacent territories (land or sea crossing).
-// settlements: named places within this territory.
-// label: centroid for placing the label, [x, y].
+// ═══════════════════════════════════════════════════════════════
+// CAMPAIGN TRAVEL — territories, adjacency, party movement
+// ═══════════════════════════════════════════════════════════════
+//
+// All coords are in the natural 1000×722 image space.
+// The SVG overlay lives inside #map-world and scales with the map.
+// Party marker is also an SVG element inside #map-world.
 
 var TERRITORIES = [
-  // ── NORTHERN SEA & ISLANDS ─────────────────────────────────
-  { id:'m1',  name:'Northern Sea (NW)',   type:'sea',     label:[130,52],  adj:['m2','m3','m10','m11'],
-    settlements:[], coords:[0,0,270,0,270,100,0,100] },
-  { id:'m2',  name:'Northern Sea (N)',    type:'sea',     label:[500,40],  adj:['m1','m3','m4','t1'],
-    settlements:[], coords:[270,0,750,0,750,90,270,90] },
-  { id:'m3',  name:'Northern Sea (NE)',   type:'sea',     label:[860,52],  adj:['m2','m4','t9'],
-    settlements:[], coords:[750,0,1000,0,1000,100,750,100] },
+  // ── NORTHERN ISLANDS ────────────────────────────────────────
+  { id:'trecia',     name:'Kingdom of Trecia',    type:'plain',    label:[105,305],
+    adj:['ascadia'],
+    settlements:['Trecia (City)','Bronze Island','Argnon Island'],
+    coords:[54,256,92,247,129,244,165,251,195,265,207,284,203,311,180,334,148,344,103,341,68,324,50,301,48,277] },
 
-  // ── NORTHERN ISLANDS ───────────────────────────────────────
-  { id:'t1',  name:'Kingdom of Trecia',  type:'plain',   label:[115,280], adj:['m11','m12','m10'],
-    notes:'Island kingdom. Road runs through the main settlement.',
-    settlements:['Trecia (City)', 'Bronze Island', 'Argnon Island'],
-    coords:[20,210,220,185,260,230,230,330,165,360,80,345,30,300] },
+  { id:'isle_howl',  name:'Isle of Howl',         type:'plain',    label:[650,58],
+    adj:['lance_pen'],
+    settlements:['Howl Keep'],
+    coords:[615,41,651,34,690,41,705,59,691,76,654,82,618,71,604,56] },
 
-  // ── MAIN CONTINENT — NORTHERN COAST ───────────────────────
-  { id:'t2',  name:'Kingdom of Ascadia',type:'forest',   label:[390,190], adj:['t3','t4','t5','t8'],
+  { id:'lance_pen',  name:'Lance Peninsula',      type:'plain',    label:[885,108],
+    adj:['isle_howl','frost_wood'],
+    settlements:['Lance Port (Town)'],
+    coords:[836,80,881,70,926,77,948,100,941,125,914,137,878,132,846,118,831,98] },
+
+  // ── MAIN CONTINENT — NORTH ──────────────────────────────────
+  { id:'ascadia',    name:'Kingdom of Ascadia',   type:'forest',   label:[430,218],
+    adj:['trecia','n_forest','p_mountains','icy_deserts'],
     notes:'Dense forests. Home of the Ascadia Forest.',
-    settlements:['Ascadia (City)', "The Bear's Den"],
-    coords:[310,130,430,110,490,140,470,230,420,250,350,240,310,200] },
-  { id:'t3',  name:'Icy Deserts',       type:'desert',   label:[570,140], adj:['t2','t4','t9','m2'],
+    settlements:['Ascadia (City)',"The Bear's Den"],
+    coords:[376,187,414,175,454,172,481,180,492,200,489,225,474,243,449,255,419,258,389,247,372,229,369,210] },
+
+  { id:'icy_deserts',name:'Icy Deserts',          type:'desert',   label:[608,198],
+    adj:['ascadia','p_mountains','kyr_forest','frost_wood'],
     notes:'Frozen wasteland. Difficult terrain.',
     settlements:[],
-    coords:[490,100,700,100,720,170,660,210,560,200,490,155] },
-  { id:'t4',  name:'Northern Forest',   type:'forest',   label:[370,290], adj:['t2','t5','t6','t3'],
+    coords:[545,171,590,164,640,164,680,174,698,194,690,216,670,231,638,236,600,230,570,216,548,198] },
+
+  { id:'frost_wood', name:'Frost Wood',           type:'forest',   label:[862,210],
+    adj:['icy_deserts','kyr_forest','lance_pen'],
+    settlements:['Frost Keep'],
+    coords:[790,172,847,168,900,175,937,190,958,215,950,241,925,255,885,258,843,249,808,232,787,211] },
+
+  // ── MAIN CONTINENT — MIDDLE ─────────────────────────────────
+  { id:'n_forest',   name:'Northern Forest',      type:'forest',   label:[368,335],
+    adj:['ascadia','p_mountains','oak_grove','w_peninsula'],
     settlements:['Nordheim'],
-    coords:[310,240,430,230,475,270,450,330,380,345,315,310] },
-  { id:'t5',  name:'Pointy Mountains',  type:'mountain', label:[490,295], adj:['t2','t4','t6','t7','t8'],
-    notes:'High mountain range. Movement costs 2 turns unless mounted.',
+    coords:[321,306,361,296,402,298,434,311,441,331,431,352,401,364,365,364,326,349,311,326] },
+
+  { id:'p_mountains',name:'Pointy Mountains',     type:'mountain', label:[515,322],
+    adj:['ascadia','icy_deserts','n_forest','oak_grove','mt_gyptian','kyr_forest'],
+    notes:'High mountain range. Movement costs 2 turns.',
     settlements:['Gyptian Pass'],
-    coords:[430,240,560,220,590,270,570,350,490,360,440,320] },
-  { id:'t6',  name:'The Great Oak Grove',type:'forest',  label:[390,400], adj:['t4','t5','t7','t13','t14'],
-    settlements:['Oakenhaven'],
-    coords:[315,335,450,325,475,370,450,430,370,445,310,400] },
+    coords:[479,283,518,272,556,272,584,283,598,305,593,332,575,350,545,358,511,355,482,340,472,317] },
 
-  // ── PULSE EMPIRE / WESTERN PENINSULA ─────────────────────
-  { id:'t7',  name:'Pulse Empire (Core)',type:'plain',   label:[380,505], adj:['t6','t8','t13','t14','t15'],
-    notes:'Heart of the Pulse Empire. Good roads.',
-    settlements:['Pulsecity (Capital, City)', 'Sudfall (Town)', 'Norkfall Castle'],
-    coords:[310,430,460,415,490,460,470,530,400,565,325,545,300,490] },
-  { id:'t8',  name:'Mount Gyptian',      type:'mountain',label:[540,355], adj:['t2','t5','t7','t9','t10'],
-    notes:'Volcanic peak. Difficult terrain.',
-    settlements:['Gyptian Shrine'],
-    coords:[560,280,640,270,660,320,640,370,580,380,545,330] },
-  { id:'t9',  name:'Kyr Forest',         type:'forest',  label:[690,270], adj:['t3','t8','t10','t11','m3'],
+  { id:'mt_gyptian', name:'Mount Gyptian',        type:'mountain', label:[632,358],
+    adj:['p_mountains','kyr_forest','lesonia'],
+    notes:'Volcanic peak.',
+    settlements:[],
+    coords:[614,313,646,306,674,313,686,333,679,356,658,368,631,363,614,347] },
+
+  { id:'kyr_forest', name:'Kyr Forest',           type:'forest',   label:[772,308],
+    adj:['icy_deserts','frost_wood','p_mountains','mt_gyptian','lesonia','chattensum'],
     settlements:['Kyrvale'],
-    coords:[650,190,780,175,800,220,790,285,720,300,660,285,645,240] },
-  { id:'t10', name:'Kingdom of Lesonia', type:'plain',   label:[680,380], adj:['t8','t9','t11','t12','t7'],
-    notes:'Fertile plains kingdom.',
-    settlements:['Lesonia (City)', 'Castellum (Castle)', 'Millford (Town)'],
-    coords:[620,300,790,280,820,340,800,420,720,440,640,420,610,360] },
-  { id:'t11', name:'Chattensum Forest',  type:'forest',  label:[800,390], adj:['t9','t10','t12','m3'],
-    settlements:[],
-    coords:[790,290,900,285,930,340,910,410,840,420,800,380] },
-  { id:'t12', name:'Kingdom of Alania',  type:'plain',   label:[770,480], adj:['t10','t11','t16','t17'],
-    notes:'Eastern lowlands. Green River runs through.',
-    settlements:['Alania (City)', 'Ashlan Bay (Town)', 'Green River Keep'],
-    coords:[720,435,910,415,940,480,920,540,830,560,720,535,700,475] },
+    coords:[723,263,768,256,813,260,843,275,851,298,840,320,810,333,768,335,733,323,716,301] },
 
-  // ── WESTERN PENINSULA ────────────────────────────────────
-  { id:'t13', name:'Western Peninsula (N)',type:'plain', label:[270,455], adj:['t6','t7','t14','m13'],
-    settlements:['Westport (Town)'],
-    coords:[210,415,320,405,325,460,305,510,235,520,205,465] },
-  { id:'t14', name:'Low Cape Forest',    type:'forest',  label:[270,540], adj:['t7','t13','t15','m13'],
+  { id:'oak_grove',  name:'Great Oak Grove',      type:'forest',   label:[385,418],
+    adj:['n_forest','p_mountains','w_peninsula','pulse'],
+    settlements:['Oakenhaven'],
+    coords:[321,387,363,381,405,385,435,398,441,420,426,443,393,450,355,447,321,432,308,410] },
+
+  { id:'lesonia',    name:'Kingdom of Lesonia',   type:'plain',    label:[692,388],
+    adj:['p_mountains','mt_gyptian','kyr_forest','chattensum','alania','ariskar','pulse'],
+    notes:'Fertile plains kingdom.',
+    settlements:['Lesonia (City)','Castellum (Castle)','Millford (Town)'],
+    coords:[649,356,681,346,712,351,750,354,795,358,837,366,852,391,842,418,817,433,772,441,722,436,679,426,649,403,642,376] },
+
+  { id:'chattensum', name:'Chattensum Forest',    type:'forest',   label:[888,432],
+    adj:['kyr_forest','lesonia','alania'],
     settlements:[],
-    coords:[210,510,315,505,325,555,300,600,230,595,200,550] },
-  { id:'t15', name:'Western Mountains',  type:'mountain',label:[360,600], adj:['t7','t14','t16','m18'],
+    coords:[884,374,921,371,956,382,971,404,968,431,951,446,914,449,882,439,869,416,873,394] },
+
+  // ── WESTERN LAND ────────────────────────────────────────────
+  { id:'w_peninsula',name:'Western Peninsula',    type:'plain',    label:[272,468],
+    adj:['n_forest','oak_grove','pulse','low_cape'],
+    settlements:['Westport (Town)'],
+    coords:[217,429,266,417,314,421,349,434,356,459,344,484,322,499,284,504,244,496,211,474] },
+
+  { id:'pulse',      name:'Pulse Empire',         type:'plain',    label:[388,512],
+    adj:['oak_grove','w_peninsula','low_cape','w_mountains','ariskar','lesonia'],
+    notes:'Heart of the Pulse Empire. Good roads.',
+    settlements:['Pulsecity (Capital)','Sudfall (Town)','Norkfall Castle'],
+    coords:[354,480,394,473,436,476,464,491,469,518,459,543,432,558,391,563,352,551,331,530,331,503] },
+
+  { id:'low_cape',   name:'Low Cape Forest',      type:'forest',   label:[238,532],
+    adj:['w_peninsula','pulse','w_mountains'],
+    settlements:[],
+    coords:[196,502,244,494,289,500,314,517,311,544,293,562,259,569,218,562,186,542,181,519] },
+
+  { id:'w_mountains',name:'Western Mountains',    type:'mountain', label:[332,592],
+    adj:['low_cape','pulse','ariskar','s_coast'],
     notes:'Mountain passes. Roads connect to Pulse Empire.',
     settlements:['Mountain Gate (Castle)'],
-    coords:[310,565,460,555,475,620,440,660,365,665,310,625] },
-  { id:'t16', name:'Ariskar Forest',     type:'forest',  label:[540,545], adj:['t7','t12','t15','t17','m20'],
+    coords:[308,569,356,563,401,569,435,584,438,610,420,632,383,640,338,637,300,622,288,599] },
+
+  // ── EASTERN / SOUTHERN ──────────────────────────────────────
+  { id:'alania',     name:'Kingdom of Alania',    type:'plain',    label:[792,498],
+    adj:['lesonia','chattensum','ariskar','ashlan_bay'],
+    notes:'Eastern lowlands. Green River runs through.',
+    settlements:['Alania (City)','Green River Keep'],
+    coords:[737,467,797,467,854,471,897,476,932,482,951,506,944,534,917,554,872,561,816,557,764,546,734,524,726,497] },
+
+  { id:'ariskar',    name:'Ariskar Forest',       type:'forest',   label:[568,558],
+    adj:['pulse','lesonia','alania','ashlan_bay','w_mountains','s_coast'],
     settlements:['Ariskar Refuge'],
-    coords:[470,510,620,495,640,560,610,610,525,625,465,575] },
-  { id:'t17', name:'Ashlan River Valley',type:'plain',   label:[650,540], adj:['t12','t16','t18','m20'],
-    notes:'Navigable river territory. Travel upstream costs extra turns.',
-    settlements:['Ashlan (Town)', 'River Crossing'],
-    coords:[620,510,740,500,760,560,735,610,650,620,615,565] },
+    coords:[502,527,551,520,596,523,626,538,629,565,611,587,574,595,529,587,499,568,493,542] },
 
-  // ── SOUTHERN TERRITORIES ─────────────────────────────────
-  { id:'t18', name:'Southern Delta',     type:'swamp',   label:[580,660], adj:['t15','t17','m18','m19','m20'],
-    notes:'Swampy lowlands. Difficult terrain.',
+  { id:'ashlan_bay', name:'Ashlan Bay',           type:'plain',    label:[728,558],
+    adj:['alania','ariskar','s_coast'],
+    notes:'Navigable river territory.',
+    settlements:['Ashlan (Town)','River Crossing'],
+    coords:[708,534,753,526,801,534,838,553,843,579,823,601,783,609,735,606,696,586,685,564] },
+
+  { id:'s_coast',    name:'Southern Coast',       type:'plain',    label:[435,652],
+    adj:['w_mountains','ariskar','ashlan_bay'],
     settlements:['Delta Village'],
-    coords:[490,630,680,615,700,670,660,705,570,715,490,680] },
-
-  // ── SEA ZONES — WEST & SOUTH ─────────────────────────────
-  { id:'m10', name:'Cloudy Sea (N)',     type:'sea',     label:[50,160],  adj:['m1','m11','m12','t1'],
-    settlements:[], coords:[0,100,165,100,165,230,0,230] },
-  { id:'m11', name:'Cloudy Sea (Mid)',   type:'sea',     label:[70,350],  adj:['m10','m12','t1','t13'],
-    settlements:[], coords:[0,230,165,230,170,450,0,450] },
-  { id:'m12', name:'Cloudy Sea (S)',     type:'sea',     label:[80,530],  adj:['m11','m13','t1','t13'],
-    settlements:[], coords:[0,450,165,450,175,600,0,600] },
-  { id:'m13', name:'Western Sea (N)',    type:'sea',     label:[120,640], adj:['m12','m14','t13','t14'],
-    settlements:[], coords:[0,600,175,600,185,700,0,700] },
-  { id:'m14', name:'Western Sea (Mid)',  type:'sea',     label:[50,760],  adj:['m13','m15','t14','t15'],
-    settlements:[], coords:[0,700,200,700,205,800,0,800] },
-  { id:'m15', name:'Western Sea (S)',    type:'sea',     label:[80,860],  adj:['m14','m16','t15'],
-    settlements:[], coords:[0,800,210,800,210,920,0,920] },
-  { id:'m16', name:'White Sea (W)',      type:'sea',     label:[200,940], adj:['m15','m17','m18'],
-    settlements:[], coords:[0,920,400,920,400,1000,0,1000] },
-  { id:'m17', name:'White Sea (C)',      type:'sea',     label:[500,950], adj:['m16','m18','m19','t18'],
-    settlements:[], coords:[400,920,700,920,700,1000,400,1000] },
-  { id:'m18', name:'White Sea (E)',      type:'sea',     label:[780,950], adj:['m17','m19','m20','t18'],
-    settlements:[], coords:[700,920,1000,920,1000,1000,700,1000] },
-  { id:'m19', name:'Northern Sea (E)',   type:'sea',     label:[900,700], adj:['m18','m20','t17','t12'],
-    settlements:[], coords:[900,550,1000,550,1000,920,900,920] },
-  { id:'m20', name:'Ashlan Bay',         type:'sea',     label:[840,590], adj:['m19','t12','t16','t17','t18'],
-    settlements:['Ashlan Bay Port'],
-    coords:[760,540,900,540,910,650,860,700,770,680,740,600] }
+    coords:[346,637,406,631,456,637,498,650,511,670,491,692,436,700,381,692,336,674,328,653] },
 ];
 
-// Territory type → colour for overlay fill
 var TERRAIN_COLORS = {
-  forest:   '#2a6a20',
-  plain:    '#c8a060',
+  forest:   '#2a5c20',
+  plain:    '#c8a050',
   mountain: '#8a7a6a',
-  swamp:    '#3a5a2a',
   desert:   '#c8a840',
   sea:      '#1a4a7a',
-  city:     '#c8a060'
+  swamp:    '#3a5a2a'
 };
 
-// Travel event outcomes by terrain type (abbreviated — full DUN deck not reproduced)
 var TRAVEL_EVENTS = {
   plain:    ['Uneventful journey — nothing impedes your progress.',
-             'Travelling merchants spotted on the road — possible trade.',
+             'Travelling merchants spotted — possible trade.',
              'Bandits ambush the road! (Epic Event available)',
-             'A local farmer offers shelter for the night. Recover 1 Vitality.',
+             'A local farmer offers shelter. Recover 1 Vitality.',
              'Heavy rain slows movement — the road turns to mud.',
-             'You discover an old shrine. May invoke a blessing (Fortune +1).'],
+             'You discover an old shrine. Fortune +1.'],
   forest:   ['The forest is quiet. You pass without incident.',
              'Strange lights in the trees — a will-o-wisp leads you astray. Lose 1 turn.',
              'Ambush from the undergrowth! (Epic Event available)',
@@ -3643,32 +3656,32 @@ var TRAVEL_EVENTS = {
              'You find a hidden cache — draw from the Treasure deck.',
              'Predators stalk the party overnight. No rest this turn.'],
   mountain: ['The pass is clear. No events.',
-             'Rockslide blocks the route — must turn back or spend 1 extra turn.',
-             'Mountain bandits demand a toll of 2 coins or fight! (Epic Event)',
+             'Rockslide blocks the route — spend 1 extra turn.',
+             'Mountain bandits demand 2 coins or fight! (Epic Event)',
              'A mountain guide offers to lead you for 1 coin.',
              'Treacherous ice — one hero risks Wounded (roll 1D6, 1-2: apply).',
              'You spot a distant fortress. Possible side quest.'],
-  swamp:    ['The swamp fog is thick but you navigate safely.',
-             'Quicksand trap — one hero must pass a test or become Knocked Out.',
-             'Undead rise from the bog! (Epic Event available)',
-             'Disease lurks in the water. Each hero rolls 1D6 — 1: Diseased.',
-             'A potion floats in the mire. Could be valuable or cursed.',
-             'Flash flood — lose all progress this turn.'],
   desert:   ['Scorching sands but your supplies hold.',
              'Sandstorm reduces visibility — lose 1 turn.',
-             'Nomads offer trade. May buy rations at normal cost.',
+             'Nomads offer trade. Buy rations at normal cost.',
              'Heat exhaustion. Each hero loses 1 Vitality.',
              'Mirage lures party off course — lose 1 turn.',
              'Ancient ruins discovered. (Epic Event available)'],
-  sea:      ['Fair winds — move an extra icon if on a navigable river.',
-             'Storm damages the vessel — lose 1 Structure point.',
+  sea:      ['Fair winds — smooth crossing.',
+             'Storm damages the vessel — lose 1 turn.',
              'Pirates intercept the ship! (Epic Event available)',
-             'Fog banks slow navigation — move only 1 icon this turn.',
+             'Fog banks slow navigation.',
              'Friendly merchant vessel — may buy/sell equipment.',
-             'Sea monster sighted — vessel takes 1 damage die vs Structure.']
+             'Sea monster sighted — vessel takes 1 damage.'],
+  swamp:    ['The swamp fog is thick but you navigate safely.',
+             'Quicksand — one hero must pass a test or Knocked Out.',
+             'Undead rise from the bog! (Epic Event available)',
+             'Disease lurks in the water. Each hero rolls 1D6 — 1: Diseased.',
+             'A potion floats in the mire — valuable or cursed.',
+             'Flash flood — lose all progress this turn.']
 };
 
-// ── State ────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────
 var travelMode = false;
 var travelState = {
   turn: 1,
@@ -3679,92 +3692,75 @@ var travelState = {
 
 function toggleTravelMode() {
   travelMode = !travelMode;
-  var btn = document.getElementById('travel-mode-btn');
+  var btn     = document.getElementById('travel-mode-btn');
   var sidebar = document.getElementById('travel-sidebar');
   var overlay = document.getElementById('territory-overlay');
-  var legend = document.getElementById('map-legend-hint');
-  var pinLegend = document.getElementById('map-pin-legend');
+  var legend  = document.getElementById('map-legend-hint');
+  var pinLeg  = document.getElementById('map-pin-legend');
 
   btn.classList.toggle('on', travelMode);
-  sidebar.style.display = travelMode ? 'flex' : 'none';
-  overlay.style.display = travelMode ? 'block' : 'none';
+  // sidebar has two display:none in style attr from HTML — force flex
+  sidebar.style.cssText = travelMode
+    ? 'display:flex;flex-direction:column;width:260px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--panel-border);overflow:hidden;'
+    : 'display:none;';
+  overlay.style.display  = travelMode ? 'block' : 'none';
 
   if (travelMode) {
-    legend.textContent = 'Click a territory to select it · Green = party location · Gold = adjacent';
-    pinLegend.style.display = 'none';
+    legend.textContent = 'Click a territory to select · Green = party · Gold = reachable · Red = selected';
+    if (pinLeg) pinLeg.style.display = 'none';
     renderTerritoryOverlay();
     renderTravelSidebar();
   } else {
     legend.textContent = 'Scroll to zoom · Drag to pan · Click map to place pin for selected mission';
-    pinLegend.style.display = '';
-    renderTravelSidebar();
+    if (pinLeg) pinLeg.style.display = '';
   }
 }
 
+// The SVG overlay is 1000×722 and lives INSIDE #map-world,
+// so it inherits the pan/zoom transform automatically.
+// We never touch its width/height — it's set once in HTML.
 function renderTerritoryOverlay() {
-  var img = document.getElementById('map-img');
-  var iw = img.naturalWidth  || 1000;
-  var ih = img.naturalHeight || 722;
-  var dw = img.offsetWidth   || iw;
-  var dh = img.offsetHeight  || ih;
-
-  var overlay = document.getElementById('territory-overlay');
-  overlay.setAttribute('width',  dw);
-  overlay.setAttribute('height', dh);
-  overlay.setAttribute('viewBox', '0 0 ' + iw + ' ' + ih);
-  overlay.style.width  = dw + 'px';
-  overlay.style.height = dh + 'px';
-
   var partyId    = travelState.partyTerritoryId;
   var selectedId = travelState.selectedTerritoryId;
-  var adjIds     = partyId ? (TERRITORIES.find(function(t){ return t.id===partyId; }) || {adj:[]}).adj : [];
+  var adjIds     = partyId
+    ? (TERRITORIES.find(function(t){ return t.id===partyId; }) || {adj:[]}).adj
+    : [];
+
+  var overlay = document.getElementById('territory-overlay');
 
   overlay.innerHTML = TERRITORIES.map(function(t) {
     var pts = [];
-    for (var i = 0; i < t.coords.length; i += 2) pts.push(t.coords[i] + ',' + t.coords[i+1]);
-    var cls = 't-region';
-    if (t.id === partyId)    cls += ' t-current';
-    else if (t.id === selectedId) cls += ' t-selected';
-    else if (adjIds.indexOf(t.id) !== -1) cls += ' t-adjacent';
+    for (var i = 0; i < t.coords.length; i += 2) pts.push(t.coords[i]+','+t.coords[i+1]);
 
-    var baseColor = TERRAIN_COLORS[t.type] || '#888';
+    var state = '';
+    if (t.id === partyId)              state = 't-current';
+    else if (t.id === selectedId)      state = 't-selected';
+    else if (adjIds.indexOf(t.id)>=0)  state = 't-adjacent';
+
+    var base = TERRAIN_COLORS[t.type] || '#888';
     var lx = t.label[0], ly = t.label[1];
-    var shortName = t.name.length > 20 ? t.name.substring(0,18)+'…' : t.name;
+    var shortName = t.name.length > 22 ? t.name.substring(0,20)+'…' : t.name;
 
-    return '<g class="' + cls + '" id="treg-' + t.id + '" onclick="selectTerritory(\'' + t.id + '\')" style="pointer-events:all;">' +
-      '<polygon class="t-fill" points="' + pts.join(' ') + '" fill="' + baseColor + '"/>' +
-      '<polygon class="t-stroke" points="' + pts.join(' ') + '"/>' +
-      (t.type !== 'sea' ? '<text class="t-label" x="' + lx + '" y="' + ly + '">' + shortName + '</text>' : '') +
-    '</g>';
+    return '<g class="t-region ' + state + '" id="treg-'+t.id+'" onclick="selectTerritory(\''+t.id+'\')" style="pointer-events:all;">'
+      + '<polygon class="t-fill" points="'+pts.join(' ')+'" fill="'+base+'"/>'
+      + '<polygon class="t-stroke" points="'+pts.join(' ')+'"/>'
+      + '<text class="t-label" x="'+lx+'" y="'+ly+'">'+shortName+'</text>'
+      + '</g>';
   }).join('');
 
-  // Party marker
-  updatePartyMarker();
-}
-
-function updatePartyMarker() {
-  var marker = document.getElementById('party-marker');
-  if (!marker) return;
-  var pid = travelState.partyTerritoryId;
-  if (!pid) { marker.style.display = 'none'; return; }
-  var t = TERRITORIES.find(function(x){ return x.id === pid; });
-  if (!t) { marker.style.display = 'none'; return; }
-
-  var img = document.getElementById('map-img');
-  var iw = img.naturalWidth || 1000;
-  var ih = img.naturalHeight || 722;
-  var dw = img.offsetWidth || iw;
-  var dh = img.offsetHeight || ih;
-  var sx = dw / iw, sy = dh / ih;
-
-  marker.style.display = 'block';
-  marker.style.left = (t.label[0] * sx) + 'px';
-  marker.style.top  = (t.label[1] * sy) + 'px';
+  // Party marker: an SVG circle+icon at the label point of the current territory
+  var pm = document.getElementById('party-marker-g');
+  if (!pm) return;
+  if (!partyId) { pm.style.display='none'; return; }
+  var pt = TERRITORIES.find(function(x){ return x.id===partyId; });
+  if (!pt) { pm.style.display='none'; return; }
+  pm.style.display = '';
+  pm.setAttribute('transform','translate('+pt.label[0]+','+pt.label[1]+')');
 }
 
 function selectTerritory(id) {
   if (!travelMode) return;
-  travelState.selectedTerritoryId = travelState.selectedTerritoryId === id ? null : id;
+  travelState.selectedTerritoryId = (travelState.selectedTerritoryId === id) ? null : id;
   renderTerritoryOverlay();
   renderTravelSidebar();
 }
@@ -3772,17 +3768,13 @@ function selectTerritory(id) {
 function setPartyHere() {
   var sid = travelState.selectedTerritoryId;
   if (!sid) { alert('Select a territory first.'); return; }
-  var t = TERRITORIES.find(function(x){ return x.id === sid; });
+  var t = TERRITORIES.find(function(x){ return x.id===sid; });
   if (!t) return;
   var prev = travelState.partyTerritoryId;
-  travelState.partyTerritoryId = sid;
+  travelState.partyTerritoryId   = sid;
   travelState.selectedTerritoryId = null;
-  if (prev) {
-    var from = TERRITORIES.find(function(x){ return x.id === prev; });
-    travelState.log.unshift('Turn ' + travelState.turn + ': Party moved to ' + t.name + (from ? ' from ' + from.name : '') + '.');
-  } else {
-    travelState.log.unshift('Turn ' + travelState.turn + ': Party placed at ' + t.name + '.');
-  }
+  var from = prev ? (TERRITORIES.find(function(x){ return x.id===prev; })||{name:'unknown'}).name : null;
+  travelState.log.unshift('Turn '+travelState.turn+': Party '+(from?'moved to':'placed at')+' '+t.name+(from?' from '+from:'')+'.');
   renderTerritoryOverlay();
   renderTravelSidebar();
 }
@@ -3790,19 +3782,19 @@ function setPartyHere() {
 function confirmTravel() {
   var sid = travelState.selectedTerritoryId;
   if (!sid) return;
-  var t = TERRITORIES.find(function(x){ return x.id === sid; });
+  var t = TERRITORIES.find(function(x){ return x.id===sid; });
   if (!t) return;
-  var partyId = travelState.partyTerritoryId;
-  var adjIds = partyId ? (TERRITORIES.find(function(x){ return x.id===partyId; })||{adj:[]}).adj : [];
-  if (partyId && adjIds.indexOf(sid) === -1) {
-    alert('You can only travel to an adjacent territory. Select an adjacent (gold) territory.');
+  var pid    = travelState.partyTerritoryId;
+  var adjIds = pid ? (TERRITORIES.find(function(x){ return x.id===pid; })||{adj:[]}).adj : [];
+  if (pid && adjIds.indexOf(sid) < 0) {
+    alert('Can only travel to an adjacent territory (shown in gold).');
     return;
   }
-  var prev = partyId ? (TERRITORIES.find(function(x){ return x.id===partyId; })||{name:'unknown'}).name : 'start';
-  travelState.partyTerritoryId = sid;
+  var fromName = pid ? (TERRITORIES.find(function(x){ return x.id===pid; })||{name:'?'}).name : 'start';
+  travelState.partyTerritoryId   = sid;
   travelState.selectedTerritoryId = null;
   travelState.turn++;
-  travelState.log.unshift('Turn ' + (travelState.turn-1) + ': Travelled to ' + t.name + ' from ' + prev + '.');
+  travelState.log.unshift('Turn '+(travelState.turn-1)+': Travelled to '+t.name+' from '+fromName+'.');
   renderTerritoryOverlay();
   renderTravelSidebar();
 }
@@ -3810,65 +3802,70 @@ function confirmTravel() {
 function travelRollEvent() {
   var sid = travelState.selectedTerritoryId || travelState.partyTerritoryId;
   if (!sid) { alert('Select or set a territory first.'); return; }
-  var t = TERRITORIES.find(function(x){ return x.id === sid; });
+  var t = TERRITORIES.find(function(x){ return x.id===sid; });
   if (!t) return;
-  var type = t.type === 'sea' ? 'sea' : t.type;
-  var pool = TRAVEL_EVENTS[type] || TRAVEL_EVENTS['plain'];
-  var roll = Math.ceil(Math.random() * 6);
+  var pool   = TRAVEL_EVENTS[t.type] || TRAVEL_EVENTS['plain'];
+  var roll   = Math.ceil(Math.random() * 6);
   var result = pool[roll - 1];
-  var resultDiv = document.getElementById('travel-event-result');
-  resultDiv.style.display = 'block';
-  document.getElementById('ter-roll').textContent = '⚀ ' + roll;
-  document.getElementById('ter-deck').textContent = t.name.toUpperCase() + ' · ' + type.toUpperCase() + ' DECK';
+  var div    = document.getElementById('travel-event-result');
+  div.style.display = 'block';
+  document.getElementById('ter-roll').textContent   = roll;
+  document.getElementById('ter-deck').textContent   = t.name.toUpperCase()+' · '+t.type.toUpperCase()+' DECK';
   document.getElementById('ter-result').textContent = result;
-  travelState.log.unshift('Turn ' + travelState.turn + ': ' + t.name + ' event (roll ' + roll + '): ' + result);
+  travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' event ('+roll+'): '+result);
   renderTravelLog();
 }
 
 function renderTravelSidebar() {
-  document.getElementById('travel-turn').textContent = travelState.turn;
+  var el = document.getElementById('travel-turn');
+  if (el) el.textContent = travelState.turn;
 
   var pid = travelState.partyTerritoryId;
   var pt  = pid ? TERRITORIES.find(function(x){ return x.id===pid; }) : null;
-  document.getElementById('travel-location').textContent = pt ? pt.name : '— Select a territory —';
-  document.getElementById('travel-terrain').textContent  = pt ? pt.type.toUpperCase() : '';
+  var locEl = document.getElementById('travel-location');
+  var terEl = document.getElementById('travel-terrain');
+  if (locEl) locEl.textContent = pt ? pt.name : '— Select a territory —';
+  if (terEl) terEl.textContent = pt ? pt.type.toUpperCase() : '';
 
   var sid = travelState.selectedTerritoryId;
   var st  = sid ? TERRITORIES.find(function(x){ return x.id===sid; }) : null;
-  var infoDiv = document.getElementById('travel-territory-info');
+  var infoDiv   = document.getElementById('travel-territory-info');
   var travelBtn = document.getElementById('btn-travel');
 
   if (st) {
-    infoDiv.style.display = 'block';
-    document.getElementById('tti-name').textContent = st.name;
-    document.getElementById('tti-type').textContent = st.type.toUpperCase() + (st.type === 'sea' ? ' ZONE' : ' TERRITORY');
+    if (infoDiv) infoDiv.style.display = 'block';
+    var nameEl = document.getElementById('tti-name');
+    var typeEl = document.getElementById('tti-type');
+    var settEl = document.getElementById('tti-settlements');
+    var noteEl = document.getElementById('tti-notes');
+    if (nameEl) nameEl.textContent = st.name;
+    if (typeEl) typeEl.textContent = st.type.toUpperCase()+' TERRITORY';
     var adjIds = pid ? (TERRITORIES.find(function(x){ return x.id===pid; })||{adj:[]}).adj : [];
-    var isAdj  = pid && adjIds.indexOf(sid) !== -1;
+    var isAdj  = pid && adjIds.indexOf(sid) >= 0;
     var isCurr = sid === pid;
-    document.getElementById('tti-settlements').innerHTML = st.settlements && st.settlements.length
-      ? '🏰 ' + st.settlements.join('<br>🏰 ')
+    if (settEl) settEl.innerHTML = st.settlements && st.settlements.length
+      ? st.settlements.map(function(s){ return '🏰 '+s; }).join('<br>')
       : '<span style="color:var(--text-muted);font-style:italic;">No named settlements</span>';
-    document.getElementById('tti-notes').textContent = st.notes || '';
-    travelBtn.style.display = (isAdj && !isCurr) ? 'block' : 'none';
-    travelBtn.textContent = 'Travel to ' + st.name + ' ↵';
+    if (noteEl) noteEl.textContent = st.notes || '';
+    if (travelBtn) {
+      travelBtn.style.display = (isAdj && !isCurr) ? 'block' : 'none';
+      travelBtn.textContent   = 'Travel to '+st.name+' ↵';
+    }
   } else {
-    infoDiv.style.display = 'none';
-    travelBtn.style.display = 'none';
+    if (infoDiv)   infoDiv.style.display   = 'none';
+    if (travelBtn) travelBtn.style.display = 'none';
   }
-
   renderTravelLog();
 }
 
 function renderTravelLog() {
   var logDiv = document.getElementById('travel-log');
   if (!logDiv) return;
-  if (!travelState.log.length) {
-    logDiv.innerHTML = '<span style="color:var(--text-muted);font-style:italic;">No journey events yet.</span>';
-  } else {
-    logDiv.innerHTML = travelState.log.slice(0, 20).map(function(entry) {
-      return '<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.05);">' + entry + '</div>';
-    }).join('');
-  }
+  logDiv.innerHTML = travelState.log.length
+    ? travelState.log.slice(0,20).map(function(e){
+        return '<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.05);">'+e+'</div>';
+      }).join('')
+    : '<span style="color:var(--text-muted);font-style:italic;">No journey events yet.</span>';
 }
 </script>
 
