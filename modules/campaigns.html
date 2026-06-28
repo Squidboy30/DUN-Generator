@@ -1643,7 +1643,7 @@ body {
         <!-- Travel event result -->
         <div id="travel-event-result" style="padding:12px 14px;border-bottom:1px solid var(--panel-border);display:none;">
           <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px;">TRAVEL EVENT</div>
-          <div id="ter-roll" style="font-family:'Cinzel',serif;font-size:22px;color:var(--gold-light);margin-bottom:4px;"></div>
+          <div id="ter-roll" style="font-family:'Cinzel',serif;font-size:28px;font-weight:bold;margin-bottom:4px;"></div>
           <div id="ter-deck" style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px;"></div>
           <div id="ter-result" style="font-family:'IM Fell English',serif;font-size:12px;color:var(--text-light);line-height:1.6;"></div>
         </div>
@@ -4044,50 +4044,62 @@ var TERRAIN_COLORS = {
 };
 
 var TRAVEL_EVENTS = {
-  plain:    ['Uneventful journey — nothing impedes your progress.',
-             'Travelling merchants spotted — possible trade.',
-             'Bandits ambush the road! (Epic Event available)',
-             'A local farmer offers shelter. Recover 1 Vitality.',
-             'Heavy rain slows movement — road turns to mud.',
-             'You discover an old shrine. Fortune +1.'],
-  forest:   ['The forest is quiet. You pass without incident.',
-             'Strange lights in the trees — will-o-wisp leads astray. Lose 1 turn.',
-             'Ambush from the undergrowth! (Epic Event available)',
-             'A hermit offers medicinal herbs. Remove one Diseased condition.',
-             'You find a hidden cache — draw from the Treasure deck.',
-             'Predators stalk the party overnight. No rest this turn.'],
-  mountain: ['The pass is clear. No events.',
-             'Rockslide blocks the route — spend 1 extra turn.',
-             'Mountain bandits demand 2 coins or fight! (Epic Event)',
-             'A mountain guide offers to lead you for 1 coin.',
-             'Treacherous ice — one hero risks Wounded (1D6, 1-2: apply).',
-             'You spot a distant fortress. Possible side quest.'],
-  desert:   ['Scorching sands but your supplies hold.',
-             'Sandstorm reduces visibility — lose 1 turn.',
-             'Nomads offer trade. Buy rations at normal cost.',
-             'Heat exhaustion. Each hero loses 1 Vitality.',
-             'Mirage lures party off course — lose 1 turn.',
-             'Ancient ruins discovered. (Epic Event available)'],
-  sea:      ['Fair winds — smooth crossing.',
-             'Storm — lose 1 turn.',
-             'Pirates intercept! (Epic Event available)',
-             'Fog banks slow navigation.',
-             'Friendly merchant vessel — may buy/sell.',
-             'Sea monster sighted — vessel takes 1 damage.'],
-  volcanic: ['Ash clouds reduce visibility — lose 1 turn.',
-             'Lava flow blocks the path — spend 1 extra turn routing around it.',
-             'Volcanic eruption! All heroes take 1 fire damage (can be blocked).',
-             'Hot springs discovered — remove all Diseased conditions.',
-             'A fire cult dwells here. (Epic Event available)',
-             'Tremors shake the ground — one hero must pass an Agility test or Knocked Out.'],
-  glacier:  ['Bitter cold slows progress — lose 1 turn unless Cold Resistance is equipped.',
-             'Glacier pass is navigable. No events.',
-             'Avalanche! (Epic Event available — all heroes may be buried)',
-             'Ancient ruins frozen in the ice. Draw from the Treasure deck.',
-             'Ice bridge collapses — one hero risks falling (Agility test or Wounded).',
-             'A frozen monster thaws. (Epic Event available)']
-};
-
+  // Threshold = minimum D6 roll to trigger an event (5+ confirmed for Mountain)
+  // Cards are drawn at random when triggered
+  // Source: physical DUN Travel Event card decks
+  mountain: {
+    threshold: 5,
+    cards: [
+      { title: 'Snowstorm!',
+        effect: 'A snowstorm falls upon you with such force it seems the gods are blowing against you. You must find a cave or you will have trouble surviving in the open. One of you must pass a Perception roll. If he fails, each Character suffers 2 damage dice against Natural Armor.',
+        epic: null },
+      { title: 'Travellers Camp',
+        effect: 'A group of travellers give you food and shelter. Each hero recovers 1 lost Vitality point. The group gets 1 Pack of Provisions.',
+        epic: null },
+      { title: 'Ambush in the Rocks',
+        effect: 'A group of enemies has ambushed you taking advantage of the shelter offered by the rocks on a hillside you pass through. All Characters suffer 2 damage dice.',
+        epic: 'Ambush in the Rocks' },
+      { title: "There's Something Out There",
+        effect: 'A Creature from that inhospitable landscape attacks the group. The hero with the lowest Movement (choose randomly if tied) suffers 4 damage dice.',
+        epic: "There's Something Out There" },
+      { title: 'The Ice is Cracking!',
+        effect: 'You are walking across a lake frozen solid when the ice starts cracking under your feet. All Characters must pass an Agility test. Those who fail suffer 2 damage dice against Natural Armor (4 if they equipped heavy armor).',
+        epic: null },
+      { title: 'Intense Cold',
+        effect: 'The area is so cold the wind feels like razors. Each hero suffers 2 damage dice against Natural Armor. Before rolling you may use a Flask of Greek Fire or a Torch to avoid this event.',
+        epic: null },
+      { title: "It's Collapsing!",
+        effect: 'You walk under an ice bridge when you hear one of its blocks crack. All Characters must pass an Agility test. Those who fail suffer 3 damage dice against Natural Armor.',
+        epic: null }
+    ]
+  },
+  // Other terrain decks — to be populated from card scans
+  // Using placeholder until cards are uploaded
+  plains:   { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Plains event card screenshots to add real events.', epic: null }
+  ]},
+  forest:   { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Forest event card screenshots to add real events.', epic: null }
+  ]},
+  desert:   { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Desert event card screenshots to add real events.', epic: null }
+  ]},
+  swamp:    { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Swamp event card screenshots to add real events.', epic: null }
+  ]},
+  volcanic: { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Volcanic event card screenshots to add real events.', epic: null }
+  ]},
+  glacier:  { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Glacier event card screenshots to add real events.', epic: null }
+  ]},
+  road:     { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Road event card screenshots to add real events.', epic: null }
+  ]},
+  sea:      { threshold: 5, cards: [
+    { title: 'Pending card scan', effect: 'Upload Sea/River event card screenshots to add real events.', epic: null }
+  ]}
+}
 // ── State ──────────────────────────────────────────────────────
 var travelMode  = false;
 var travelState = { turn:1, partyId:null, selectedId:null, log:[] };
@@ -4262,13 +4274,39 @@ function travelRollEvent() {
   var sid = travelState.selectedId || travelState.partyId;
   if (!sid) { alert('Select a territory node first.'); return; }
   var t    = TERRITORIES.find(function(x){ return x.id===sid; });
-  var pool = TRAVEL_EVENTS[t.type] || TRAVEL_EVENTS['plain'];
+  var deck = TRAVEL_EVENTS[t.type] || TRAVEL_EVENTS['plains'];
+  var threshold = deck.threshold || 5;
   var roll = Math.ceil(Math.random() * 6);
-  document.getElementById('travel-event-result').style.display = 'block';
-  document.getElementById('ter-roll').textContent   = roll;
-  document.getElementById('ter-deck').textContent   = t.region.toUpperCase()+' · '+t.type.toUpperCase();
-  document.getElementById('ter-result').textContent = pool[roll-1];
-  travelState.log.unshift('Turn '+travelState.turn+': '+t.region+' event ('+roll+'): '+pool[roll-1]);
+  var triggered = roll >= threshold;
+
+  var div = document.getElementById('travel-event-result');
+  div.style.display = 'block';
+
+  var rollEl   = document.getElementById('ter-roll');
+  var deckEl   = document.getElementById('ter-deck');
+  var resultEl = document.getElementById('ter-result');
+
+  // Show the roll and deck
+  rollEl.textContent = roll + ' / 6';
+  rollEl.style.color = triggered ? 'var(--gold-light)' : 'var(--text-muted)';
+  deckEl.textContent = t.region.toUpperCase() + ' · ' + t.type.toUpperCase() + ' DECK  (triggers on ' + threshold + '+)';
+
+  if (!triggered) {
+    resultEl.innerHTML = '<span style="color:var(--text-muted);font-style:italic;">No event — the party travels safely.</span>';
+    travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' — rolled '+roll+', no event.');
+  } else {
+    // Pick a random card from the deck
+    var cards = deck.cards;
+    var card  = cards[Math.floor(Math.random() * cards.length)];
+    var html  = '<strong style="color:var(--gold-light);font-size:11px;letter-spacing:1px;">'
+              + card.title + '</strong><br>'
+              + '<span style="color:var(--text-light);">' + card.effect + '</span>';
+    if (card.epic) {
+      html += '<br><span style="color:#c8a050;font-style:italic;font-size:10px;">⚔ Epic Event available: &quot;' + card.epic + '&quot;</span>';
+    }
+    resultEl.innerHTML = html;
+    travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' — rolled '+roll+', event triggered: '+card.title+'.');
+  }
   renderTravelLog();
 }
 
