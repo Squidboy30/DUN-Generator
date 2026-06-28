@@ -1294,8 +1294,8 @@ body {
             <img id="map-img" src="arasca-map.jpg" alt="World of Arasca" draggable="false">
             <!-- Territory overlay: fixed 1000×722 — rides the map transform -->
             <svg id="territory-overlay"
-                 width="2000" height="722"
-                 viewBox="0 0 2000 722"
+                 width="2000" height="750"
+                 viewBox="0 0 2000 750"
                  style="position:absolute;top:0;left:0;display:none;overflow:visible;"
                  pointer-events="all"
                  xmlns="http://www.w3.org/2000/svg">
@@ -2070,7 +2070,7 @@ function initMapInteraction() {
     var img = document.getElementById('map-img');
     if (!img) return;
     var iw = img.naturalWidth || 2000;
-    var ih = img.naturalHeight || 722;
+    var ih = img.naturalHeight || 750;
     var nx = imgX / iw;
     var ny = imgY / ih;
     if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
@@ -3668,65 +3668,65 @@ if (_mapImg) {
 // ═══════════════════════════════════════════════════════════════
 
 var TERRITORIES = [
-  {id:'t1',  name:'Trecia North',       region:'Kingdom of Trecia',    type:'plain',    x: 95, y:268, adj:['t2','t3']},
-  {id:'t2',  name:'Trecia South',       region:'Kingdom of Trecia',    type:'plain',    x:155, y:348, adj:['t1','t3']},
-  {id:'t3',  name:'Ascadia (W)',        region:'Kingdom of Ascadia',   type:'forest',   x:378, y:222, adj:['t1','t2','t4','t9','t10']},
-  {id:'t4',  name:'Ascadia (E)',        region:'Kingdom of Ascadia',   type:'forest',   x:448, y:240, adj:['t3','t5','t10','t11']},
-  {id:'t5',  name:'Icy Deserts (W)',    region:'Icy Deserts',          type:'desert',   x:588, y:222, adj:['t4','t6','t11','t13']},
-  {id:'t6',  name:'Icy Deserts (E)',    region:'Icy Deserts',          type:'desert',   x:672, y:248, adj:['t5','t7','t13']},
-  {id:'t7',  name:'Frost Wood (W)',     region:'Frost Wood',           type:'forest',   x:800, y:195, adj:['t6','t8','t13']},
-  {id:'t8',  name:'Frost Wood (E)',     region:'Frost Wood',           type:'forest',   x:922, y:175, adj:['t7','t33']},
-  {id:'t9',  name:'Northern Forest',   region:'Northern Forest',      type:'forest',   x:348, y:325, adj:['t3','t10','t14','t20']},
-  {id:'t10', name:'Pointy Mtns (W)',   region:'Pointy Mountains',     type:'mountain', x:452, y:322, adj:['t3','t4','t9','t11','t14']},
-  {id:'t11', name:'Pointy Mtns (E)',   region:'Pointy Mountains',     type:'mountain', x:538, y:328, adj:['t4','t5','t10','t12','t15']},
-  {id:'t12', name:'Mount Gyptian',     region:'Mount Gyptian',        type:'mountain', x:648, y:345, adj:['t11','t13','t15','t16','t17']},
-  {id:'t13', name:'Kyr Forest',        region:'Kyr Forest',           type:'forest',   x:788, y:295, adj:['t5','t6','t7','t12','t18']},
-  {id:'t14', name:'Great Oak Grove',   region:'Great Oak Grove',      type:'forest',   x:368, y:420, adj:['t9','t10','t20','t21','t22']},
-  {id:'t15', name:'Lesonia (NW)',      region:'Kingdom of Lesonia',   type:'plain',    x:628, y:342, adj:['t11','t12','t16','t17','t22']},
-  {id:'t16', name:'Lesonia (N)',       region:'Kingdom of Lesonia',   type:'plain',    x:668, y:302, adj:['t12','t13','t15','t18']},
-  {id:'t17', name:'Lesonia (C)',       region:'Kingdom of Lesonia',   type:'plain',    x:698, y:368, adj:['t12','t15','t16','t18','t22','t26','t29']},
-  {id:'t18', name:'Lesonia (E)',       region:'Kingdom of Lesonia',   type:'plain',    x:808, y:378, adj:['t13','t16','t17','t19','t27']},
-  {id:'t19', name:'Chattensum Forest', region:'Chattensum Forest',    type:'forest',   x:922, y:415, adj:['t18','t27','t28']},
-  {id:'t20', name:'W Peninsula (N)',   region:'Western Peninsula',    type:'plain',    x:218, y:415, adj:['t9','t14','t21','t24']},
-  {id:'t21', name:'W Peninsula (S)',   region:'Western Peninsula',    type:'plain',    x:248, y:472, adj:['t20','t22','t24']},
-  {id:'t22', name:'Pulse Empire (N)',  region:'Pulse Empire',         type:'plain',    x:418, y:462, adj:['t14','t15','t17','t21','t23','t29']},
-  {id:'t23', name:'Pulse Empire (S)',  region:'Pulse Empire',         type:'plain',    x:448, y:515, adj:['t22','t24','t25','t29']},
-  {id:'t24', name:'Low Cape Forest',  region:'Low Cape Forest',      type:'forest',   x:238, y:525, adj:['t20','t21','t23','t25']},
-  {id:'t25', name:'Western Mountains',region:'Western Mountains',    type:'mountain', x:368, y:588, adj:['t23','t24','t29','t31']},
-  {id:'t26', name:'Alania (NW)',      region:'Kingdom of Alania',    type:'plain',    x:698, y:465, adj:['t17','t22','t27','t29','t30']},
-  {id:'t27', name:'Alania (NE)',      region:'Kingdom of Alania',    type:'plain',    x:838, y:468, adj:['t18','t19','t26','t28','t30']},
-  {id:'t28', name:'Alania (SE)',      region:'Kingdom of Alania',    type:'plain',    x:948, y:525, adj:['t19','t27']},
-  {id:'t29', name:'Ariskar Forest',   region:'Ariskar Forest',       type:'forest',   x:558, y:555, adj:['t22','t23','t25','t26','t30','t31']},
-  {id:'t30', name:'Ashlan Bay',       region:'Ashlan Bay',           type:'plain',    x:748, y:528, adj:['t26','t27','t29','t31']},
-  {id:'t31', name:'Southern Coast',   region:'Southern Coast',       type:'plain',    x:428, y:655, adj:['t25','t29','t30']},
+  {id:'t1',  name:'Trecia North',       region:'Kingdom of Trecia',    type:'plain',    x: 95, y:278, adj:['t2','t3']},
+  {id:'t2',  name:'Trecia South',       region:'Kingdom of Trecia',    type:'plain',    x:155, y:361, adj:['t1','t3']},
+  {id:'t3',  name:'Ascadia (W)',        region:'Kingdom of Ascadia',   type:'forest',   x:378, y:231, adj:['t1','t2','t4','t9','t10']},
+  {id:'t4',  name:'Ascadia (E)',        region:'Kingdom of Ascadia',   type:'forest',   x:448, y:249, adj:['t3','t5','t10','t11']},
+  {id:'t5',  name:'Icy Deserts (W)',    region:'Icy Deserts',          type:'desert',   x:588, y:231, adj:['t4','t6','t11','t13']},
+  {id:'t6',  name:'Icy Deserts (E)',    region:'Icy Deserts',          type:'desert',   x:672, y:258, adj:['t5','t7','t13']},
+  {id:'t7',  name:'Frost Wood (W)',     region:'Frost Wood',           type:'forest',   x:800, y:203, adj:['t6','t8','t13']},
+  {id:'t8',  name:'Frost Wood (E)',     region:'Frost Wood',           type:'forest',   x:922, y:182, adj:['t7','t33']},
+  {id:'t9',  name:'Northern Forest',   region:'Northern Forest',      type:'forest',   x:348, y:338, adj:['t3','t10','t14','t20']},
+  {id:'t10', name:'Pointy Mtns (W)',   region:'Pointy Mountains',     type:'mountain', x:452, y:334, adj:['t3','t4','t9','t11','t14']},
+  {id:'t11', name:'Pointy Mtns (E)',   region:'Pointy Mountains',     type:'mountain', x:538, y:341, adj:['t4','t5','t10','t12','t15']},
+  {id:'t12', name:'Mount Gyptian',     region:'Mount Gyptian',        type:'mountain', x:648, y:358, adj:['t11','t13','t15','t16','t17']},
+  {id:'t13', name:'Kyr Forest',        region:'Kyr Forest',           type:'forest',   x:788, y:306, adj:['t5','t6','t7','t12','t18']},
+  {id:'t14', name:'Great Oak Grove',   region:'Great Oak Grove',      type:'forest',   x:368, y:436, adj:['t9','t10','t20','t21','t22']},
+  {id:'t15', name:'Lesonia (NW)',      region:'Kingdom of Lesonia',   type:'plain',    x:628, y:355, adj:['t11','t12','t16','t17','t22']},
+  {id:'t16', name:'Lesonia (N)',       region:'Kingdom of Lesonia',   type:'plain',    x:668, y:314, adj:['t12','t13','t15','t18']},
+  {id:'t17', name:'Lesonia (C)',       region:'Kingdom of Lesonia',   type:'plain',    x:698, y:382, adj:['t12','t15','t16','t18','t22','t26','t29']},
+  {id:'t18', name:'Lesonia (E)',       region:'Kingdom of Lesonia',   type:'plain',    x:808, y:393, adj:['t13','t16','t17','t19','t27']},
+  {id:'t19', name:'Chattensum Forest', region:'Chattensum Forest',    type:'forest',   x:922, y:431, adj:['t18','t27','t28']},
+  {id:'t20', name:'W Peninsula (N)',   region:'Western Peninsula',    type:'plain',    x:218, y:431, adj:['t9','t14','t21','t24']},
+  {id:'t21', name:'W Peninsula (S)',   region:'Western Peninsula',    type:'plain',    x:248, y:490, adj:['t20','t22','t24']},
+  {id:'t22', name:'Pulse Empire (N)',  region:'Pulse Empire',         type:'plain',    x:418, y:480, adj:['t14','t15','t17','t21','t23','t29']},
+  {id:'t23', name:'Pulse Empire (S)',  region:'Pulse Empire',         type:'plain',    x:448, y:535, adj:['t22','t24','t25','t29']},
+  {id:'t24', name:'Low Cape Forest',  region:'Low Cape Forest',      type:'forest',   x:238, y:545, adj:['t20','t21','t23','t25']},
+  {id:'t25', name:'Western Mountains',region:'Western Mountains',    type:'mountain', x:368, y:611, adj:['t23','t24','t29','t31']},
+  {id:'t26', name:'Alania (NW)',      region:'Kingdom of Alania',    type:'plain',    x:698, y:483, adj:['t17','t22','t27','t29','t30']},
+  {id:'t27', name:'Alania (NE)',      region:'Kingdom of Alania',    type:'plain',    x:838, y:486, adj:['t18','t19','t26','t28','t30']},
+  {id:'t28', name:'Alania (SE)',      region:'Kingdom of Alania',    type:'plain',    x:948, y:545, adj:['t19','t27']},
+  {id:'t29', name:'Ariskar Forest',   region:'Ariskar Forest',       type:'forest',   x:558, y:577, adj:['t22','t23','t25','t26','t30','t31']},
+  {id:'t30', name:'Ashlan Bay',       region:'Ashlan Bay',           type:'plain',    x:748, y:548, adj:['t26','t27','t29','t31']},
+  {id:'t31', name:'Southern Coast',   region:'Southern Coast',       type:'plain',    x:428, y:680, adj:['t25','t29','t30']},
   {id:'t32', name:'Isle of Howl',     region:'Isle of Howl',         type:'plain',    x:668, y: 52, adj:['t33']},
-  {id:'t33', name:'Lance Peninsula',  region:'Lance Peninsula',      type:'plain',    x:888, y:108, adj:['t8','t32']},
+  {id:'t33', name:'Lance Peninsula',  region:'Lance Peninsula',      type:'plain',    x:888, y:112, adj:['t8','t32']},
 
   // ── EASTERN CONTINENT ────────────────────────────────────────
-  {id:'t34', name:'Lycanthrope Lands', region:'Lycanthrope Lands',    type:'forest',   x:1055, y:278, adj:['t35','t36','t38']},
-  {id:'t35', name:'Toreth Forest',     region:'Toreth Forest',        type:'forest',   x:1118, y:268, adj:['t34','t36','t38']},
-  {id:'t36', name:'Kingdom of Bibal',  region:'Kingdom of Bibal',     type:'plain',    x:1085, y:358, adj:['t34','t35','t37','t38','t39']},
-  {id:'t37', name:'Bibal Lake',        region:'Kingdom of Bibal',     type:'plain',    x:1055, y:422, adj:['t36','t39','t40']},
-  {id:'t38', name:'Frozen Moor',       region:'Frozen Moor',          type:'desert',   x:1215, y:248, adj:['t34','t35','t36','t39','t41','t42']},
-  {id:'t39', name:'K. Alania (Guardian Hills)', region:'Kingdom of Alania', type:'plain', x:1065, y:468, adj:['t36','t37','t38','t40','t41']},
-  {id:'t40', name:'Alania River',      region:'Kingdom of Alania',    type:'plain',    x:1085, y:548, adj:['t37','t39','t45']},
-  {id:'t41', name:'Grey Mountains',    region:'Grey Mountains',       type:'mountain', x:1295, y:278, adj:['t38','t39','t42','t43']},
-  {id:'t42', name:'Blood Kingdom',     region:'Blood Kingdom',        type:'plain',    x:1248, y:128, adj:['t38','t41','t43']},
-  {id:'t43', name:'K. of Asthalien',   region:'Kingdom of Asthalien', type:'plain',    x:1478, y:298, adj:['t41','t42','t44','t46']},
-  {id:'t44', name:'K. of Hamaer',      region:'Kingdom of Hamaer',    type:'mountain', x:1488, y:368, adj:['t43','t45','t46']},
-  {id:'t45', name:'Kurgan Clans',      region:'Kurgan Clans',         type:'plain',    x:1328, y:468, adj:['t40','t41','t44','t47','t48']},
-  {id:'t46', name:'Orign Island',      region:'Orign Island',         type:'plain',    x:1608, y:318, adj:['t43','t44']},
-  {id:'t47', name:'Muddy Hills',       region:'The Muddy Hills',      type:'plain',    x:1338, y:518, adj:['t45','t48','t49']},
-  {id:'t48', name:'Barbarian Steppe',  region:'Barbarian Steppe',     type:'plain',    x:1418, y:528, adj:['t45','t47','t49','t50']},
-  {id:'t49', name:'Gagarian Tribes',   region:'Gagarian Tribes',      type:'plain',    x:1448, y:588, adj:['t47','t48','t50','t51']},
-  {id:'t50', name:'Cave Hills',        region:'Cave Hills',           type:'mountain', x:1548, y:548, adj:['t48','t49','t51','t52']},
-  {id:'t51', name:'Drugin Tribes',     region:'Drugin Tribes',        type:'plain',    x:1558, y:588, adj:['t49','t50','t52']},
-  {id:'t52', name:'Wild Boar Forest',  region:'Wild Boar Forest',     type:'forest',   x:1468, y:638, adj:['t49','t51','t53']},
-  {id:'t53', name:'Tamar Forest',      region:'Tamar Forest',         type:'forest',   x:1198, y:628, adj:['t45','t52','t54']},
-  {id:'t54', name:'Thai Shang Empire', region:'Thai Shang Empire',    type:'plain',    x:1218, y:668, adj:['t53']},
-  {id:'t55', name:'K. of Krog',        region:'Kingdom of Krog',      type:'plain',    x:1748, y:168, adj:['t43','t46']},
-  {id:'t56', name:'K. of the Reborn',  region:'Kingdom of the Reborn',type:'plain',    x:1848, y:468, adj:['t55','t57']},
-  {id:'t57', name:'K. of Bandmer',     region:'Kingdom of Bandmer',   type:'plain',    x:1878, y:638, adj:['t56']},
+  {id:'t34', name:'Lycanthrope Lands', region:'Lycanthrope Lands',    type:'forest',   x:1055, y:289, adj:['t35','t36','t38']},
+  {id:'t35', name:'Toreth Forest',     region:'Toreth Forest',        type:'forest',   x:1118, y:278, adj:['t34','t36','t38']},
+  {id:'t36', name:'Kingdom of Bibal',  region:'Kingdom of Bibal',     type:'plain',    x:1085, y:372, adj:['t34','t35','t37','t38','t39']},
+  {id:'t37', name:'Bibal Lake',        region:'Kingdom of Bibal',     type:'plain',    x:1055, y:438, adj:['t36','t39','t40']},
+  {id:'t38', name:'Frozen Moor',       region:'Frozen Moor',          type:'desert',   x:1215, y:258, adj:['t34','t35','t36','t39','t41','t42']},
+  {id:'t39', name:'K. Alania (Guardian Hills)', region:'Kingdom of Alania', type:'plain', x:1065, y:486, adj:['t36','t37','t38','t40','t41']},
+  {id:'t40', name:'Alania River',      region:'Kingdom of Alania',    type:'plain',    x:1085, y:569, adj:['t37','t39','t45']},
+  {id:'t41', name:'Grey Mountains',    region:'Grey Mountains',       type:'mountain', x:1295, y:289, adj:['t38','t39','t42','t43']},
+  {id:'t42', name:'Blood Kingdom',     region:'Blood Kingdom',        type:'plain',    x:1248, y:133, adj:['t38','t41','t43']},
+  {id:'t43', name:'K. of Asthalien',   region:'Kingdom of Asthalien', type:'plain',    x:1478, y:310, adj:['t41','t42','t44','t46']},
+  {id:'t44', name:'K. of Hamaer',      region:'Kingdom of Hamaer',    type:'mountain', x:1488, y:382, adj:['t43','t45','t46']},
+  {id:'t45', name:'Kurgan Clans',      region:'Kurgan Clans',         type:'plain',    x:1328, y:486, adj:['t40','t41','t44','t47','t48']},
+  {id:'t46', name:'Orign Island',      region:'Orign Island',         type:'plain',    x:1608, y:330, adj:['t43','t44']},
+  {id:'t47', name:'Muddy Hills',       region:'The Muddy Hills',      type:'plain',    x:1338, y:538, adj:['t45','t48','t49']},
+  {id:'t48', name:'Barbarian Steppe',  region:'Barbarian Steppe',     type:'plain',    x:1418, y:548, adj:['t45','t47','t49','t50']},
+  {id:'t49', name:'Gagarian Tribes',   region:'Gagarian Tribes',      type:'plain',    x:1448, y:611, adj:['t47','t48','t50','t51']},
+  {id:'t50', name:'Cave Hills',        region:'Cave Hills',           type:'mountain', x:1548, y:569, adj:['t48','t49','t51','t52']},
+  {id:'t51', name:'Drugin Tribes',     region:'Drugin Tribes',        type:'plain',    x:1558, y:611, adj:['t49','t50','t52']},
+  {id:'t52', name:'Wild Boar Forest',  region:'Wild Boar Forest',     type:'forest',   x:1468, y:663, adj:['t49','t51','t53']},
+  {id:'t53', name:'Tamar Forest',      region:'Tamar Forest',         type:'forest',   x:1198, y:652, adj:['t45','t52','t54']},
+  {id:'t54', name:'Thai Shang Empire', region:'Thai Shang Empire',    type:'plain',    x:1218, y:694, adj:['t53']},
+  {id:'t55', name:'K. of Krog',        region:'Kingdom of Krog',      type:'plain',    x:1748, y:175, adj:['t43','t46']},
+  {id:'t56', name:'K. of the Reborn',  region:'Kingdom of the Reborn',type:'plain',    x:1848, y:486, adj:['t55','t57']},
+  {id:'t57', name:'K. of Bandmer',     region:'Kingdom of Bandmer',   type:'plain',    x:1878, y:663, adj:['t56']},
 ];
 
 var TERRAIN_COLORS = {
