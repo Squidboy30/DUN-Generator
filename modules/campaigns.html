@@ -1327,12 +1327,29 @@ body {
 
       <!-- Campaign Travel Sidebar (shown in travel mode) -->
       <div id="travel-sidebar" style="display:none;width:260px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--panel-border);flex-direction:column;overflow:hidden;">
+
+        <!-- STEP 1: Starting region picker (shown until party is placed) -->
+        <div id="travel-setup" style="padding:14px;border-bottom:1px solid var(--panel-border);">
+          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--gold-light);margin-bottom:10px;">CAMPAIGN TRAVEL</div>
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;">STEP 1 — CHOOSE STARTING TERRITORY</div>
+          <select id="travel-start-select"
+            style="width:100%;background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'IM Fell English',serif;font-size:12px;padding:6px 8px;margin-bottom:10px;cursor:pointer;">
+            <option value="">— Select territory —</option>
+          </select>
+          <button class="tool-btn" onclick="travelSetStart()"
+            style="width:100%;border-color:var(--gold-light);color:var(--gold-light);">
+            ⚑ Place Party Here
+          </button>
+        </div>
+
+        <!-- STEP 2: Travel controls (shown after party is placed) -->
+        <div id="travel-controls" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
         <div style="padding:12px 14px;border-bottom:1px solid var(--panel-border);">
           <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold-light);margin-bottom:8px;">CAMPAIGN TRAVEL</div>
 
           <!-- How to use hint -->
           <div id="travel-hint" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);font-style:italic;margin-bottom:10px;line-height:1.5;padding:6px 8px;background:rgba(255,255,255,0.03);border-left:2px solid var(--border-gold);">
-            Click any territory on the map to select it.
+            Click a territory node on the map to select it.
           </div>
 
           <!-- Turn counter -->
@@ -1351,18 +1368,17 @@ body {
             <div id="travel-terrain" style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-muted);margin-top:2px;letter-spacing:1px;"></div>
           </div>
 
-          <!-- Primary action button — context-sensitive -->
-          <button class="tool-btn" id="btn-place-party" onclick="travelPlaceParty()"
-            style="width:100%;margin-bottom:6px;display:none;border-color:var(--gold-light);color:var(--gold-light);">
-            ⚑ Place Party Here
-          </button>
           <button class="tool-btn" id="btn-travel" onclick="travelMove()"
             style="width:100%;margin-bottom:6px;display:none;border-color:#64c864;color:#64c864;">
             ➜ Travel Here (advances turn)
           </button>
           <button class="tool-btn" id="btn-roll-event" onclick="travelRollEvent()"
-            style="width:100%;margin-bottom:0;display:none;">
+            style="width:100%;margin-bottom:6px;display:none;">
             ⚄ Roll Travel Event
+          </button>
+          <button class="tool-btn" onclick="travelReset()"
+            style="width:100%;font-size:9px;color:var(--text-muted);">
+            ↺ Change Starting Territory
           </button>
         </div>
 
@@ -1382,6 +1398,8 @@ body {
           <div id="ter-result" style="font-family:'IM Fell English',serif;font-size:12px;color:var(--text-light);line-height:1.6;"></div>
         </div>
 
+        </div><!-- end travel-controls inner -->
+
         <!-- Journey log -->
         <div style="flex:1;overflow-y:auto;padding:10px 14px;">
           <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
@@ -1390,6 +1408,8 @@ body {
           </div>
           <div id="travel-log" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);line-height:1.7;"></div>
         </div>
+
+        </div><!-- end travel-controls -->
 
         <!-- Legend -->
         <div style="padding:8px 14px;border-top:1px solid var(--panel-border);font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);line-height:2;">
@@ -3622,6 +3642,16 @@ function toggleTravelMode() {
   if (travelMode) {
     legend.textContent = 'Click a territory node to select it · Gold = adjacent · Green = party';
     if (pinLeg) pinLeg.style.display = 'none';
+    // Populate start dropdown once
+    var sel = document.getElementById('travel-start-select');
+    if (sel && sel.options.length === 1) {
+      TERRITORIES.forEach(function(t) {
+        var opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.id.toUpperCase() + ' — ' + t.name + ' (' + t.region + ')';
+        sel.appendChild(opt);
+      });
+    }
     renderTravelOverlay();
     renderTravelSidebar();
   } else {
@@ -3689,6 +3719,27 @@ function selectTerritoryNode(id) {
   renderTravelSidebar();
 }
 
+function travelSetStart() {
+  var sel = document.getElementById('travel-start-select');
+  if (!sel || !sel.value) { alert('Please select a starting territory from the list.'); return; }
+  var t = TERRITORIES.find(function(x){ return x.id === sel.value; });
+  if (!t) return;
+  travelState.partyId    = t.id;
+  travelState.selectedId = null;
+  travelState.log.unshift('Turn 1: Campaign started at ' + t.id.toUpperCase() + ' — ' + t.name + ' (' + t.region + ').');
+  renderTravelOverlay();
+  renderTravelSidebar();
+}
+
+function travelReset() {
+  travelState.partyId    = null;
+  travelState.selectedId = null;
+  var sel = document.getElementById('travel-start-select');
+  if (sel) sel.value = '';
+  renderTravelOverlay();
+  renderTravelSidebar();
+}
+
 function travelPlaceParty() {
   var sid = travelState.selectedId;
   if (!sid) return;
@@ -3735,6 +3786,13 @@ function travelRollEvent() {
 
 function renderTravelSidebar() {
   // Turn
+  // Show setup panel or controls panel
+  var setup    = document.getElementById('travel-setup');
+  var controls = document.getElementById('travel-controls');
+  var pid = travelState.partyId;
+  if (setup)    setup.style.display    = pid ? 'none' : 'block';
+  if (controls) controls.style.display = pid ? 'flex'  : 'none';
+
   var el = document.getElementById('travel-turn');
   if (el) el.textContent = travelState.turn;
 
