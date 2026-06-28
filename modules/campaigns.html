@@ -1335,6 +1335,39 @@ body {
           <select id="travel-start-select"
             style="width:100%;background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'IM Fell English',serif;font-size:12px;padding:6px 8px;margin-bottom:10px;cursor:pointer;">
             <option value="">— Select territory —</option>
+            <option value="t1">T1 — Trecia North (Kingdom of Trecia)</option>
+            <option value="t2">T2 — Trecia South (Kingdom of Trecia)</option>
+            <option value="t3">T3 — Ascadia (W) (Kingdom of Ascadia)</option>
+            <option value="t4">T4 — Ascadia (E) (Kingdom of Ascadia)</option>
+            <option value="t5">T5 — Icy Deserts (W) (Icy Deserts)</option>
+            <option value="t6">T6 — Icy Deserts (E) (Icy Deserts)</option>
+            <option value="t7">T7 — Frost Wood (W) (Frost Wood)</option>
+            <option value="t8">T8 — Frost Wood (E) (Frost Wood)</option>
+            <option value="t9">T9 — Northern Forest (Northern Forest)</option>
+            <option value="t10">T10 — Pointy Mtns (W) (Pointy Mountains)</option>
+            <option value="t11">T11 — Pointy Mtns (E) (Pointy Mountains)</option>
+            <option value="t12">T12 — Mount Gyptian (Mount Gyptian)</option>
+            <option value="t13">T13 — Kyr Forest (Kyr Forest)</option>
+            <option value="t14">T14 — Great Oak Grove (Great Oak Grove)</option>
+            <option value="t15">T15 — Lesonia (NW) (Kingdom of Lesonia)</option>
+            <option value="t16">T16 — Lesonia (N) (Kingdom of Lesonia)</option>
+            <option value="t17">T17 — Lesonia (C) (Kingdom of Lesonia)</option>
+            <option value="t18">T18 — Lesonia (E) (Kingdom of Lesonia)</option>
+            <option value="t19">T19 — Chattensum Forest (Chattensum Forest)</option>
+            <option value="t20">T20 — W Peninsula (N) (Western Peninsula)</option>
+            <option value="t21">T21 — W Peninsula (S) (Western Peninsula)</option>
+            <option value="t22">T22 — Pulse Empire (N) (Pulse Empire)</option>
+            <option value="t23">T23 — Pulse Empire (S) (Pulse Empire)</option>
+            <option value="t24">T24 — Low Cape Forest (Low Cape Forest)</option>
+            <option value="t25">T25 — Western Mountains (Western Mountains)</option>
+            <option value="t26">T26 — Alania (NW) (Kingdom of Alania)</option>
+            <option value="t27">T27 — Alania (NE) (Kingdom of Alania)</option>
+            <option value="t28">T28 — Alania (SE) (Kingdom of Alania)</option>
+            <option value="t29">T29 — Ariskar Forest (Ariskar Forest)</option>
+            <option value="t30">T30 — Ashlan Bay (Ashlan Bay)</option>
+            <option value="t31">T31 — Southern Coast (Southern Coast)</option>
+            <option value="t32">T32 — Isle of Howl (Isle of Howl)</option>
+            <option value="t33">T33 — Lance Peninsula (Lance Peninsula)</option>
           </select>
           <button class="tool-btn" onclick="travelSetStart()"
             style="width:100%;border-color:var(--gold-light);color:var(--gold-light);">
@@ -3642,17 +3675,6 @@ function toggleTravelMode() {
   if (travelMode) {
     legend.textContent = 'Click a territory node to select it · Gold = adjacent · Green = party';
     if (pinLeg) pinLeg.style.display = 'none';
-    // Populate dropdown every time (safe to re-add)
-    var sel = document.getElementById('travel-start-select');
-    if (sel) {
-      while (sel.options.length > 1) sel.remove(1); // clear old options except placeholder
-      TERRITORIES.forEach(function(t) {
-        var opt = document.createElement('option');
-        opt.value = t.id;
-        opt.textContent = t.id.toUpperCase() + ' — ' + t.name + ' (' + t.region + ')';
-        sel.appendChild(opt);
-      });
-    }
     renderTravelOverlay();
     renderTravelSidebar();
   } else {
