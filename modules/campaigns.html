@@ -3529,6 +3529,17 @@ function applyGeneratedCampaign(gen) {
 
 init();
 renderNodes();
+// Pre-populate travel start dropdown
+(function() {
+  var sel = document.getElementById('travel-start-select');
+  if (!sel) return;
+  TERRITORIES.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.id.toUpperCase() + ' — ' + t.name + ' (' + t.region + ')';
+    sel.appendChild(opt);
+  });
+})();
 window.addEventListener('resize', function() {
   renderMapPins();
 });
@@ -3642,16 +3653,6 @@ function toggleTravelMode() {
   if (travelMode) {
     legend.textContent = 'Click a territory node to select it · Gold = adjacent · Green = party';
     if (pinLeg) pinLeg.style.display = 'none';
-    // Populate start dropdown once
-    var sel = document.getElementById('travel-start-select');
-    if (sel && sel.options.length === 1) {
-      TERRITORIES.forEach(function(t) {
-        var opt = document.createElement('option');
-        opt.value = t.id;
-        opt.textContent = t.id.toUpperCase() + ' — ' + t.name + ' (' + t.region + ')';
-        sel.appendChild(opt);
-      });
-    }
     renderTravelOverlay();
     renderTravelSidebar();
   } else {
