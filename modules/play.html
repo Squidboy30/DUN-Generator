@@ -157,7 +157,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   </div>
   <div class="hdr-right">
     <div class="hdr-progress" id="hdr-progress"></div>
-    <button class="hdr-btn" onclick="toggleTravelPanel()" id="btn-travel-panel">🗺 Travel</button>
+    <button class="hdr-btn" onclick="toggleTravelPanel()" id="btn-travel-panel" style="border-color:#e0b840;color:#e0b840;">🗺 Travel</button>
     <button class="hdr-btn danger" onclick="confirmReset()">↺ Reset</button>
   </div>
 </div>
@@ -484,12 +484,12 @@ function renderConnections() {
 
 // ── MISSION PINS ─────────────────────────────────────────────
 var PIN_COLORS = {
-  available:'#a07820', active:'#e0b840',
-  victory:'#4a8a4a',   defeat:'#8a2a2a', locked:'#1e180c'
+  available:'#f5d800', active:'#ffe940',
+  victory:'#4a8a4a',   defeat:'#8a2a2a', locked:'#3a3020'
 };
 var PIN_TEXT_COLORS = {
   available:'#0a0806', active:'#0a0806',
-  victory:'#d0f0d0',   defeat:'#f0d0d0', locked:'#5a4a30'
+  victory:'#d0f0d0',   defeat:'#f0d0d0', locked:'#9a8a60'
 };
 
 function renderPins() {
@@ -593,38 +593,58 @@ function renderParty() {
   var g = document.createElementNS('http://www.w3.org/2000/svg','g');
   g.setAttribute('class','party-group party-drag-zone');
 
-  // Glow
-  var glow = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  glow.setAttribute('cx',px); glow.setAttribute('cy',py); glow.setAttribute('r','20');
-  glow.setAttribute('fill','rgba(224,184,64,0.12)');
-  g.appendChild(glow);
+  // Pulsing outer ring
+  var pulse = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  pulse.setAttribute('cx',px); pulse.setAttribute('cy',py); pulse.setAttribute('r','28');
+  pulse.setAttribute('fill','none'); pulse.setAttribute('stroke','#ff2020');
+  pulse.setAttribute('stroke-width','2'); pulse.setAttribute('opacity','0.6');
+  pulse.innerHTML = '<animate attributeName="r" values="22;34;22" dur="1.6s" repeatCount="indefinite"/>'
+    + '<animate attributeName="opacity" values="0.7;0;0.7" dur="1.6s" repeatCount="indefinite"/>';
+  g.appendChild(pulse);
 
-  // Base circle
-  var base = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  base.setAttribute('cx',px); base.setAttribute('cy',py); base.setAttribute('r','14');
-  base.setAttribute('fill','rgba(13,10,6,0.85)');
-  base.setAttribute('stroke','#e0b840'); base.setAttribute('stroke-width','2');
-  g.appendChild(base);
+  // Drop shadow
+  var shadow = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+  shadow.setAttribute('cx',String(px+3)); shadow.setAttribute('cy',String(py+22));
+  shadow.setAttribute('rx','12'); shadow.setAttribute('ry','5');
+  shadow.setAttribute('fill','rgba(0,0,0,0.5)');
+  g.appendChild(shadow);
 
-  // Banner icon
+  // Pin teardrop body
+  var pin = document.createElementNS('http://www.w3.org/2000/svg','path');
+  var d = 'M'+px+','+(py+16)+' C'+(px-16)+','+(py+4)+' '+(px-20)+','+(py-8)+' '+(px-20)+','+(py-18)
+        + ' A20,20 0 1,1 '+(px+20)+','+(py-18)
+        + ' C'+(px+20)+','+(py-8)+' '+(px+16)+','+(py+4)+' '+px+','+(py+16)+'Z';
+  pin.setAttribute('d', d);
+  pin.setAttribute('fill','#e02020'); pin.setAttribute('stroke','#fff'); pin.setAttribute('stroke-width','2');
+  g.appendChild(pin);
+
+  // Inner highlight
+  var inner = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  inner.setAttribute('cx',px); inner.setAttribute('cy',String(py-18)); inner.setAttribute('r','11');
+  inner.setAttribute('fill','#ff5555');
+  g.appendChild(inner);
+
+  // Sword icon
   var icon = document.createElementNS('http://www.w3.org/2000/svg','text');
-  icon.setAttribute('x',px); icon.setAttribute('y',py);
+  icon.setAttribute('x',px); icon.setAttribute('y',String(py-18));
   icon.setAttribute('text-anchor','middle'); icon.setAttribute('dominant-baseline','central');
   icon.setAttribute('font-size','14'); icon.setAttribute('pointer-events','none');
-  icon.textContent = '⚑';
+  icon.setAttribute('fill','#fff');
+  icon.textContent = '⚔';
   g.appendChild(icon);
 
-  // Label
+  // PARTY label
   var lbg = document.createElementNS('http://www.w3.org/2000/svg','rect');
-  lbg.setAttribute('x',px-24); lbg.setAttribute('y',py+16);
-  lbg.setAttribute('width','48'); lbg.setAttribute('height','12');
-  lbg.setAttribute('fill','rgba(13,10,6,0.75)'); lbg.setAttribute('rx','2');
+  lbg.setAttribute('x',String(px-26)); lbg.setAttribute('y',String(py+20));
+  lbg.setAttribute('width','52'); lbg.setAttribute('height','14');
+  lbg.setAttribute('fill','rgba(220,20,20,0.85)'); lbg.setAttribute('rx','2');
   g.appendChild(lbg);
   var lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
-  lbl.setAttribute('x',px); lbl.setAttribute('y',py+23);
-  lbl.setAttribute('text-anchor','middle');
-  lbl.setAttribute('fill','#e0b840'); lbl.setAttribute('font-size','8');
-  lbl.setAttribute('font-family','Cinzel,serif'); lbl.setAttribute('pointer-events','none');
+  lbl.setAttribute('x',px); lbl.setAttribute('y',String(py+28));
+  lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('dominant-baseline','central');
+  lbl.setAttribute('fill','#fff'); lbl.setAttribute('font-size','9');
+  lbl.setAttribute('font-family','Cinzel,serif'); lbl.setAttribute('font-weight','700');
+  lbl.setAttribute('pointer-events','none');
   lbl.textContent = 'PARTY';
   g.appendChild(lbl);
 
@@ -985,19 +1005,18 @@ var TRAVEL_EVENTS = {
 var travelState = { territoryId: null, turn: 1, log: [] };
 
 function initTravel() {
-  // Use campaign's startingTerritory if defined
-  var startId = campaign && campaign.startingTerritory;
-  // Check saved state
-  try {
-    var saved = JSON.parse(localStorage.getItem('dun_travel_'+campaign.id)||'null');
-    if (saved) { travelState = saved; }
-    else if (startId) { travelState.territoryId = startId; }
-  } catch(e) {}
+  // travelState already restored in load() from dun_play_ saved data
+  // Apply startingTerritory if no territory set yet
+  if (!travelState.territoryId && campaign && campaign.startingTerritory) {
+    travelState.territoryId = campaign.startingTerritory;
+  }
   refreshTravelPanel();
+  renderParty();
 }
 
 function saveTravel() {
-  try { localStorage.setItem('dun_travel_'+campaign.id, JSON.stringify(travelState)); } catch(e) {}
+  // Save travel state as part of the main play save
+  saveState();
 }
 
 function toggleTravelPanel() {
