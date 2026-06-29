@@ -1200,7 +1200,7 @@ body {
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('designer')">Campaign Designer</button>
       <button class="tab-btn" onclick="switchTab('campaigns')">My Campaigns</button>
-      <button class="tab-btn" id="tab-btn-map" onclick="switchTab('map')">🗺 World Map</button>
+      <button class="tab-btn" id="tab-btn-map" onclick="openWorldMap()">🗺 World Map</button>
     </div>
     <div class="auth-status" id="auth-header">
       <span class="auth-email" id="auth-user-email" style="display:none"></span>
@@ -1686,6 +1686,14 @@ function saveLocal() {
 // ═══════════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════════
+
+function openWorldMap() {
+  if (activeCampaign && activeCampaign.id) {
+    window.location.href = 'play.html?c=' + activeCampaign.id;
+  } else {
+    alert('Please open a campaign first, then click World Map.');
+  }
+}
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(function(b, i) {
@@ -2407,7 +2415,7 @@ function renderEditor() {
         '<input class="region-input" id="region-input" type="text" placeholder="Region name (e.g. Kingdom of Arasalia)" value="' + regionVal.replace(/"/g,'&quot;') + '" onchange="saveRegion(\''+pinNode.id+'\',this.value)">' +
         '<button class="' + pinBtnClass + '" onclick="togglePinMode(\'' + pinNode.id + '\')" title="Place pin on world map">' + (hasPinVal ? '📍' : '📍') + '</button>' +
       '</div>' +
-      (hasPinVal ? '<div style="font-size:9px;color:#6abe6a;margin-top:4px;font-style:italic;">✓ Pinned · <a href="#" onclick="switchTab(\'map\');return false;" style="color:var(--gold-light);">View on map →</a></div>' : '<div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-style:italic;">Not pinned — click 📍 to place on map</div>') :
+      (hasPinVal ? '<div style="font-size:9px;color:#6abe6a;margin-top:4px;font-style:italic;">✓ Pinned · <a href="#" onclick="openWorldMap();return false;" style="color:var(--gold-light);">View on map →</a></div>' : '<div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-style:italic;">Not pinned — click 📍 to place on map</div>') :
       '<div style="font-size:9px;color:var(--text-muted);font-style:italic;">Add mission to canvas to pin on map</div>'
     );
 
