@@ -4116,16 +4116,17 @@ function toggleTravelMode() {
 
   var legend = document.getElementById('map-legend-hint');
   var pinLeg = document.getElementById('map-pin-legend');
+  var ov = document.getElementById('territory-overlay');
   if (travelMode) {
     legend.textContent = 'Click a territory node to select it · Gold = adjacent · Green = party';
     if (pinLeg) pinLeg.style.display = 'none';
+    if (ov) ov.style.display = 'block';
     renderTravelOverlay();
     renderTravelSidebar();
   } else {
     legend.textContent = 'Scroll to zoom · Drag to pan · Click map to place pin for selected mission';
     if (pinLeg) pinLeg.style.display = '';
-    var ov = document.getElementById('territory-overlay');
-    if (ov) ov.innerHTML = '';
+    if (ov) { ov.style.display = 'none'; ov.innerHTML = ''; }
   }
 }
 
