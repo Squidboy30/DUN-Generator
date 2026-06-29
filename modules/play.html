@@ -73,7 +73,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 .b-victory{background:rgba(74,138,74,.15);border:1px solid var(--green);color:var(--green-light);}
 .b-defeat{background:rgba(138,42,42,.15);border:1px solid var(--red);color:var(--red-light);}
 .b-locked{background:rgba(58,48,32,.3);border:1px solid var(--grey);color:var(--grey-text);}
-.pop-close{position:absolute;top:8px;right:8px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;}
+.pop-close{position:absolute;top:8px;right:8px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;z-index:10;}
 .pop-close:hover{color:var(--gold);}
 .pop-goal{padding:8px 13px;font-size:11px;color:var(--text-muted);font-style:italic;line-height:1.5;border-bottom:1px solid var(--border);}
 .pop-actions{padding:9px 13px;display:flex;flex-direction:column;gap:6px;}
@@ -770,12 +770,11 @@ function closePopover() {
   document.addEventListener('mousedown', function(e) {
     var hdr = document.getElementById('pop-header');
     if (!hdr || !hdr.contains(e.target)) return;
-    if (e.target.classList.contains('pop-close')) return;
+    if (e.target.closest('.pop-close')) return; // don't intercept close button
     pop = document.getElementById('popover');
     pdrag = true;
     pdx = e.clientX - parseInt(pop.style.left||0);
     pdy = e.clientY - parseInt(pop.style.top||0);
-    e.preventDefault();
   });
   document.addEventListener('mousemove', function(e) {
     if (!pdrag) return;
