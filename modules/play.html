@@ -118,6 +118,32 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 .conn-line      { fill:none; stroke-width:1.5; }
 .cv{stroke:#a07820;} .cd{stroke:#8b1a1a;} .cc{stroke:#4a5a6e;}
 .party-drag-zone{ cursor:move; pointer-events:all; }
+
+/* ── TRAVEL PANEL ── */
+.travel-panel{position:absolute;top:14px;right:16px;width:240px;background:rgba(13,10,6,.95);border:1px solid var(--border-gold);z-index:15;display:none;flex-direction:column;max-height:calc(100% - 28px);overflow:hidden;}
+.travel-panel.show{display:flex;}
+.tp-head{padding:8px 12px;border-bottom:1px solid var(--border);background:rgba(160,120,32,.08);display:flex;align-items:center;justify-content:space-between;}
+.tp-title{font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
+.tp-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 2px;line-height:1;}
+.tp-body{padding:10px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+.tp-loc{background:rgba(0,0,0,.3);border:1px solid var(--border);padding:7px 10px;}
+.tp-loc-label{font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px;}
+.tp-loc-name{font-family:'IM Fell English',Georgia,serif;font-size:13px;color:var(--text);}
+.tp-loc-sub{font-family:Cinzel,serif;font-size:8px;color:var(--text-muted);letter-spacing:1px;margin-top:2px;}
+.tp-turn{display:flex;align-items:center;gap:6px;}
+.tp-turn-label{font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;}
+.tp-turn-num{font-family:Cinzel,serif;font-size:20px;color:var(--gold);min-width:28px;text-align:center;}
+.tp-btn{font-family:Cinzel,serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;width:100%;text-align:center;transition:all .15s;}
+.tp-btn:hover{border-color:var(--border-gold);color:var(--gold);}
+.tp-btn.primary{border-color:var(--gold);color:var(--gold);}
+.tp-roll-result{padding:8px 10px;background:rgba(0,0,0,.4);border:1px solid var(--border);}
+.tp-roll-num{font-family:Cinzel,serif;font-size:24px;font-weight:700;margin-bottom:2px;}
+.tp-roll-deck{font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;}
+.tp-roll-title{font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;color:var(--gold);margin-bottom:4px;}
+.tp-roll-text{font-family:'IM Fell English',Georgia,serif;font-size:11px;color:var(--text);line-height:1.6;}
+.tp-roll-epic{font-family:Cinzel,serif;font-size:9px;color:#c8a050;font-style:italic;margin-top:4px;}
+.tp-log{max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.tp-log-entry{font-family:'IM Fell English',Georgia,serif;font-size:10px;color:var(--text-muted);padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.04);line-height:1.4;}
 </style>
 </head>
 <body>
@@ -132,6 +158,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   <div class="hdr-right">
     <div class="hdr-progress" id="hdr-progress"></div>
     <button class="hdr-btn" onclick="togglePartyDrag()" id="btn-move-party" title="Move party marker">⚑ Move Party</button>
+    <button class="hdr-btn" onclick="toggleTravelPanel()" id="btn-travel-panel">🗺 Travel</button>
     <button class="hdr-btn danger" onclick="confirmReset()">↺ Reset</button>
   </div>
 </div>
@@ -161,6 +188,43 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
       <button onclick="mZoom(0.2)">+</button>
       <button onclick="mZoom(-0.2)">−</button>
       <button class="fit-btn" onclick="mFit()">Fit</button>
+    </div>
+  </div>
+
+  <!-- Travel Panel -->
+  <div class="travel-panel" id="travel-panel">
+    <div class="tp-head">
+      <span class="tp-title">⚔ Campaign Travel</span>
+      <button class="tp-close" onclick="toggleTravelPanel()">×</button>
+    </div>
+    <div class="tp-body">
+      <div class="tp-loc">
+        <div class="tp-loc-label">Party Location</div>
+        <div class="tp-loc-name" id="tp-loc-name">Not set</div>
+        <div class="tp-loc-sub" id="tp-loc-sub"></div>
+      </div>
+      <div class="tp-turn">
+        <span class="tp-turn-label">Turn</span>
+        <button onclick="travelTurn(-1)" style="width:22px;height:22px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:13px;">−</button>
+        <span class="tp-turn-num" id="tp-turn-num">1</span>
+        <button onclick="travelTurn(1)"  style="width:22px;height:22px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:13px;">+</button>
+        <span class="tp-turn-label">Week</span>
+      </div>
+      <button class="tp-btn primary" onclick="travelRoll()">⚄ Roll Travel Event</button>
+      <button class="tp-btn" onclick="travelReset()" style="font-size:8px;">↺ Change Location</button>
+      <div class="tp-roll-result" id="tp-roll-result" style="display:none;">
+        <div class="tp-roll-num" id="tp-roll-num"></div>
+        <div class="tp-roll-deck" id="tp-roll-deck"></div>
+        <div id="tp-roll-card" style="display:none;">
+          <div class="tp-roll-title" id="tp-roll-title"></div>
+          <div class="tp-roll-text" id="tp-roll-text"></div>
+          <div class="tp-roll-epic" id="tp-roll-epic" style="display:none;"></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px;">Journey Log</div>
+        <div class="tp-log" id="tp-log"><span style="color:var(--text-muted);font-style:italic;font-size:10px;">No entries yet.</span></div>
+      </div>
     </div>
   </div>
 
@@ -250,6 +314,7 @@ function load() {
     ensurePins();
     renderMap();
     mFit();
+    initTravel();
   }
   if (img.complete && img.naturalWidth) onImgReady();
   else img.onload = onImgReady;
@@ -815,6 +880,207 @@ function mFit(){
 
   window.addEventListener('resize',function(){mFit();});
 })();
+
+// ═══════════════════════════════════════════════════════
+// TERRITORY TRAVEL
+// ═══════════════════════════════════════════════════════
+
+var TERRITORIES = [
+  {id:'i1',  name:'Column Islands',   region:'Northern Islands',   type:'forest'},
+  {id:'i2',  name:'Argon Island',     region:'Northern Islands',   type:'plains'},
+  {id:'i3',  name:'Milon Isle',       region:'Northern Islands',   type:'mountain'},
+  {id:'i4',  name:'Folor Forest',     region:'Northern Islands',   type:'forest'},
+  {id:'i5',  name:'Atnas',            region:'Kingdom of Trecia',  type:'plains'},
+  {id:'i6',  name:'Zanom',            region:'Kingdom of Trecia',  type:'plains'},
+  {id:'i7',  name:'Peklos',           region:'Kingdom of Trecia',  type:'plains'},
+  {id:'i8',  name:'Bronze Island',    region:'Kingdom of Trecia',  type:'plains'},
+  {id:'i10', name:'Goromul (Isle of Howls)', region:'Isle of Howls', type:'volcanic'},
+  {id:'t1',  name:'Raarkund',         region:'Lance Peninsula',    type:'plains'},
+  {id:'t2',  name:'Urakul',           region:'Lance Peninsula',    type:'plains'},
+  {id:'t3',  name:'Frost Woods (W)',  region:'Frost Woods',        type:'forest'},
+  {id:'t4',  name:'Frost Woods (E)',  region:'Frost Woods',        type:'forest'},
+  {id:'t7',  name:'Icy Deserts (N)',  region:'Icy Deserts',        type:'desert'},
+  {id:'t8',  name:'Icy Deserts (C)',  region:'Icy Deserts',        type:'desert'},
+  {id:'t9',  name:'Kamnul',           region:'Icy Deserts',        type:'plains'},
+  {id:'t10', name:"Ascadia (W)",      region:'Kingdom of Ascadia', type:'forest'},
+  {id:'t12', name:'Ascadia (C)',      region:'Kingdom of Ascadia', type:'plains'},
+  {id:'t13', name:"The Bear's Den",   region:'Kingdom of Ascadia', type:'forest'},
+  {id:'t14', name:'Ascadia (S)',      region:'Kingdom of Ascadia', type:'forest'},
+  {id:'t15', name:'Breten',           region:'Kingdom of Ascadia', type:'plains'},
+  {id:'t16', name:'Touloune',         region:'Kingdom of Ascadia', type:'plains'},
+  {id:'t17', name:'Icy Deserts (S)',  region:'Icy Deserts',        type:'desert'},
+  {id:'t18', name:'Rur Forest',       region:'Kingdom of Lesonia', type:'forest'},
+  {id:'t19', name:'Lesonia (NE)',     region:'Kingdom of Lesonia', type:'plains'},
+  {id:'t20', name:'Lesonia (N)',      region:'Kingdom of Lesonia', type:'plains'},
+  {id:'t21', name:'Lesonia (NW)',     region:'Kingdom of Lesonia', type:'plains'},
+  {id:'t22', name:'Chettenaum (SE)',  region:'Chettenaum Forest',  type:'forest'},
+  {id:'t23', name:'Aurion',           region:'Kingdom of Lesonia', type:'plains'},
+  {id:'t24', name:'Chettenaum (N)',   region:'Chettenaum Forest',  type:'forest'},
+  {id:'t25', name:'Chettenaum (S)',   region:'Chettenaum Forest',  type:'forest'},
+  {id:'t26', name:'Alania (E)',       region:'Kingdom of Alania',  type:'plains'},
+  {id:'t27', name:'Alania (SE)',      region:'Kingdom of Alania',  type:'plains'},
+  {id:'t28', name:'Alania (S)',       region:'Kingdom of Alania',  type:'plains'},
+  {id:'t29', name:'Alania (SW)',      region:'Kingdom of Alania',  type:'plains'},
+  {id:'t30', name:'Alania (C)',       region:'Kingdom of Alania',  type:'plains'},
+  {id:'t31', name:'Alania (W)',       region:'Kingdom of Alania',  type:'plains'},
+  {id:'t33', name:'Varinn / Achlan Bay', region:'Achlan Bay',     type:'plains'},
+  {id:'t36', name:'Ridley',           region:'Kingdom of Lesonia', type:'plains'},
+  {id:'t37', name:'Silver',           region:'Kingdom of Lesonia', type:'plains'},
+  {id:'t38', name:'Lesonia (SW)',     region:'Kingdom of Lesonia', type:'plains'},
+  {id:'t39', name:'Vallen River',     region:'Pulse Empire',       type:'plains'},
+  {id:'t40', name:'Shanain',          region:'Pulse Empire',       type:'plains'},
+  {id:'t41', name:'Mount Gypcian',    region:'Pointy Mountains',   type:'mountain'},
+  {id:'t42', name:'Pointy Mtns (C)',  region:'Pointy Mountains',   type:'mountain'},
+  {id:'t43', name:'Larche',           region:'Pointy Mountains',   type:'mountain'},
+  {id:'t44', name:'Lausan',           region:'Northern Forest',    type:'forest'},
+  {id:'t45', name:'Great Oak (N)',    region:'Great Oak Grove',    type:'forest'},
+  {id:'t46', name:'Great Oak (S)',    region:'Great Oak Grove',    type:'forest'},
+  {id:'t47', name:'Lamparshion',      region:'Great Oak Grove',    type:'forest'},
+  {id:'t48', name:'Vallen River (S)', region:'Pulse Empire',       type:'plains'},
+  {id:'t49', name:'Arlotar Forest',   region:'Arlotar Forest',     type:'forest'},
+  {id:'t50', name:'Salzor',           region:'Pulse Empire',       type:'plains'},
+  {id:'t51', name:'Pulse (W)',        region:'Pulse Empire',       type:'plains'},
+  {id:'t52', name:'Bercy',            region:'Western Peninsula',  type:'plains'},
+  {id:'t53', name:'W Peninsula (N)',  region:'Western Peninsula',  type:'plains'},
+  {id:'t54', name:'Caboalto',         region:'Western Peninsula',  type:'plains'},
+  {id:'t55', name:'Low Cape Forest',  region:'Low Cape Forest',    type:'forest'},
+  {id:'t56', name:'W Peninsula (C)',  region:'Western Peninsula',  type:'plains'},
+  {id:'t57', name:'Monteazul',        region:'Pulse Empire',       type:'plains'},
+  {id:'t58', name:'W Mountains (N)',  region:'Western Mountains',  type:'mountain'},
+  {id:'t59', name:'W Mountains (S)',  region:'Western Mountains',  type:'mountain'},
+  {id:'t60', name:'Castro',           region:'Pulse Empire',       type:'plains'},
+  {id:'t61', name:'Conor',            region:'Pulse Empire',       type:'plains'},
+  {id:'t62', name:'Pulse (S)',        region:'Pulse Empire',       type:'plains'},
+];
+
+var TRAVEL_EVENTS = {
+  mountain: {
+    threshold: 5,
+    cards: [
+      { title:'Snowstorm!', effect:'A snowstorm falls upon you with such force it seems the gods are blowing against you. You must find a cave or you will have trouble surviving in the open. One of you must pass a Perception roll. If he fails, each Character suffers 2 damage dice against Natural Armor.', epic:null },
+      { title:'Travellers Camp', effect:'A group of travellers give you food and shelter. Each hero recovers 1 lost Vitality point. The group gets 1 Pack of Provisions.', epic:null },
+      { title:'Ambush in the Rocks', effect:'A group of enemies has ambushed you taking advantage of the shelter offered by the rocks on a hillside you pass through. All Characters suffer 2 damage dice.', epic:'Ambush in the Rocks' },
+      { title:"There's Something Out There", effect:'A Creature from that inhospitable landscape attacks the group. The hero with the lowest Movement (choose randomly if tied) suffers 4 damage dice.', epic:"There's Something Out There" },
+      { title:'The Ice is Cracking!', effect:'You are walking across a lake frozen solid when the ice starts cracking under your feet. All Characters must pass an Agility test. Those who fail suffer 2 damage dice against Natural Armor (4 if they equipped heavy armor).', epic:null },
+      { title:'Intense Cold', effect:'The area is so cold the wind feels like razors. Each hero suffers 2 damage dice against Natural Armor. Before rolling you may use a Flask of Greek Fire or a Torch to avoid this event.', epic:null },
+      { title:"It's Collapsing!", effect:'You walk under an ice bridge when you hear one of its blocks crack. All Characters must pass an Agility test. Those who fail suffer 3 damage dice against Natural Armor.', epic:null }
+    ]
+  },
+  forest:   { threshold:5, cards:[{title:'Pending',effect:'Upload Forest event card screenshots to add real events.',epic:null}] },
+  plains:   { threshold:5, cards:[{title:'Pending',effect:'Upload Plains event card screenshots to add real events.',epic:null}] },
+  desert:   { threshold:5, cards:[{title:'Pending',effect:'Upload Desert event card screenshots to add real events.',epic:null}] },
+  swamp:    { threshold:5, cards:[{title:'Pending',effect:'Upload Swamp event card screenshots to add real events.',epic:null}] },
+  volcanic: { threshold:5, cards:[{title:'Pending',effect:'Upload Volcanic event card screenshots to add real events.',epic:null}] },
+  glacier:  { threshold:5, cards:[{title:'Pending',effect:'Upload Glacier event card screenshots to add real events.',epic:null}] },
+};
+
+// ── Travel state ────────────────────────────────────────
+var travelState = { territoryId: null, turn: 1, log: [] };
+
+function initTravel() {
+  // Use campaign's startingTerritory if defined
+  var startId = campaign && campaign.startingTerritory;
+  // Check saved state
+  try {
+    var saved = JSON.parse(localStorage.getItem('dun_travel_'+campaign.id)||'null');
+    if (saved) { travelState = saved; }
+    else if (startId) { travelState.territoryId = startId; }
+  } catch(e) {}
+  refreshTravelPanel();
+}
+
+function saveTravel() {
+  try { localStorage.setItem('dun_travel_'+campaign.id, JSON.stringify(travelState)); } catch(e) {}
+}
+
+function toggleTravelPanel() {
+  var panel = document.getElementById('travel-panel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) refreshTravelPanel();
+}
+
+function travelTurn(delta) {
+  travelState.turn = Math.max(1, travelState.turn + delta);
+  saveTravel();
+  refreshTravelPanel();
+}
+
+function travelReset() {
+  travelState.territoryId = null;
+  document.getElementById('tp-roll-result').style.display = 'none';
+  saveTravel();
+  refreshTravelPanel();
+  // Prompt to pick territory
+  var name = prompt('Enter territory ID (e.g. t22) or name:');
+  if (!name) return;
+  var t = TERRITORIES.find(function(x){
+    return x.id.toLowerCase()===name.toLowerCase() ||
+           x.name.toLowerCase().indexOf(name.toLowerCase())>=0;
+  });
+  if (t) {
+    travelState.territoryId = t.id;
+    travelState.log.unshift('Turn '+travelState.turn+': Party placed at '+t.name+' ('+t.region+').');
+    saveTravel();
+    refreshTravelPanel();
+  } else {
+    alert('Territory not found. Try an ID like "t22" or a name like "Pulse Empire".');
+  }
+}
+
+function travelRoll() {
+  var tid = travelState.territoryId;
+  if (!tid) { alert('Set a territory location first.'); return; }
+  var t = TERRITORIES.find(function(x){ return x.id===tid; });
+  if (!t) return;
+  var deck = TRAVEL_EVENTS[t.type] || TRAVEL_EVENTS['plains'];
+  var threshold = deck.threshold || 5;
+  var roll = Math.ceil(Math.random() * 6);
+  var triggered = roll >= threshold;
+
+  document.getElementById('tp-roll-result').style.display = 'block';
+  var numEl = document.getElementById('tp-roll-num');
+  numEl.textContent = roll + ' / 6';
+  numEl.style.color = triggered ? 'var(--gold)' : 'var(--text-muted)';
+  document.getElementById('tp-roll-deck').textContent =
+    t.region.toUpperCase() + ' · ' + t.type.toUpperCase() + ' DECK  (triggers on '+threshold+'+)';
+
+  var cardDiv = document.getElementById('tp-roll-card');
+  if (!triggered) {
+    cardDiv.style.display = 'none';
+    travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' — rolled '+roll+', no event.');
+  } else {
+    var card = deck.cards[Math.floor(Math.random() * deck.cards.length)];
+    cardDiv.style.display = 'block';
+    document.getElementById('tp-roll-title').textContent = card.title;
+    document.getElementById('tp-roll-text').textContent  = card.effect;
+    var epicEl = document.getElementById('tp-roll-epic');
+    if (card.epic) {
+      epicEl.style.display = 'block';
+      epicEl.textContent = '⚔ Epic Event: "'+card.epic+'"';
+    } else {
+      epicEl.style.display = 'none';
+    }
+    travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' — rolled '+roll+': '+card.title+'.');
+  }
+  saveTravel();
+  refreshTravelPanel();
+}
+
+function refreshTravelPanel() {
+  var t = travelState.territoryId
+    ? TERRITORIES.find(function(x){ return x.id===travelState.territoryId; })
+    : null;
+  document.getElementById('tp-loc-name').textContent = t ? t.name : 'Not set — click "Change Location"';
+  document.getElementById('tp-loc-sub').textContent  = t ? t.region+' · '+t.type.toUpperCase() : '';
+  document.getElementById('tp-turn-num').textContent = travelState.turn;
+
+  var logDiv = document.getElementById('tp-log');
+  logDiv.innerHTML = travelState.log.length
+    ? travelState.log.slice(0,12).map(function(e){
+        return '<div class="tp-log-entry">'+e+'</div>';
+      }).join('')
+    : '<span style="color:var(--text-muted);font-style:italic;font-size:10px;">No entries yet.</span>';
+}
 
 load();
 </script>

@@ -1286,475 +1286,36 @@ body {
 
   <!-- World Map Tab -->
   <div id="tab-map" class="map-tab-view">
-    <div style="display:flex;flex:1;overflow:hidden;">
-      <!-- Map area -->
-      <div class="map-container" id="map-container">
-        <div id="map-viewport" style="position:relative;">
-          <!-- Party marker: positioned in screen coords over the map -->
-          <div id="party-marker-div" style="display:none;position:absolute;z-index:20;pointer-events:none;transform:translate(-50%,-100%);">
-            <svg width="40" height="56" viewBox="0 0 40 56" xmlns="http://www.w3.org/2000/svg">
-              <!-- Drop shadow -->
-              <ellipse cx="21" cy="53" rx="10" ry="4" fill="rgba(0,0,0,0.4)"/>
-              <!-- Pin body -->
-              <path d="M20,52 C20,52 4,34 4,20 A16,16 0 1,1 36,20 C36,34 20,52 20,52 Z" fill="#e02020" stroke="#fff" stroke-width="2"/>
-              <!-- Inner circle -->
-              <circle cx="20" cy="20" r="10" fill="#ff5555"/>
-              <!-- Sword icon -->
-              <text x="20" y="20" text-anchor="middle" dominant-baseline="central" font-size="14" fill="#fff">&#x2694;</text>
-              <!-- Pulse ring -->
-              <circle cx="20" cy="20" r="18" fill="none" stroke="#ff4444" stroke-width="2" opacity="0.6">
-                <animate attributeName="r" values="16;26;16" dur="1.8s" repeatCount="indefinite"/>
-                <animate attributeName="opacity" values="0.6;0;0.6" dur="1.8s" repeatCount="indefinite"/>
-              </circle>
-            </svg>
-          </div>
-          <div id="map-world">
-            <img id="map-img" src="arasca-map.jpg" alt="World of Arasca" draggable="false">
-            <!-- Territory overlay SVG — rides the map transform -->
-            <svg id="territory-overlay"
-                 width="5000" height="1792"
-                 viewBox="0 0 5000 1792"
-                 style="position:absolute;top:0;left:0;display:none;overflow:visible;pointer-events:all;"
-                 xmlns="http://www.w3.org/2000/svg">
-            </svg>
-            <div id="map-pins-layer"></div>
-          </div>
-        </div>
-        <div class="pin-mode-bar" id="pin-mode-bar">
-          <span id="pin-mode-label">📍 Click on the map to place pin for: <b id="pin-mode-mission"></b></span>
-          <button class="tool-btn" onclick="cancelPinMode()" style="background:rgba(0,0,0,0.3);color:#fff;border-color:rgba(255,255,255,0.3);">Cancel</button>
-        </div>
-        <div id="map-zoom-controls">
-          <button onclick="mapZoom(0.2)">+</button>
-          <button onclick="mapZoom(-0.2)">−</button>
-          <button onclick="mapResetView()" style="font-size:9px;letter-spacing:0;">Fit</button>
-        </div>
-        <!-- Travel mode toggle -->
-        <div style="position:absolute;top:10px;right:52px;z-index:15;">
-          <button class="map-toggle-btn" id="travel-mode-btn" onclick="toggleTravelMode()">⚔ Campaign Travel</button>
+    <div class="map-container" id="map-container">
+      <div id="map-viewport">
+        <div id="map-world">
+          <img id="map-img" src="arasca-map.jpg" alt="World of Arasca" draggable="false">
+          <div id="map-pins-layer"></div>
         </div>
       </div>
-
-      <!-- Campaign Travel Sidebar (shown in travel mode) -->
-      <div id="travel-sidebar" style="display:none;width:260px;flex-shrink:0;background:var(--bg-panel);border-left:1px solid var(--panel-border);flex-direction:column;overflow:hidden;">
-
-        <!-- STEP 1: Starting region picker (shown until party is placed) -->
-        <div id="travel-setup" style="padding:14px;border-bottom:1px solid var(--panel-border);">
-          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--gold-light);margin-bottom:10px;">CAMPAIGN TRAVEL</div>
-          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;">STEP 1 — CHOOSE STARTING TERRITORY</div>
-          <select id="travel-start-select"
-          style="background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'IM Fell English',serif;font-size:11px;padding:3px 6px;cursor:pointer;max-width:220px;">
-          <option value="">— Select starting territory —</option>
-          <optgroup label="Northern Islands">
-            <option value="i1">I1 — Column Islands</option>
-            <option value="i2">I2 — Argon Island</option>
-            <option value="i3">I3 — Milon Isle</option>
-            <option value="i4">I4 — Folor Forest</option>
-            <option value="i9">I9 — Northern Isle</option>
-          </optgroup>
-          <optgroup label="Kingdom of Trecia">
-            <option value="i5">I5 — Atnas</option>
-            <option value="i6">I6 — Zanom</option>
-            <option value="i7">I7 — Peklos</option>
-            <option value="i8">I8 — Bronze Island</option>
-          </optgroup>
-          <optgroup label="Isle of Howls">
-            <option value="i10">I10 — Goromul (Isle of Howls)</option>
-          </optgroup>
-          <optgroup label="Lance Peninsula">
-            <option value="t1">T1 — Raarkund</option>
-            <option value="t2">T2 — Urakul</option>
-          </optgroup>
-          <optgroup label="Frost Woods">
-            <option value="t3">T3 — Frost Woods (W)</option>
-            <option value="t4">T4 — Frost Woods (E)</option>
-            <option value="t5">T5 — Frost Woods (SE)</option>
-            <option value="t6">T6 — Frost Woods (far E)</option>
-          </optgroup>
-          <optgroup label="Icy Deserts">
-            <option value="t7">T7 — Icy Deserts (N)</option>
-            <option value="t8">T8 — Icy Deserts (C)</option>
-            <option value="t9">T9 — Kamnul</option>
-            <option value="t17">T17 — Icy Deserts (S)</option>
-          </optgroup>
-          <optgroup label="Kingdom of Ascadia">
-            <option value="t10">T10 — Ascadia (W)</option>
-            <option value="t11">T11 — Ascadia (N)</option>
-            <option value="t12">T12 — Ascadia (C)</option>
-            <option value="t14">T14 — Ascadia (S)</option>
-            <option value="t15">T15 — Breten</option>
-            <option value="t16">T16 — Touloune</option>
-          </optgroup>
-          <optgroup label="Kingdom of Lesonia">
-            <option value="t18">T18 — Rur Forest</option>
-            <option value="t19">T19 — Lesonia (NE)</option>
-            <option value="t20">T20 — Lesonia (N)</option>
-            <option value="t21">T21 — Lesonia (NW)</option>
-            <option value="t23">T23 — Aurion</option>
-            <option value="t36">T36 — Ridley</option>
-            <option value="t37">T37 — Silver</option>
-            <option value="t38">T38 — Lesonia (SW)</option>
-          </optgroup>
-          <optgroup label="Chettenaum Forest">
-            <option value="t22">T22 — Chettenaum (SE)</option>
-            <option value="t24">T24 — Chettenaum (N)</option>
-            <option value="t25">T25 — Chettenaum (S)</option>
-          </optgroup>
-          <optgroup label="Kingdom of Alania">
-            <option value="t34">T34 — Alania Forest</option>
-            <option value="t35">T35 — Alania (NW)</option>
-            <option value="t26">T26 — Alania (E)</option>
-            <option value="t27">T27 — Alania (SE)</option>
-            <option value="t28">T28 — Alania (S)</option>
-            <option value="t29">T29 — Alania (SW)</option>
-            <option value="t30">T30 — Alania (C)</option>
-            <option value="t31">T31 — Alania (W)</option>
-            <option value="t32">T32 — Alania (far S)</option>
-          </optgroup>
-          <optgroup label="Achlan Bay">
-            <option value="t33">T33 — Varinn / Achlan Bay</option>
-          </optgroup>
-          <optgroup label="Pulse Empire">
-            <option value="t39">T39 — Vallen River</option>
-            <option value="t40">T40 — Shanain</option>
-            <option value="t48">T48 — Vallen River (S)</option>
-            <option value="t50">T50 — Salzor</option>
-            <option value="t51">T51 — Pulse (W)</option>
-            <option value="t57">T57 — Monteazul</option>
-            <option value="t60">T60 — Castro</option>
-            <option value="t61">T61 — Conor</option>
-            <option value="t62">T62 — Pulse (S)</option>
-          </optgroup>
-          <optgroup label="Pointy Mountains">
-            <option value="t41">T41 — Mount Gypcian</option>
-            <option value="t42">T42 — Pointy Mtns (C)</option>
-            <option value="t43">T43 — Larche</option>
-          </optgroup>
-          <optgroup label="Northern Forest">
-            <option value="t44">T44 — Lausan</option>
-          </optgroup>
-          <optgroup label="Great Oak Grove">
-            <option value="t45">T45 — Great Oak (N)</option>
-            <option value="t46">T46 — Great Oak (S)</option>
-            <option value="t47">T47 — Lamparshion</option>
-          </optgroup>
-          <optgroup label="Arlotar Forest">
-            <option value="t49">T49 — Arlotar Forest</option>
-          </optgroup>
-          <optgroup label="Western Peninsula">
-            <option value="t52">T52 — Bercy</option>
-            <option value="t53">T53 — W Peninsula (N)</option>
-            <option value="t54">T54 — Caboalto</option>
-            <option value="t56">T56 — W Peninsula (C)</option>
-          </optgroup>
-          <optgroup label="Low Cape Forest">
-            <option value="t55">T55 — Low Cape Forest</option>
-          </optgroup>
-          <optgroup label="Western Mountains">
-            <option value="t58">T58 — W Mountains (N)</option>
-            <option value="t59">T59 — W Mountains (S)</option>
-          </optgroup>
-          <optgroup label="Lycanthrope Lands">
-            <option value="t1e">T1E — Lycanthrope N</option>
-            <option value="t2e">T2E — Lycanthrope S</option>
-            <option value="t3e">T3E — Seal Bay</option>
-            <option value="t17e">T17E — Lycanthrope (SE)</option>
-          </optgroup>
-          <optgroup label="Frozen Moor">
-            <option value="t4e">T4E — Frozen Moor (W)</option>
-            <option value="t5e">T5E — Frozen Moor (E)</option>
-            <option value="t14e">T14E — Frozen Moor (S)</option>
-          </optgroup>
-          <optgroup label="Troll Forest">
-            <option value="t6e">T6E — Troll Forest (E)</option>
-            <option value="t7e">T7E — Troll Forest (C)</option>
-            <option value="t12e">T12E — Troll Forest (N)</option>
-          </optgroup>
-          <optgroup label="Kingdom of Asthalien">
-            <option value="t8e">T8E — Asthal</option>
-            <option value="t9e">T9E — Asthalien (N)</option>
-            <option value="t10e">T10E — Orkhuz</option>
-          </optgroup>
-          <optgroup label="Grey Mountains">
-            <option value="t11e">T11E — Grey Mtns (W)</option>
-            <option value="t33e">T33E — Grey Mtns (E)</option>
-          </optgroup>
-          <optgroup label="Torath Forest">
-            <option value="t13e">T13E — Torath Forest</option>
-            <option value="t15e">T15E — Torath (S)</option>
-            <option value="t16e">T16E — Thorzul</option>
-            <option value="t19e">T19E — Varzul</option>
-            <option value="t20e">T20E — Torath (E)</option>
-          </optgroup>
-          <optgroup label="Kingdom of Bibal">
-            <option value="t18e">T18E — Rizul</option>
-            <option value="t21e">T21E — Bibal (N)</option>
-            <option value="t22e">T22E — Vallack</option>
-            <option value="t31e">T31E — Bibal Lake</option>
-          </optgroup>
-          <optgroup label="Kingdom of Alania (E)">
-            <option value="t23e">T23E — Barrock</option>
-            <option value="t24e">T24E — Aitania</option>
-            <option value="t25e">T25E — Verneck</option>
-            <option value="t26e">T26E — Alania GH (S)</option>
-            <option value="t27e">T27E — Carrick</option>
-            <option value="t28e">T28E — Alania GH (N)</option>
-            <option value="t29e">T29E — Sudfall</option>
-            <option value="t30e">T30E — Norkfall</option>
-            <option value="t32e">T32E — Nimfall</option>
-            <option value="t42e">T42E — Asdurag River</option>
-          </optgroup>
-          <optgroup label="Kamaer Mountains">
-            <option value="t34e">T34E — Kamaer Mtns</option>
-          </optgroup>
-          <optgroup label="Kingdom of Kamaer">
-            <option value="t35e">T35E — Menoe</option>
-            <option value="t36e">T36E — Kamaer (S)</option>
-            <option value="t38e">T38E — S Eternal Forest</option>
-            <option value="t39e">T39E — Kamaer (SW)</option>
-            <option value="t52e">T52E — Kamaer (W)</option>
-            <option value="t53e">T53E — Kamaer (plain)</option>
-          </optgroup>
-          <optgroup label="Kurgan Clans">
-            <option value="t40e">T40E — Kurgan (N)</option>
-            <option value="t50e">T50E — Kurgan (W)</option>
-            <option value="t51e">T51E — Kurgan (C)</option>
-          </optgroup>
-          <optgroup label="The Muddy Hills">
-            <option value="t41e">T41E — Muddy Hills</option>
-            <option value="t48e">T48E — Muddy Hills (S)</option>
-          </optgroup>
-          <optgroup label="Tamor Forest">
-            <option value="t43e">T43E — Tamor Forest (N)</option>
-            <option value="t46e">T46E — Tamor Forest (S)</option>
-          </optgroup>
-          <optgroup label="Thai-Shiang Empire">
-            <option value="t44e">T44E — Issi-Thai</option>
-            <option value="t45e">T45E — Thai Capital</option>
-            <option value="t47e">T47E — Aris-Thai</option>
-            <option value="t61e">T61E — Thamey</option>
-            <option value="t62e">T62E — Shion-Thai</option>
-          </optgroup>
-          <optgroup label="Barbarian Steppes">
-            <option value="t49e">T49E — Barbarian Steppe</option>
-            <option value="t60e">T60E — Thamor</option>
-          </optgroup>
-          <optgroup label="Cave Hills">
-            <option value="t54e">T54E — Cave Hills (W)</option>
-          </optgroup>
-          <optgroup label="Drugni Tribes">
-            <option value="t55e">T55E — Drugni (W)</option>
-            <option value="t56e">T56E — Drugni (E)</option>
-          </optgroup>
-          <optgroup label="Gagarian Tribes">
-            <option value="t57e">T57E — Gagarian Tribes</option>
-            <option value="t58e">T58E — Gagarian (N)</option>
-          </optgroup>
-          <optgroup label="Siaron Tribes">
-            <option value="t59e">T59E — Siaron Tribes</option>
-          </optgroup>
-          <optgroup label="Wild Boar Forest">
-            <option value="t63e">T63E — Wild Boar Forest</option>
-          </optgroup>
-          <optgroup label="Isdra Swamps">
-            <option value="t64e">T64E — Isdra Swamps (W)</option>
-            <option value="t65e">T65E — Isdra Swamps (E)</option>
-            <option value="t66e">T66E — Asarlang River</option>
-          </optgroup>
-          <optgroup label="Ibram Bay">
-            <option value="t67e">T67E — Ibram Bay (N)</option>
-          </optgroup>
-          <optgroup label="Kingdom of Bandmor">
-            <option value="t68e">T68E — Krazmor</option>
-            <option value="t69e">T69E — Mountains of Doom</option>
-            <option value="t70e">T70E — Bandmor (Mtn)</option>
-            <option value="t71e">T71E — Bandmor (E)</option>
-            <option value="t72e">T72E — Red River</option>
-            <option value="t73e">T73E — Bandmor</option>
-            <option value="t74e">T74E — Agramor</option>
-            <option value="t75e">T75E — Maramor</option>
-            <option value="t76e">T76E — Bandmor (plain)</option>
-          </optgroup>
-          <optgroup label="The Iron Hills">
-            <option value="t77e">T77E — Iron Hills (W)</option>
-            <option value="t78e">T78E — Iron Hills (E)</option>
-            <option value="t79e">T79E — Iron Hills (N)</option>
-          </optgroup>
-          <optgroup label="Grim Lands">
-            <option value="t80e">T80E — Grim Lands (N)</option>
-            <option value="t84e">T84E — Grim Lands (S)</option>
-          </optgroup>
-          <optgroup label="Kingdom of the Reborn">
-            <option value="t82e">T82E — Ibram Bay (E)</option>
-            <option value="t83e">T83E — Reborn (S)</option>
-            <option value="t85e">T85E — Vulgrabur</option>
-            <option value="t86e">T86E — Cemetery Marshes</option>
-            <option value="t88e">T88E — Kirfall</option>
-            <option value="t89e">T89E — Reborn (N)</option>
-          </optgroup>
-          <optgroup label="Forest of the Witches">
-            <option value="t87e">T87E — Forest of Witches</option>
-          </optgroup>
-        </select>
-          <button class="tool-btn" onclick="travelSetStart()"
-            style="width:100%;border-color:var(--gold-light);color:var(--gold-light);">
-            ⚑ Place Party Here
-          </button>
-        </div>
-
-        <!-- STEP 2: Travel controls (shown after party is placed) -->
-        <div id="travel-controls" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
-        <div style="padding:12px 14px;border-bottom:1px solid var(--panel-border);">
-          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold-light);margin-bottom:8px;">CAMPAIGN TRAVEL</div>
-
-          <!-- How to use hint -->
-          <div id="travel-hint" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);font-style:italic;margin-bottom:10px;line-height:1.5;padding:6px 8px;background:rgba(255,255,255,0.03);border-left:2px solid var(--border-gold);">
-            Click a territory node on the map to select it.
-          </div>
-
-          <!-- Turn counter -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);">TURN</span>
-            <button onclick="travelState.turn=Math.max(1,travelState.turn-1);renderTravelSidebar()" style="width:22px;height:22px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;">−</button>
-            <span id="travel-turn" style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold-light);min-width:32px;text-align:center;">1</span>
-            <button onclick="travelState.turn++;renderTravelSidebar()" style="width:22px;height:22px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;">+</button>
-            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);">WEEK</span>
-          </div>
-
-          <!-- Current location -->
-          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);padding:8px 10px;margin-bottom:10px;">
-            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">PARTY LOCATION</div>
-            <div id="travel-location" style="font-family:'IM Fell English',serif;font-size:13px;color:var(--text-light);">Not placed</div>
-            <div id="travel-terrain" style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-muted);margin-top:2px;letter-spacing:1px;"></div>
-          </div>
-
-          <button class="tool-btn" id="btn-travel" onclick="travelMove()"
-            style="width:100%;margin-bottom:6px;display:none;border-color:#64c864;color:#64c864;">
-            ➜ Travel Here (advances turn)
-          </button>
-          <button class="tool-btn" id="btn-roll-event" onclick="travelRollEvent()"
-            style="width:100%;margin-bottom:6px;display:none;">
-            ⚄ Roll Travel Event
-          </button>
-          <button class="tool-btn" onclick="travelReset()"
-            style="width:100%;font-size:9px;color:var(--text-muted);">
-            ↺ Change Starting Territory
-          </button>
-        </div>
-
-        <!-- Selected territory info -->
-        <div id="travel-territory-info" style="padding:12px 14px;border-bottom:1px solid var(--panel-border);display:none;">
-          <div id="tti-name" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;color:var(--gold-light);margin-bottom:6px;"></div>
-          <div id="tti-type" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px;"></div>
-          <div id="tti-settlements" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-light);line-height:1.6;"></div>
-          <div id="tti-notes" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);font-style:italic;margin-top:4px;line-height:1.5;"></div>
-        </div>
-
-        <!-- Travel event result -->
-        <div id="travel-event-result" style="padding:12px 14px;border-bottom:1px solid var(--panel-border);display:none;">
-          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px;">TRAVEL EVENT</div>
-          <div id="ter-roll" style="font-family:'Cinzel',serif;font-size:28px;font-weight:bold;margin-bottom:4px;"></div>
-          <div id="ter-deck" style="font-family:'Cinzel',serif;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px;"></div>
-          <div id="ter-result" style="font-family:'IM Fell English',serif;font-size:12px;color:var(--text-light);line-height:1.6;"></div>
-        </div>
-
-        </div><!-- end travel-controls inner -->
-
-        <!-- Journey log -->
-        <div style="flex:1;overflow-y:auto;padding:10px 14px;">
-          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
-            JOURNEY LOG
-            <button onclick="travelState.log=[];renderTravelSidebar()" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;background:transparent;border:1px solid var(--panel-border);color:var(--text-muted);padding:2px 6px;cursor:pointer;">Clear</button>
-          </div>
-          <div id="travel-log" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);line-height:1.7;"></div>
-        </div>
-
-        </div><!-- end travel-controls -->
-
-        <!-- Legend -->
-        <div style="padding:8px 14px;border-top:1px solid var(--panel-border);font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);line-height:2;">
-          <span style="display:inline-block;width:10px;height:10px;background:rgba(100,180,100,0.35);border:1px solid #4a9a4a;margin-right:4px;vertical-align:middle;"></span>Current location&nbsp;&nbsp;
-          <span style="display:inline-block;width:10px;height:10px;background:rgba(200,160,60,0.25);border:1px solid #a07820;margin-right:4px;vertical-align:middle;"></span>Adjacent&nbsp;&nbsp;
-          <span style="display:inline-block;width:10px;height:10px;background:rgba(180,80,80,0.2);border:1px solid #8b1a1a;margin-right:4px;vertical-align:middle;"></span>Selected
-        </div>
+      <div class="pin-mode-bar" id="pin-mode-bar">
+        <span id="pin-mode-label">📍 Click on the map to place pin for: <b id="pin-mode-mission"></b></span>
+        <button class="tool-btn" onclick="cancelPinMode()" style="background:rgba(0,0,0,0.3);color:#fff;border-color:rgba(255,255,255,0.3);">Cancel</button>
+      </div>
+      <div id="map-zoom-controls">
+        <button onclick="mapZoom(0.2)">+</button>
+        <button onclick="mapZoom(-0.2)">−</button>
+        <button onclick="mapResetView()" style="font-size:9px;letter-spacing:0;">Fit</button>
       </div>
     </div>
-
-    <div class="map-toolbar" style="gap:8px;flex-wrap:wrap;">
-      <button class="tool-btn" onclick="switchTab('designer')">← Back</button>
-      <!-- Campaign travel controls always visible in toolbar -->
-      <div style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap;">
-        <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--gold-light);white-space:nowrap;">⚔ CAMPAIGN:</span>
-        <select id="travel-start-select"
-          style="background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'IM Fell English',serif;font-size:11px;padding:3px 6px;cursor:pointer;max-width:220px;">
-          <option value="">— Select starting territory —</option>
-          <option value="t1">T1 — Trecia North</option>
-          <option value="t2">T2 — Trecia South</option>
-          <option value="t3">T3 — Ascadia (W)</option>
-          <option value="t4">T4 — Ascadia (E)</option>
-          <option value="t5">T5 — Icy Deserts (W)</option>
-          <option value="t6">T6 — Icy Deserts (E)</option>
-          <option value="t7">T7 — Frost Wood (W)</option>
-          <option value="t8">T8 — Frost Wood (E)</option>
-          <option value="t9">T9 — Northern Forest</option>
-          <option value="t10">T10 — Pointy Mtns (W)</option>
-          <option value="t11">T11 — Pointy Mtns (E)</option>
-          <option value="t12">T12 — Mount Gyptian</option>
-          <option value="t13">T13 — Kyr Forest</option>
-          <option value="t14">T14 — Great Oak Grove</option>
-          <option value="t15">T15 — Lesonia (NW)</option>
-          <option value="t16">T16 — Lesonia (N)</option>
-          <option value="t17">T17 — Lesonia (C)</option>
-          <option value="t18">T18 — Lesonia (E)</option>
-          <option value="t19">T19 — Chattensum Forest</option>
-          <option value="t20">T20 — W Peninsula (N)</option>
-          <option value="t21">T21 — W Peninsula (S)</option>
-          <option value="t22">T22 — Pulse Empire (N)</option>
-          <option value="t23">T23 — Pulse Empire (S)</option>
-          <option value="t24">T24 — Low Cape Forest</option>
-          <option value="t25">T25 — Western Mountains</option>
-          <option value="t26">T26 — Alania (NW)</option>
-          <option value="t27">T27 — Alania (NE)</option>
-          <option value="t28">T28 — Alania (SE)</option>
-          <option value="t29">T29 — Ariskar Forest</option>
-          <option value="t30">T30 — Ashlan Bay</option>
-          <option value="t31">T31 — Southern Coast</option>
-          <option value="t32">T32 — Isle of Howl</option>
-          <option value="t33">T33 — Lance Peninsula</option>
-          <option value="t34">T34 — Lycanthrope Lands</option>
-          <option value="t35">T35 — Toreth Forest</option>
-          <option value="t36">T36 — Kingdom of Bibal</option>
-          <option value="t37">T37 — Bibal Lake</option>
-          <option value="t38">T38 — Frozen Moor</option>
-          <option value="t39">T39 — Alania Guardian Hills</option>
-          <option value="t40">T40 — Alania River</option>
-          <option value="t41">T41 — Grey Mountains</option>
-          <option value="t42">T42 — Blood Kingdom</option>
-          <option value="t43">T43 — Kingdom of Asthalien</option>
-          <option value="t44">T44 — Kingdom of Hamaer</option>
-          <option value="t45">T45 — Kurgan Clans</option>
-          <option value="t46">T46 — Orign Island</option>
-          <option value="t47">T47 — Muddy Hills</option>
-          <option value="t48">T48 — Barbarian Steppe</option>
-          <option value="t49">T49 — Gagarian Tribes</option>
-          <option value="t50">T50 — Cave Hills</option>
-          <option value="t51">T51 — Drugin Tribes</option>
-          <option value="t52">T52 — Wild Boar Forest</option>
-          <option value="t53">T53 — Tamar Forest</option>
-          <option value="t54">T54 — Thai Shang Empire</option>
-          <option value="t55">T55 — Kingdom of Krog</option>
-          <option value="t56">T56 — Kingdom of the Reborn</option>
-          <option value="t57">T57 — Kingdom of Bandmer</option>
-        </select>
-        <button class="tool-btn" onclick="travelSetStart()" style="white-space:nowrap;border-color:var(--gold-light);color:var(--gold-light);">⚑ Place Party</button>
-        <span id="travel-location-inline" style="font-family:'IM Fell English',serif;font-size:11px;color:var(--text-muted);white-space:nowrap;display:none;">📍 <span id="travel-loc-text"></span></span>
-        <button class="tool-btn" id="btn-travel-inline" onclick="travelMove()" style="display:none;white-space:nowrap;border-color:#64c864;color:#64c864;">➜ Travel Here</button>
-        <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--text-muted);white-space:nowrap;">TURN <span id="travel-turn-inline" style="color:var(--gold-light);">—</span></span>
+    <div class="map-toolbar">
+      <button class="tool-btn" onclick="switchTab('designer')">← Back to Designer</button>
+      <div class="map-legend">
+        <span class="map-legend-item" id="map-pin-legend">
+          <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#a07820" stroke="#1a1008" stroke-width="1.5"/><text x="7" y="7" text-anchor="middle" dominant-baseline="central" fill="#1a1008" font-size="8" font-family="Cinzel,serif" font-weight="700">1</text></svg>
+          Mission pin
+        </span>
+        <span id="map-legend-hint">Scroll to zoom · Drag to pan · Click map to place pin for selected mission</span>
       </div>
-      <button class="map-toggle-btn" id="travel-mode-btn" onclick="toggleTravelMode()">⚔ Show Nodes</button>
     </div>
   </div>
 
+</div>
 </div>
 
 <!-- Connection Outcome Modal -->
@@ -1806,6 +1367,13 @@ body {
     <div class="form-group">
       <label class="form-label">Description</label>
       <textarea class="form-textarea" id="nc-desc" placeholder="Brief description of the campaign..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Starting Territory</label>
+      <select class="form-input" id="nc-territory" style="cursor:pointer;">
+        <option value="">— Choose starting location —</option>
+      </select>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Where does the party begin on the world map?</div>
     </div>
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeModal('modal-new-campaign')">Cancel</button>
@@ -3023,13 +2591,31 @@ function saveCampaign() {
 function newCampaign() {
   document.getElementById('nc-name').value = '';
   document.getElementById('nc-desc').value = '';
+  // Populate territory dropdown from TERRITORIES data
+  var tsel = document.getElementById('nc-territory');
+  if (tsel && tsel.options.length <= 1) {
+    var lastRegion = '';
+    TERRITORIES.forEach(function(t) {
+      if (t.region !== lastRegion) {
+        var og = document.createElement('optgroup');
+        og.label = t.region;
+        tsel.appendChild(og);
+        lastRegion = t.region;
+      }
+      var opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.id.toUpperCase() + ' — ' + t.name;
+      tsel.appendChild(opt);
+    });
+  }
   document.getElementById('modal-new-campaign').classList.add('open');
 }
 
 function createCampaign() {
   var name = document.getElementById('nc-name').value.trim() || 'Unnamed Campaign';
   var desc = document.getElementById('nc-desc').value.trim();
-  activeCampaign = { id: 'camp_' + Date.now(), name: name, description: desc, nodes: [], connections: [] };
+  var territory = document.getElementById('nc-territory').value;
+  activeCampaign = { id: 'camp_' + Date.now(), name: name, description: desc, nodes: [], connections: [], startingTerritory: territory || null };
   document.getElementById('campaign-name').value = name;
   saveLocal();
   closeModal('modal-new-campaign');
