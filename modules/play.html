@@ -198,11 +198,8 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
       <span class="tp-title">⚔ Campaign Travel</span>
     </div>
     <div class="tp-body">
-      <div class="tp-loc">
-        <div class="tp-loc-label">Party Location</div>
-        <div class="tp-loc-name" id="tp-loc-name">Not set</div>
-        <div class="tp-loc-sub" id="tp-loc-sub"></div>
-      </div>
+      <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Drag the ⚔ marker to move the party</div>
+
       <div class="tp-turn">
         <span class="tp-turn-label">Turn</span>
         <button onclick="travelTurn(-1)" style="width:22px;height:22px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:13px;">−</button>
@@ -210,15 +207,12 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
         <button onclick="travelTurn(1)"  style="width:22px;height:22px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:13px;">+</button>
         <span class="tp-turn-label">Week</span>
       </div>
+
+      <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Roll event for territory</div>
+      <select id="tp-territory-select" style="width:100%;background:#0e0b07;border:1px solid var(--border);color:var(--text);font-family:'IM Fell English',Georgia,serif;font-size:11px;padding:5px 7px;cursor:pointer;margin-bottom:6px;">
+        <option value="">— Select territory —</option>
+      </select>
       <button class="tp-btn primary" onclick="travelRoll()">⚄ Roll Travel Event</button>
-      <div>
-        <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px;">Move Party To Territory</div>
-        <select id="tp-territory-select" style="width:100%;background:#0e0b07;border:1px solid var(--border);color:var(--text);font-family:'IM Fell English',Georgia,serif;font-size:11px;padding:5px 7px;cursor:pointer;margin-bottom:5px;">
-          <option value="">— Select territory —</option>
-        </select>
-        <button class="tp-btn primary" onclick="travelMoveToTerritory()" style="font-size:9px;">⚑ Move Party Here</button>
-      </div>
-      <button class="tp-btn" onclick="travelReset()" style="font-size:8px;color:var(--text-muted);">↺ Clear Location</button>
       <div class="tp-roll-result" id="tp-roll-result" style="display:none;">
         <div class="tp-roll-num" id="tp-roll-num"></div>
         <div class="tp-roll-deck" id="tp-roll-deck"></div>
@@ -587,17 +581,13 @@ function renderParty() {
   var existing = svg.querySelector('.party-group');
   if (existing) existing.remove();
 
-  // Use territory node position if set, otherwise fall back to partyPos
-  var px, py;
-  if (travelState && travelState.territoryId) {
-    var t = TERRITORIES.find(function(x){ return x.id === travelState.territoryId; });
-    if (t) { px = t.x; py = t.y; }
+  // Party position is always partyPos (free drag)
+  if (!partyPos) {
+    // Default to centre of map on first load
+    partyPos = { x: 0.25, y: 0.55 };
   }
-  if (px === undefined) {
-    if (!partyPos) return;
-    px = partyPos.x * IMG_W;
-    py = partyPos.y * IMG_H;
-  }
+  var px = partyPos.x * IMG_W;
+  var py = partyPos.y * IMG_H;
 
   var g = document.createElementNS('http://www.w3.org/2000/svg','g');
   g.setAttribute('class','party-group party-drag-zone');
@@ -661,23 +651,32 @@ function renderParty() {
   var pDrag=false, pDSX=0, pDSY=0;
   g.addEventListener('mousedown', function(e){
     e.stopPropagation();
+    e.preventDefault();
     pDrag=true; pDSX=e.clientX; pDSY=e.clientY;
     document.getElementById('map-vp').classList.add('panning');
   });
-  document.addEventListener('mousemove', function(e){
+  // Use named functions so we can remove them
+  function onPMove(e){
     if (!pDrag) return;
     var dx=e.clientX-pDSX, dy=e.clientY-pDSY;
     pDSX=e.clientX; pDSY=e.clientY;
-    var nx = partyPos.x + dx/(IMG_W*mScale);
-    var ny = partyPos.y + dy/(IMG_H*mScale);
-    partyPos = { x:Math.max(0,Math.min(1,nx)), y:Math.max(0,Math.min(1,ny)) };
+    partyPos = {
+      x: Math.max(0,Math.min(1, partyPos.x + dx/(IMG_W*mScale))),
+      y: Math.max(0,Math.min(1, partyPos.y + dy/(IMG_H*mScale)))
+    };
     renderParty();
-  });
-  document.addEventListener('mouseup', function(){
+  }
+  function onPUp(){
     if (!pDrag) return;
     pDrag=false;
     document.getElementById('map-vp').classList.remove('panning');
     saveState();
+    document.removeEventListener('mousemove', onPMove);
+    document.removeEventListener('mouseup', onPUp);
+  }
+  g.addEventListener('mousedown', function(){
+    document.addEventListener('mousemove', onPMove);
+    document.addEventListener('mouseup', onPUp);
   });
 
   svg.appendChild(g);
@@ -1025,9 +1024,6 @@ var TRAVEL_EVENTS = {
 var travelState = { territoryId: null, turn: 1, log: [] };
 
 function initTravel() {
-  if (!travelState.territoryId && campaign && campaign.startingTerritory) {
-    travelState.territoryId = campaign.startingTerritory;
-  }
   // Populate territory dropdown
   var sel = document.getElementById('tp-territory-select');
   if (sel && sel.options.length <= 1) {
@@ -1049,20 +1045,6 @@ function initTravel() {
   renderParty();
 }
 
-function travelMoveToTerritory() {
-  var sel = document.getElementById('tp-territory-select');
-  if (!sel || !sel.value) { alert('Select a territory first.'); return; }
-  var t = TERRITORIES.find(function(x){ return x.id === sel.value; });
-  if (!t) return;
-  // Snap party to territory node coords
-  partyPos = { x: t.x / IMG_W, y: t.y / IMG_H };
-  travelState.territoryId = t.id;
-  travelState.log.unshift('Turn '+travelState.turn+': Party moved to '+t.name+' ('+t.region+').');
-  saveTravel();
-  renderParty();
-  refreshTravelPanel();
-}
-
 function saveTravel() {
   // Save travel state as part of the main play save
   saveState();
@@ -1077,21 +1059,14 @@ function travelTurn(delta) {
 }
 
 function travelReset() {
-  travelState.territoryId = null;
   document.getElementById('tp-roll-result').style.display = 'none';
-  saveTravel();
-  renderParty();
   refreshTravelPanel();
-  // Show hint to click map
-  var hint = document.getElementById('party-hint');
-  hint.classList.add('show');
-  document.getElementById('map-svg').classList.add('interactive');
-  setTimeout(function(){ hint.classList.remove('show'); }, 3000);
 }
 
 function travelRoll() {
-  var tid = travelState.territoryId;
-  if (!tid) { alert('Set a territory location first.'); return; }
+  var sel = document.getElementById('tp-territory-select');
+  var tid = sel ? sel.value : null;
+  if (!tid) { alert('Select a territory from the dropdown first.'); return; }
   var t = TERRITORIES.find(function(x){ return x.id===tid; });
   if (!t) return;
   var deck = TRAVEL_EVENTS[t.type] || TRAVEL_EVENTS['plains'];
@@ -1129,11 +1104,6 @@ function travelRoll() {
 }
 
 function refreshTravelPanel() {
-  var t = travelState.territoryId
-    ? TERRITORIES.find(function(x){ return x.id===travelState.territoryId; })
-    : null;
-  document.getElementById('tp-loc-name').textContent = t ? t.name : 'Not set — click "Change Location"';
-  document.getElementById('tp-loc-sub').textContent  = t ? t.region+' · '+t.type.toUpperCase() : '';
   document.getElementById('tp-turn-num').textContent = travelState.turn;
 
   var logDiv = document.getElementById('tp-log');
