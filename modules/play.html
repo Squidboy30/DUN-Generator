@@ -60,9 +60,10 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 .party-hint.show{opacity:1;}
 
 /* ── MISSION POPOVER ── */
-#popover{position:fixed;z-index:100;width:230px;background:rgba(13,10,6,.97);border:1px solid var(--border-gold);box-shadow:0 4px 24px rgba(0,0,0,.7);display:none;flex-direction:column;}
+#popover{position:fixed;z-index:100;width:260px;background:rgba(13,10,6,.97);border:1px solid var(--border-gold);box-shadow:0 4px 24px rgba(0,0,0,.7);display:none;flex-direction:column;}
+.pop-header{padding:10px 13px 8px;border-bottom:1px solid var(--border);background:rgba(160,120,32,.08);cursor:move;user-select:none;position:relative;}
 #popover.open{display:flex;}
-.pop-header{padding:10px 13px 8px;border-bottom:1px solid var(--border);background:rgba(160,120,32,.08);}
+/* pop-header defined above */
 .pop-num{font-family:Cinzel,serif;font-size:8px;color:var(--text-muted);margin-bottom:2px;}
 .pop-name{font-family:'Cinzel Decorative',serif;font-size:12px;color:var(--gold);line-height:1.3;margin-bottom:4px;}
 .pop-region{font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);}
@@ -72,6 +73,8 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 .b-victory{background:rgba(74,138,74,.15);border:1px solid var(--green);color:var(--green-light);}
 .b-defeat{background:rgba(138,42,42,.15);border:1px solid var(--red);color:var(--red-light);}
 .b-locked{background:rgba(58,48,32,.3);border:1px solid var(--grey);color:var(--grey-text);}
+.pop-close{position:absolute;top:8px;right:8px;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;}
+.pop-close:hover{color:var(--gold);}
 .pop-goal{padding:8px 13px;font-size:11px;color:var(--text-muted);font-style:italic;line-height:1.5;border-bottom:1px solid var(--border);}
 .pop-actions{padding:9px 13px;display:flex;flex-direction:column;gap:6px;}
 .pop-launch{font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px;border:1px solid var(--border-gold);background:rgba(160,120,32,.1);color:var(--gold);cursor:pointer;transition:all .15s;width:100%;text-align:center;}
@@ -180,7 +183,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
       </div>
     </div>
 
-    <div class="party-hint" id="party-hint">Click a territory node to move party</div>
+    <div class="party-hint" id="party-hint">Drag party marker · or use Travel panel · Shift+click to place freely</div>
 
     <div class="zoom-ctrl">
       <button onclick="mZoom(0.2)">+</button>
@@ -208,7 +211,14 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
         <span class="tp-turn-label">Week</span>
       </div>
       <button class="tp-btn primary" onclick="travelRoll()">⚄ Roll Travel Event</button>
-      <button class="tp-btn" onclick="travelReset()" style="font-size:8px;">↺ Change Location</button>
+      <div>
+        <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px;">Move Party To Territory</div>
+        <select id="tp-territory-select" style="width:100%;background:#0e0b07;border:1px solid var(--border);color:var(--text);font-family:'IM Fell English',Georgia,serif;font-size:11px;padding:5px 7px;cursor:pointer;margin-bottom:5px;">
+          <option value="">— Select territory —</option>
+        </select>
+        <button class="tp-btn primary" onclick="travelMoveToTerritory()" style="font-size:9px;">⚑ Move Party Here</button>
+      </div>
+      <button class="tp-btn" onclick="travelReset()" style="font-size:8px;color:var(--text-muted);">↺ Clear Location</button>
       <div class="tp-roll-result" id="tp-roll-result" style="display:none;">
         <div class="tp-roll-num" id="tp-roll-num"></div>
         <div class="tp-roll-deck" id="tp-roll-deck"></div>
@@ -239,7 +249,8 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 
 <!-- Mission popover -->
 <div id="popover">
-  <div class="pop-header">
+  <div class="pop-header" id="pop-header">
+    <button class="pop-close" onclick="closePopover()" title="Close">×</button>
     <div class="pop-num" id="pop-num"></div>
     <div class="pop-name" id="pop-name"></div>
     <div class="pop-region" id="pop-region"></div>
@@ -673,7 +684,7 @@ function renderParty() {
 }
 
 // ── PARTY PLACEMENT MODE ──────────────────────────────────────
-// togglePartyDrag removed — party moves by clicking territory nodes
+function togglePartyDrag() {} // kept for compatibility
 
 // ── POPOVER ───────────────────────────────────────────────────
 function openPin(nodeId, pinCX, pinCY) {
@@ -750,9 +761,30 @@ function positionPopover(pinImgX, pinImgY) {
 function closePopover() {
   openNodeId = null;
   document.getElementById('popover').classList.remove('open');
-  if (!partyDragMode) document.getElementById('map-svg').classList.remove('interactive');
+  document.getElementById('map-svg').classList.remove('interactive');
   renderPins();
 }
+
+// Make popover draggable
+(function() {
+  var pop, pdrag=false, pdx=0, pdy=0;
+  document.addEventListener('mousedown', function(e) {
+    var hdr = document.getElementById('pop-header');
+    if (!hdr || !hdr.contains(e.target)) return;
+    if (e.target.classList.contains('pop-close')) return;
+    pop = document.getElementById('popover');
+    pdrag = true;
+    pdx = e.clientX - parseInt(pop.style.left||0);
+    pdy = e.clientY - parseInt(pop.style.top||0);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!pdrag) return;
+    pop.style.left = (e.clientX - pdx) + 'px';
+    pop.style.top  = (e.clientY - pdy) + 'px';
+  });
+  document.addEventListener('mouseup', function() { pdrag = false; });
+})();
 
 // ── BRIEF PANEL ───────────────────────────────────────────────
 function openBrief(nodeId) {
@@ -857,26 +889,16 @@ function mFit(){
   // Pan drag
   vp.addEventListener('mousedown',function(e){
     if (e.target.closest('.pin-group')||e.target.closest('.party-group')) return;
-    // Check if click is near a territory node — move party there
-    if (travelState) {
+    // Free-place party on Shift+click anywhere on map
+    if (e.shiftKey) {
       var r2=vp.getBoundingClientRect();
       var ix2=(e.clientX-r2.left-mOX)/mScale;
       var iy2=(e.clientY-r2.top -mOY)/mScale;
-      var HIT = 30 / mScale; // hit radius in image pixels
-      var hit = null;
-      for (var ti=0; ti<TERRITORIES.length; ti++) {
-        var tt = TERRITORIES[ti];
-        var dx = tt.x - ix2, dy = tt.y - iy2;
-        if (Math.sqrt(dx*dx+dy*dy) < HIT) { hit = tt; break; }
-      }
-      if (hit) {
-        travelState.territoryId = hit.id;
-        travelState.log.unshift('Turn '+travelState.turn+': Party moved to '+hit.name+' ('+hit.region+').');
-        saveTravel();
-        renderParty();
-        refreshTravelPanel();
-        return;
-      }
+      partyPos = { x: ix2/IMG_W, y: iy2/IMG_H };
+      travelState.territoryId = null; // free position, not snapped to territory
+      saveState();
+      renderParty();
+      return;
     }
     mDrag=true; mDidDrag=false;
     mDSX=e.clientX; mDSY=e.clientY; mDOX=mOX; mDOY=mOY;
@@ -1003,13 +1025,42 @@ var TRAVEL_EVENTS = {
 var travelState = { territoryId: null, turn: 1, log: [] };
 
 function initTravel() {
-  // travelState already restored in load() from dun_play_ saved data
-  // Apply startingTerritory if no territory set yet
   if (!travelState.territoryId && campaign && campaign.startingTerritory) {
     travelState.territoryId = campaign.startingTerritory;
   }
+  // Populate territory dropdown
+  var sel = document.getElementById('tp-territory-select');
+  if (sel && sel.options.length <= 1) {
+    var lastRegion = '';
+    TERRITORIES.forEach(function(t) {
+      if (t.region !== lastRegion) {
+        var og = document.createElement('optgroup');
+        og.label = t.region;
+        sel.appendChild(og);
+        lastRegion = t.region;
+      }
+      var opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.id.toUpperCase() + ' — ' + t.name;
+      sel.appendChild(opt);
+    });
+  }
   refreshTravelPanel();
   renderParty();
+}
+
+function travelMoveToTerritory() {
+  var sel = document.getElementById('tp-territory-select');
+  if (!sel || !sel.value) { alert('Select a territory first.'); return; }
+  var t = TERRITORIES.find(function(x){ return x.id === sel.value; });
+  if (!t) return;
+  // Snap party to territory node coords
+  partyPos = { x: t.x / IMG_W, y: t.y / IMG_H };
+  travelState.territoryId = t.id;
+  travelState.log.unshift('Turn '+travelState.turn+': Party moved to '+t.name+' ('+t.region+').');
+  saveTravel();
+  renderParty();
+  refreshTravelPanel();
 }
 
 function saveTravel() {
