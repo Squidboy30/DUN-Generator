@@ -157,7 +157,6 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   </div>
   <div class="hdr-right">
     <div class="hdr-progress" id="hdr-progress"></div>
-    <button class="hdr-btn" onclick="togglePartyDrag()" id="btn-move-party" title="Move party marker">⚑ Move Party</button>
     <button class="hdr-btn" onclick="toggleTravelPanel()" id="btn-travel-panel">🗺 Travel</button>
     <button class="hdr-btn danger" onclick="confirmReset()">↺ Reset</button>
   </div>
@@ -182,7 +181,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
       </div>
     </div>
 
-    <div class="party-hint" id="party-hint">Click map to place party</div>
+    <div class="party-hint" id="party-hint">Click a territory node to move party</div>
 
     <div class="zoom-ctrl">
       <button onclick="mZoom(0.2)">+</button>
@@ -297,8 +296,9 @@ function load() {
   document.getElementById('hdr-title').textContent = campaign.name;
   var saved=null; try{saved=JSON.parse(localStorage.getItem('dun_play_'+id));}catch(e){}
   if (saved) {
-    playState = saved.state || saved; // handle old format
-    partyPos  = saved.party || null;
+    playState   = saved.state || saved;
+    partyPos    = saved.party || null;
+    if (saved.travel) travelState = saved.travel;
   } else {
     playState = buildInitialState();
   }
@@ -311,6 +311,7 @@ function load() {
     svg.setAttribute('height', IMG_H);
     svg.style.width  = IMG_W + 'px';
     svg.style.height = IMG_H + 'px';
+    svg.classList.add('interactive'); // always accept clicks for territory movement
     ensurePins();
     renderMap();
     mFit();
@@ -359,7 +360,7 @@ function buildInitialState() {
 }
 
 function saveState() {
-  localStorage.setItem('dun_play_'+campaign.id, JSON.stringify({state:playState, party:partyPos}));
+  localStorage.setItem('dun_play_'+campaign.id, JSON.stringify({state:playState, party:partyPos, travel:travelState}));
 }
 
 function nodeStatus(nid){ return playState[nid]||'locked'; }
@@ -576,10 +577,18 @@ function renderParty() {
   var svg = document.getElementById('map-svg');
   var existing = svg.querySelector('.party-group');
   if (existing) existing.remove();
-  if (!partyPos) return;
 
-  var px = partyPos.x * IMG_W;
-  var py = partyPos.y * IMG_H;
+  // Use territory node position if set, otherwise fall back to partyPos
+  var px, py;
+  if (travelState && travelState.territoryId) {
+    var t = TERRITORIES.find(function(x){ return x.id === travelState.territoryId; });
+    if (t) { px = t.x; py = t.y; }
+  }
+  if (px === undefined) {
+    if (!partyPos) return;
+    px = partyPos.x * IMG_W;
+    py = partyPos.y * IMG_H;
+  }
 
   var g = document.createElementNS('http://www.w3.org/2000/svg','g');
   g.setAttribute('class','party-group party-drag-zone');
@@ -646,23 +655,7 @@ function renderParty() {
 }
 
 // ── PARTY PLACEMENT MODE ──────────────────────────────────────
-function togglePartyDrag() {
-  partyDragMode = !partyDragMode;
-  var btn = document.getElementById('btn-move-party');
-  var hint = document.getElementById('party-hint');
-  var vp = document.getElementById('map-vp');
-  if (partyDragMode) {
-    btn.style.borderColor = '#e0b840'; btn.style.color = '#e0b840';
-    hint.classList.add('show');
-    vp.classList.add('dragging-party');
-    document.getElementById('map-svg').classList.add('interactive');
-  } else {
-    btn.style.borderColor = ''; btn.style.color = '';
-    hint.classList.remove('show');
-    vp.classList.remove('dragging-party');
-    if (!openNodeId) document.getElementById('map-svg').classList.remove('interactive');
-  }
-}
+// togglePartyDrag removed — party moves by clicking territory nodes
 
 // ── POPOVER ───────────────────────────────────────────────────
 function openPin(nodeId, pinCX, pinCY) {
@@ -846,13 +839,26 @@ function mFit(){
   // Pan drag
   vp.addEventListener('mousedown',function(e){
     if (e.target.closest('.pin-group')||e.target.closest('.party-group')) return;
-    if (partyDragMode) {
-      // Place party on click
-      var r=vp.getBoundingClientRect();
-      var ix=(e.clientX-r.left-mOX)/mScale;
-      var iy=(e.clientY-r.top -mOY)/mScale;
-      partyPos={x:Math.max(0,Math.min(1,ix/IMG_W)), y:Math.max(0,Math.min(1,iy/IMG_H))};
-      saveState(); renderParty(); togglePartyDrag(); return;
+    // Check if click is near a territory node — move party there
+    if (travelState) {
+      var r2=vp.getBoundingClientRect();
+      var ix2=(e.clientX-r2.left-mOX)/mScale;
+      var iy2=(e.clientY-r2.top -mOY)/mScale;
+      var HIT = 30 / mScale; // hit radius in image pixels
+      var hit = null;
+      for (var ti=0; ti<TERRITORIES.length; ti++) {
+        var tt = TERRITORIES[ti];
+        var dx = tt.x - ix2, dy = tt.y - iy2;
+        if (Math.sqrt(dx*dx+dy*dy) < HIT) { hit = tt; break; }
+      }
+      if (hit) {
+        travelState.territoryId = hit.id;
+        travelState.log.unshift('Turn '+travelState.turn+': Party moved to '+hit.name+' ('+hit.region+').');
+        saveTravel();
+        renderParty();
+        refreshTravelPanel();
+        return;
+      }
     }
     mDrag=true; mDidDrag=false;
     mDSX=e.clientX; mDSY=e.clientY; mDOX=mOX; mDOY=mOY;
@@ -886,71 +892,72 @@ function mFit(){
 // ═══════════════════════════════════════════════════════
 
 var TERRITORIES = [
-  {id:'i1',  name:'Column Islands',   region:'Northern Islands',   type:'forest'},
-  {id:'i2',  name:'Argon Island',     region:'Northern Islands',   type:'plains'},
-  {id:'i3',  name:'Milon Isle',       region:'Northern Islands',   type:'mountain'},
-  {id:'i4',  name:'Folor Forest',     region:'Northern Islands',   type:'forest'},
-  {id:'i5',  name:'Atnas',            region:'Kingdom of Trecia',  type:'plains'},
-  {id:'i6',  name:'Zanom',            region:'Kingdom of Trecia',  type:'plains'},
-  {id:'i7',  name:'Peklos',           region:'Kingdom of Trecia',  type:'plains'},
-  {id:'i8',  name:'Bronze Island',    region:'Kingdom of Trecia',  type:'plains'},
-  {id:'i10', name:'Goromul (Isle of Howls)', region:'Isle of Howls', type:'volcanic'},
-  {id:'t1',  name:'Raarkund',         region:'Lance Peninsula',    type:'plains'},
-  {id:'t2',  name:'Urakul',           region:'Lance Peninsula',    type:'plains'},
-  {id:'t3',  name:'Frost Woods (W)',  region:'Frost Woods',        type:'forest'},
-  {id:'t4',  name:'Frost Woods (E)',  region:'Frost Woods',        type:'forest'},
-  {id:'t7',  name:'Icy Deserts (N)',  region:'Icy Deserts',        type:'desert'},
-  {id:'t8',  name:'Icy Deserts (C)',  region:'Icy Deserts',        type:'desert'},
-  {id:'t9',  name:'Kamnul',           region:'Icy Deserts',        type:'plains'},
-  {id:'t10', name:"Ascadia (W)",      region:'Kingdom of Ascadia', type:'forest'},
-  {id:'t12', name:'Ascadia (C)',      region:'Kingdom of Ascadia', type:'plains'},
-  {id:'t13', name:"The Bear's Den",   region:'Kingdom of Ascadia', type:'forest'},
-  {id:'t14', name:'Ascadia (S)',      region:'Kingdom of Ascadia', type:'forest'},
-  {id:'t15', name:'Breten',           region:'Kingdom of Ascadia', type:'plains'},
-  {id:'t16', name:'Touloune',         region:'Kingdom of Ascadia', type:'plains'},
-  {id:'t17', name:'Icy Deserts (S)',  region:'Icy Deserts',        type:'desert'},
-  {id:'t18', name:'Rur Forest',       region:'Kingdom of Lesonia', type:'forest'},
-  {id:'t19', name:'Lesonia (NE)',     region:'Kingdom of Lesonia', type:'plains'},
-  {id:'t20', name:'Lesonia (N)',      region:'Kingdom of Lesonia', type:'plains'},
-  {id:'t21', name:'Lesonia (NW)',     region:'Kingdom of Lesonia', type:'plains'},
-  {id:'t22', name:'Chettenaum (SE)',  region:'Chettenaum Forest',  type:'forest'},
-  {id:'t23', name:'Aurion',           region:'Kingdom of Lesonia', type:'plains'},
-  {id:'t24', name:'Chettenaum (N)',   region:'Chettenaum Forest',  type:'forest'},
-  {id:'t25', name:'Chettenaum (S)',   region:'Chettenaum Forest',  type:'forest'},
-  {id:'t26', name:'Alania (E)',       region:'Kingdom of Alania',  type:'plains'},
-  {id:'t27', name:'Alania (SE)',      region:'Kingdom of Alania',  type:'plains'},
-  {id:'t28', name:'Alania (S)',       region:'Kingdom of Alania',  type:'plains'},
-  {id:'t29', name:'Alania (SW)',      region:'Kingdom of Alania',  type:'plains'},
-  {id:'t30', name:'Alania (C)',       region:'Kingdom of Alania',  type:'plains'},
-  {id:'t31', name:'Alania (W)',       region:'Kingdom of Alania',  type:'plains'},
-  {id:'t33', name:'Varinn / Achlan Bay', region:'Achlan Bay',     type:'plains'},
-  {id:'t36', name:'Ridley',           region:'Kingdom of Lesonia', type:'plains'},
-  {id:'t37', name:'Silver',           region:'Kingdom of Lesonia', type:'plains'},
-  {id:'t38', name:'Lesonia (SW)',     region:'Kingdom of Lesonia', type:'plains'},
-  {id:'t39', name:'Vallen River',     region:'Pulse Empire',       type:'plains'},
-  {id:'t40', name:'Shanain',          region:'Pulse Empire',       type:'plains'},
-  {id:'t41', name:'Mount Gypcian',    region:'Pointy Mountains',   type:'mountain'},
-  {id:'t42', name:'Pointy Mtns (C)',  region:'Pointy Mountains',   type:'mountain'},
-  {id:'t43', name:'Larche',           region:'Pointy Mountains',   type:'mountain'},
-  {id:'t44', name:'Lausan',           region:'Northern Forest',    type:'forest'},
-  {id:'t45', name:'Great Oak (N)',    region:'Great Oak Grove',    type:'forest'},
-  {id:'t46', name:'Great Oak (S)',    region:'Great Oak Grove',    type:'forest'},
-  {id:'t47', name:'Lamparshion',      region:'Great Oak Grove',    type:'forest'},
-  {id:'t48', name:'Vallen River (S)', region:'Pulse Empire',       type:'plains'},
-  {id:'t49', name:'Arlotar Forest',   region:'Arlotar Forest',     type:'forest'},
-  {id:'t50', name:'Salzor',           region:'Pulse Empire',       type:'plains'},
-  {id:'t51', name:'Pulse (W)',        region:'Pulse Empire',       type:'plains'},
-  {id:'t52', name:'Bercy',            region:'Western Peninsula',  type:'plains'},
-  {id:'t53', name:'W Peninsula (N)',  region:'Western Peninsula',  type:'plains'},
-  {id:'t54', name:'Caboalto',         region:'Western Peninsula',  type:'plains'},
-  {id:'t55', name:'Low Cape Forest',  region:'Low Cape Forest',    type:'forest'},
-  {id:'t56', name:'W Peninsula (C)',  region:'Western Peninsula',  type:'plains'},
-  {id:'t57', name:'Monteazul',        region:'Pulse Empire',       type:'plains'},
-  {id:'t58', name:'W Mountains (N)',  region:'Western Mountains',  type:'mountain'},
-  {id:'t59', name:'W Mountains (S)',  region:'Western Mountains',  type:'mountain'},
-  {id:'t60', name:'Castro',           region:'Pulse Empire',       type:'plains'},
-  {id:'t61', name:'Conor',            region:'Pulse Empire',       type:'plains'},
-  {id:'t62', name:'Pulse (S)',        region:'Pulse Empire',       type:'plains'},
+  // x,y are pixel coords in the 5000x1792 map image
+  {id:'i1',  name:'Column Islands',      region:'Northern Islands',   type:'forest',   x: 128, y: 918},
+  {id:'i2',  name:'Argon Island',        region:'Northern Islands',   type:'plains',   x: 270, y:1020},
+  {id:'i3',  name:'Milon Isle',          region:'Northern Islands',   type:'mountain', x: 498, y: 820},
+  {id:'i4',  name:'Folor Forest',        region:'Northern Islands',   type:'forest',   x: 145, y:1075},
+  {id:'i5',  name:'Atnas',               region:'Kingdom of Trecia',  type:'plains',   x: 230, y:1170},
+  {id:'i6',  name:'Zanom',               region:'Kingdom of Trecia',  type:'plains',   x: 368, y:1115},
+  {id:'i7',  name:'Peklos',              region:'Kingdom of Trecia',  type:'plains',   x: 500, y:1125},
+  {id:'i8',  name:'Bronze Island',       region:'Kingdom of Trecia',  type:'plains',   x: 435, y:1030},
+  {id:'i10', name:'Goromul (Isle of Howls)', region:'Isle of Howls',  type:'volcanic', x:1398, y: 562},
+  {id:'t1',  name:'Raarkund',            region:'Lance Peninsula',    type:'plains',   x:2350, y: 330},
+  {id:'t2',  name:'Urakul',              region:'Lance Peninsula',    type:'plains',   x:2165, y: 485},
+  {id:'t3',  name:'Frost Woods (W)',     region:'Frost Woods',        type:'forest',   x:2268, y: 752},
+  {id:'t4',  name:'Frost Woods (E)',     region:'Frost Woods',        type:'forest',   x:2620, y: 760},
+  {id:'t7',  name:'Icy Deserts (N)',     region:'Icy Deserts',        type:'desert',   x:1960, y: 768},
+  {id:'t8',  name:'Icy Deserts (C)',     region:'Icy Deserts',        type:'desert',   x:1715, y: 850},
+  {id:'t9',  name:'Kamnul',              region:'Icy Deserts',        type:'plains',   x:1410, y: 720},
+  {id:'t10', name:'Ascadia (W)',         region:'Kingdom of Ascadia', type:'forest',   x:1105, y: 952},
+  {id:'t12', name:'Ascadia (C)',         region:'Kingdom of Ascadia', type:'plains',   x:1720, y: 972},
+  {id:'t13', name:"The Bear's Den",      region:'Kingdom of Ascadia', type:'forest',   x:1895, y:1050},
+  {id:'t14', name:'Ascadia (S)',         region:'Kingdom of Ascadia', type:'forest',   x:1295, y:1080},
+  {id:'t15', name:'Breten',              region:'Kingdom of Ascadia', type:'plains',   x:1518, y:1118},
+  {id:'t16', name:'Touloune',            region:'Kingdom of Ascadia', type:'plains',   x:1705, y:1210},
+  {id:'t17', name:'Icy Deserts (S)',     region:'Icy Deserts',        type:'desert',   x:1900, y:1080},
+  {id:'t18', name:'Rur Forest',          region:'Kingdom of Lesonia', type:'forest',   x:2095, y:1195},
+  {id:'t19', name:'Lesonia (NE)',        region:'Kingdom of Lesonia', type:'plains',   x:2310, y:1025},
+  {id:'t20', name:'Lesonia (N)',         region:'Kingdom of Lesonia', type:'plains',   x:2448, y:1060},
+  {id:'t21', name:'Lesonia (NW)',        region:'Kingdom of Lesonia', type:'plains',   x:2618, y: 918},
+  {id:'t22', name:'Chettenaum (SE)',     region:'Chettenaum Forest',  type:'forest',   x:2788, y:1065},
+  {id:'t23', name:'Aurion',              region:'Kingdom of Lesonia', type:'plains',   x:2552, y:1050},
+  {id:'t24', name:'Chettenaum (N)',      region:'Chettenaum Forest',  type:'forest',   x:2655, y:1125},
+  {id:'t25', name:'Chettenaum (S)',      region:'Chettenaum Forest',  type:'forest',   x:2758, y:1195},
+  {id:'t26', name:'Alania (E)',          region:'Kingdom of Alania',  type:'plains',   x:2895, y:1240},
+  {id:'t27', name:'Alania (SE)',         region:'Kingdom of Alania',  type:'plains',   x:2958, y:1410},
+  {id:'t28', name:'Alania (S)',          region:'Kingdom of Alania',  type:'plains',   x:2828, y:1520},
+  {id:'t29', name:'Alania (SW)',         region:'Kingdom of Alania',  type:'plains',   x:2648, y:1548},
+  {id:'t30', name:'Alania (C)',          region:'Kingdom of Alania',  type:'plains',   x:2472, y:1288},
+  {id:'t31', name:'Alania (W)',          region:'Kingdom of Alania',  type:'plains',   x:2278, y:1358},
+  {id:'t33', name:'Varinn / Achlan Bay', region:'Achlan Bay',         type:'plains',   x:1998, y:1462},
+  {id:'t36', name:'Ridley',              region:'Kingdom of Lesonia', type:'plains',   x:1912, y:1305},
+  {id:'t37', name:'Silver',              region:'Kingdom of Lesonia', type:'plains',   x:1720, y:1310},
+  {id:'t38', name:'Lesonia (SW)',        region:'Kingdom of Lesonia', type:'plains',   x:1568, y:1322},
+  {id:'t39', name:'Vallen River',        region:'Pulse Empire',       type:'plains',   x:1492, y:1420},
+  {id:'t40', name:'Shanain',             region:'Pulse Empire',       type:'plains',   x:1260, y:1175},
+  {id:'t41', name:'Mount Gypcian',       region:'Pointy Mountains',   type:'mountain', x:1395, y:1298},
+  {id:'t42', name:'Pointy Mtns (C)',     region:'Pointy Mountains',   type:'mountain', x:1218, y:1275},
+  {id:'t43', name:'Larche',              region:'Pointy Mountains',   type:'mountain', x:1355, y:1148},
+  {id:'t44', name:'Lausan',              region:'Northern Forest',    type:'forest',   x:1535, y:1058},
+  {id:'t45', name:'Great Oak (N)',       region:'Great Oak Grove',    type:'forest',   x:1282, y:1055},
+  {id:'t46', name:'Great Oak (S)',       region:'Great Oak Grove',    type:'forest',   x:1348, y:1165},
+  {id:'t47', name:'Lamparshion',         region:'Great Oak Grove',    type:'forest',   x:1445, y:1045},
+  {id:'t48', name:'Vallen River (S)',    region:'Pulse Empire',       type:'plains',   x:1348, y:1460},
+  {id:'t49', name:'Arlotar Forest',      region:'Arlotar Forest',     type:'forest',   x:1262, y:1528},
+  {id:'t50', name:'Salzor',              region:'Pulse Empire',       type:'plains',   x:1158, y:1508},
+  {id:'t51', name:'Pulse (W)',           region:'Pulse Empire',       type:'plains',   x:1108, y:1388},
+  {id:'t52', name:'Bercy',               region:'Western Peninsula',  type:'plains',   x:1458, y: 878},
+  {id:'t53', name:'W Peninsula (N)',     region:'Western Peninsula',  type:'plains',   x:1215, y: 885},
+  {id:'t54', name:'Caboalto',            region:'Western Peninsula',  type:'plains',   x: 870, y:1135},
+  {id:'t55', name:'Low Cape Forest',     region:'Low Cape Forest',    type:'forest',   x:1030, y:1245},
+  {id:'t56', name:'W Peninsula (C)',     region:'Western Peninsula',  type:'plains',   x:1112, y:1008},
+  {id:'t57', name:'Monteazul',           region:'Pulse Empire',       type:'plains',   x:1082, y:1545},
+  {id:'t58', name:'W Mountains (N)',     region:'Western Mountains',  type:'mountain', x:1325, y:1352},
+  {id:'t59', name:'W Mountains (S)',     region:'Western Mountains',  type:'mountain', x:1432, y:1368},
+  {id:'t60', name:'Castro',              region:'Pulse Empire',       type:'plains',   x:1592, y:1455},
+  {id:'t61', name:'Conor',               region:'Pulse Empire',       type:'plains',   x:1248, y:1648},
+  {id:'t62', name:'Pulse (S)',           region:'Pulse Empire',       type:'plains',   x:1338, y:1712},
 ];
 
 var TRAVEL_EVENTS = {
@@ -1009,22 +1016,13 @@ function travelReset() {
   travelState.territoryId = null;
   document.getElementById('tp-roll-result').style.display = 'none';
   saveTravel();
+  renderParty();
   refreshTravelPanel();
-  // Prompt to pick territory
-  var name = prompt('Enter territory ID (e.g. t22) or name:');
-  if (!name) return;
-  var t = TERRITORIES.find(function(x){
-    return x.id.toLowerCase()===name.toLowerCase() ||
-           x.name.toLowerCase().indexOf(name.toLowerCase())>=0;
-  });
-  if (t) {
-    travelState.territoryId = t.id;
-    travelState.log.unshift('Turn '+travelState.turn+': Party placed at '+t.name+' ('+t.region+').');
-    saveTravel();
-    refreshTravelPanel();
-  } else {
-    alert('Territory not found. Try an ID like "t22" or a name like "Pulse Empire".');
-  }
+  // Show hint to click map
+  var hint = document.getElementById('party-hint');
+  hint.classList.add('show');
+  document.getElementById('map-svg').classList.add('interactive');
+  setTimeout(function(){ hint.classList.remove('show'); }, 3000);
 }
 
 function travelRoll() {
