@@ -198,7 +198,11 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
       <span class="tp-title">⚔ Campaign Travel</span>
     </div>
     <div class="tp-body">
-      <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Drag the ⚔ marker to move the party</div>
+      <div class="tp-loc">
+        <div class="tp-loc-label">Party Location</div>
+        <div class="tp-loc-name" id="tp-loc-name">Not set</div>
+        <div class="tp-loc-sub" id="tp-loc-sub"></div>
+      </div>
 
       <div class="tp-turn">
         <span class="tp-turn-label">Turn</span>
@@ -208,11 +212,11 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
         <span class="tp-turn-label">Week</span>
       </div>
 
-      <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Roll event for territory</div>
-      <select id="tp-territory-select" style="width:100%;background:#0e0b07;border:1px solid var(--border);color:var(--text);font-family:'IM Fell English',Georgia,serif;font-size:11px;padding:5px 7px;cursor:pointer;margin-bottom:6px;">
-        <option value="">— Select territory —</option>
-      </select>
-      <button class="tp-btn primary" onclick="travelRoll()">⚄ Roll Travel Event</button>
+      <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;line-height:1.5;">Click a <span style="color:#f5d800;">gold-ringed</span> territory on the map to travel there (1 week)</div>
+
+      <button class="tp-btn" onclick="travelStay()" id="tp-btn-stay" style="display:none;">⏳ Stay Here (1 week)</button>
+      <button class="tp-btn" onclick="settlementToggle()" id="tp-btn-settle" style="display:none;"></button>
+
       <div class="tp-roll-result" id="tp-roll-result" style="display:none;">
         <div class="tp-roll-num" id="tp-roll-num"></div>
         <div class="tp-roll-deck" id="tp-roll-deck"></div>
@@ -222,9 +226,18 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
           <div class="tp-roll-epic" id="tp-roll-epic" style="display:none;"></div>
         </div>
       </div>
+
       <div>
         <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px;">Journey Log</div>
         <div class="tp-log" id="tp-log"><span style="color:var(--text-muted);font-style:italic;font-size:10px;">No entries yet.</span></div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:8px;">
+        <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px;">Set Party Location (setup)</div>
+        <select id="tp-territory-select" style="width:100%;background:#0e0b07;border:1px solid var(--border);color:var(--text);font-family:'IM Fell English',Georgia,serif;font-size:11px;padding:5px 7px;cursor:pointer;margin-bottom:6px;">
+          <option value="">— Select territory —</option>
+        </select>
+        <button class="tp-btn" onclick="travelSetLocation()">⚑ Place Party (no roll)</button>
       </div>
     </div>
   </div>
@@ -399,6 +412,7 @@ function confirmReset() {
 
 // ── RENDER ────────────────────────────────────────────────────
 function renderMap() {
+  renderTerritories();
   renderConnections();
   renderPins();
   renderParty();
@@ -581,13 +595,16 @@ function renderParty() {
   var existing = svg.querySelector('.party-group');
   if (existing) existing.remove();
 
-  // Party position is always partyPos (free drag)
-  if (!partyPos) {
-    // Default to centre of map on first load
-    partyPos = { x: 0.25, y: 0.55 };
+  // Snap to current territory node when set; else free partyPos
+  var snapped = false, px, py;
+  var curT = travelState.territoryId ? terrById(travelState.territoryId) : null;
+  if (curT) {
+    px = curT.x; py = curT.y; snapped = true;
+  } else {
+    if (!partyPos) partyPos = { x: 0.25, y: 0.55 };
+    px = partyPos.x * IMG_W;
+    py = partyPos.y * IMG_H;
   }
-  var px = partyPos.x * IMG_W;
-  var py = partyPos.y * IMG_H;
 
   var g = document.createElementNS('http://www.w3.org/2000/svg','g');
   g.setAttribute('class','party-group party-drag-zone');
@@ -647,8 +664,9 @@ function renderParty() {
   lbl.textContent = 'PARTY';
   g.appendChild(lbl);
 
-  // Drag behaviour
+  // Drag behaviour (only when not snapped to a territory)
   var pDrag=false, pDSX=0, pDSY=0;
+  if (snapped) { svg.appendChild(g); return; }
   g.addEventListener('mousedown', function(e){
     e.stopPropagation();
     e.preventDefault();
@@ -926,79 +944,191 @@ function mFit(){
 })();
 
 // ═══════════════════════════════════════════════════════
-// TERRITORY TRAVEL
+// TERRITORY TRAVEL — rulebook: 1 adjacent territory per week;
+// event roll on entering/remaining in a territory and on
+// entering or leaving a settlement.
 // ═══════════════════════════════════════════════════════
 
 var TERRITORIES = [
-  // x,y are pixel coords in the 5000x1792 map image
-  {id:'i1',  name:'Column Islands',      region:'Northern Islands',   type:'forest',   x: 128, y: 918},
-  {id:'i2',  name:'Argon Island',        region:'Northern Islands',   type:'plains',   x: 270, y:1020},
-  {id:'i3',  name:'Milon Isle',          region:'Northern Islands',   type:'mountain', x: 498, y: 820},
-  {id:'i4',  name:'Folor Forest',        region:'Northern Islands',   type:'forest',   x: 145, y:1075},
-  {id:'i5',  name:'Atnas',               region:'Kingdom of Trecia',  type:'plains',   x: 230, y:1170},
-  {id:'i6',  name:'Zanom',               region:'Kingdom of Trecia',  type:'plains',   x: 368, y:1115},
-  {id:'i7',  name:'Peklos',              region:'Kingdom of Trecia',  type:'plains',   x: 500, y:1125},
-  {id:'i8',  name:'Bronze Island',       region:'Kingdom of Trecia',  type:'plains',   x: 435, y:1030},
-  {id:'i10', name:'Goromul (Isle of Howls)', region:'Isle of Howls',  type:'volcanic', x:1398, y: 562},
-  {id:'t1',  name:'Raarkund',            region:'Lance Peninsula',    type:'plains',   x:2350, y: 330},
-  {id:'t2',  name:'Urakul',              region:'Lance Peninsula',    type:'plains',   x:2165, y: 485},
-  {id:'t3',  name:'Frost Woods (W)',     region:'Frost Woods',        type:'forest',   x:2268, y: 752},
-  {id:'t4',  name:'Frost Woods (E)',     region:'Frost Woods',        type:'forest',   x:2620, y: 760},
-  {id:'t7',  name:'Icy Deserts (N)',     region:'Icy Deserts',        type:'desert',   x:1960, y: 768},
-  {id:'t8',  name:'Icy Deserts (C)',     region:'Icy Deserts',        type:'desert',   x:1715, y: 850},
-  {id:'t9',  name:'Kamnul',              region:'Icy Deserts',        type:'plains',   x:1410, y: 720},
-  {id:'t10', name:'Ascadia (W)',         region:'Kingdom of Ascadia', type:'forest',   x:1105, y: 952},
-  {id:'t12', name:'Ascadia (C)',         region:'Kingdom of Ascadia', type:'plains',   x:1720, y: 972},
-  {id:'t13', name:"The Bear's Den",      region:'Kingdom of Ascadia', type:'forest',   x:1895, y:1050},
-  {id:'t14', name:'Ascadia (S)',         region:'Kingdom of Ascadia', type:'forest',   x:1295, y:1080},
-  {id:'t15', name:'Breten',              region:'Kingdom of Ascadia', type:'plains',   x:1518, y:1118},
-  {id:'t16', name:'Touloune',            region:'Kingdom of Ascadia', type:'plains',   x:1705, y:1210},
-  {id:'t17', name:'Icy Deserts (S)',     region:'Icy Deserts',        type:'desert',   x:1900, y:1080},
-  {id:'t18', name:'Rur Forest',          region:'Kingdom of Lesonia', type:'forest',   x:2095, y:1195},
-  {id:'t19', name:'Lesonia (NE)',        region:'Kingdom of Lesonia', type:'plains',   x:2310, y:1025},
-  {id:'t20', name:'Lesonia (N)',         region:'Kingdom of Lesonia', type:'plains',   x:2448, y:1060},
-  {id:'t21', name:'Lesonia (NW)',        region:'Kingdom of Lesonia', type:'plains',   x:2618, y: 918},
-  {id:'t22', name:'Chettenaum (SE)',     region:'Chettenaum Forest',  type:'forest',   x:2788, y:1065},
-  {id:'t23', name:'Aurion',              region:'Kingdom of Lesonia', type:'plains',   x:2552, y:1050},
-  {id:'t24', name:'Chettenaum (N)',      region:'Chettenaum Forest',  type:'forest',   x:2655, y:1125},
-  {id:'t25', name:'Chettenaum (S)',      region:'Chettenaum Forest',  type:'forest',   x:2758, y:1195},
-  {id:'t26', name:'Alania (E)',          region:'Kingdom of Alania',  type:'plains',   x:2895, y:1240},
-  {id:'t27', name:'Alania (SE)',         region:'Kingdom of Alania',  type:'plains',   x:2958, y:1410},
-  {id:'t28', name:'Alania (S)',          region:'Kingdom of Alania',  type:'plains',   x:2828, y:1520},
-  {id:'t29', name:'Alania (SW)',         region:'Kingdom of Alania',  type:'plains',   x:2648, y:1548},
-  {id:'t30', name:'Alania (C)',          region:'Kingdom of Alania',  type:'plains',   x:2472, y:1288},
-  {id:'t31', name:'Alania (W)',          region:'Kingdom of Alania',  type:'plains',   x:2278, y:1358},
-  {id:'t33', name:'Varinn / Achlan Bay', region:'Achlan Bay',         type:'plains',   x:1998, y:1462},
-  {id:'t36', name:'Ridley',              region:'Kingdom of Lesonia', type:'plains',   x:1912, y:1305},
-  {id:'t37', name:'Silver',              region:'Kingdom of Lesonia', type:'plains',   x:1720, y:1310},
-  {id:'t38', name:'Lesonia (SW)',        region:'Kingdom of Lesonia', type:'plains',   x:1568, y:1322},
-  {id:'t39', name:'Vallen River',        region:'Pulse Empire',       type:'plains',   x:1492, y:1420},
-  {id:'t40', name:'Shanain',             region:'Pulse Empire',       type:'plains',   x:1260, y:1175},
-  {id:'t41', name:'Mount Gypcian',       region:'Pointy Mountains',   type:'mountain', x:1395, y:1298},
-  {id:'t42', name:'Pointy Mtns (C)',     region:'Pointy Mountains',   type:'mountain', x:1218, y:1275},
-  {id:'t43', name:'Larche',              region:'Pointy Mountains',   type:'mountain', x:1355, y:1148},
-  {id:'t44', name:'Lausan',              region:'Northern Forest',    type:'forest',   x:1535, y:1058},
-  {id:'t45', name:'Great Oak (N)',       region:'Great Oak Grove',    type:'forest',   x:1282, y:1055},
-  {id:'t46', name:'Great Oak (S)',       region:'Great Oak Grove',    type:'forest',   x:1348, y:1165},
-  {id:'t47', name:'Lamparshion',         region:'Great Oak Grove',    type:'forest',   x:1445, y:1045},
-  {id:'t48', name:'Vallen River (S)',    region:'Pulse Empire',       type:'plains',   x:1348, y:1460},
-  {id:'t49', name:'Arlotar Forest',      region:'Arlotar Forest',     type:'forest',   x:1262, y:1528},
-  {id:'t50', name:'Salzor',              region:'Pulse Empire',       type:'plains',   x:1158, y:1508},
-  {id:'t51', name:'Pulse (W)',           region:'Pulse Empire',       type:'plains',   x:1108, y:1388},
-  {id:'t52', name:'Bercy',               region:'Western Peninsula',  type:'plains',   x:1458, y: 878},
-  {id:'t53', name:'W Peninsula (N)',     region:'Western Peninsula',  type:'plains',   x:1215, y: 885},
-  {id:'t54', name:'Caboalto',            region:'Western Peninsula',  type:'plains',   x: 870, y:1135},
-  {id:'t55', name:'Low Cape Forest',     region:'Low Cape Forest',    type:'forest',   x:1030, y:1245},
-  {id:'t56', name:'W Peninsula (C)',     region:'Western Peninsula',  type:'plains',   x:1112, y:1008},
-  {id:'t57', name:'Monteazul',           region:'Pulse Empire',       type:'plains',   x:1082, y:1545},
-  {id:'t58', name:'W Mountains (N)',     region:'Western Mountains',  type:'mountain', x:1325, y:1352},
-  {id:'t59', name:'W Mountains (S)',     region:'Western Mountains',  type:'mountain', x:1432, y:1368},
-  {id:'t60', name:'Castro',              region:'Pulse Empire',       type:'plains',   x:1592, y:1455},
-  {id:'t61', name:'Conor',               region:'Pulse Empire',       type:'plains',   x:1248, y:1648},
-  {id:'t62', name:'Pulse (S)',           region:'Pulse Empire',       type:'plains',   x:1338, y:1712},
+  {id:'i1', name:'Column Islands', region:'Northern Islands', type:'forest', x:140, y:612},
+  {id:'i2', name:'Argon Island', region:'Northern Islands', type:'mountain', x:303, y:648},
+  {id:'i3', name:'Milon Isle (Mitika)', region:'Northern Islands', type:'forest', x:441, y:551, settlement:'Mitika', settleKind:'settlement'},
+  {id:'i4', name:'Folor Forest', region:'Northern Islands', type:'forest', x:148, y:791},
+  {id:'i5', name:'Trecia Highlands (Atnas)', region:'Kingdom of Trecia', type:'mountain', x:345, y:884, settlement:'Atnas', settleKind:'settlement'},
+  {id:'i6', name:'Trecia South (Zanom)', region:'Kingdom of Trecia', type:'plains', x:386, y:969, settlement:'Zanom', settleKind:'settlement'},
+  {id:'i7', name:'Trecia East (Peklos)', region:'Kingdom of Trecia', type:'forest', x:497, y:862, settlement:'Peklos', settleKind:'settlement'},
+  {id:'i8', name:'Bronze Island', region:'Kingdom of Trecia', type:'mountain', x:464, y:745},
+  {id:'i9', name:'Northern Isle', region:'Northern Islands', type:'plains', x:549, y:668},
+  {id:'i10', name:'Isle of Howls (Goromul)', region:'Isle of Howls', type:'volcanic', x:1888, y:124, settlement:'Goromul', settleKind:'evil'},
+  {id:'t1', name:'Raarkund', region:'Lance Peninsula', type:'plains', x:2398, y:82, settlement:'Raarkund', settleKind:'evil'},
+  {id:'t2', name:'Urakul', region:'Lance Peninsula', type:'plains', x:2086, y:245, settlement:'Urakul', settleKind:'evil'},
+  {id:'t3', name:'South Lance Glacier', region:'Lance Peninsula', type:'glacier', x:2143, y:428},
+  {id:'t4', name:'Frost Woods (E)', region:'Frost Woods', type:'forest', x:2407, y:522},
+  {id:'t5', name:'Frost Woods (C)', region:'Frost Woods', type:'forest', x:2259, y:541},
+  {id:'t6', name:'Frost Woods (Nigazul)', region:'Frost Woods', type:'forest', x:2062, y:549, settlement:'Nigazul', settleKind:'evil'},
+  {id:'t7', name:'Frost Woods (W)', region:'Frost Woods', type:'forest', x:1858, y:530},
+  {id:'t8', name:'Icy Deserts', region:'Icy Deserts', type:'desert', x:1631, y:515},
+  {id:'t9', name:'Kamhul Coast', region:'Icy Deserts', type:'plains', x:1443, y:388, settlement:'Kamhul', settleKind:'evil'},
+  {id:'t10', name:'Ascadia (N)', region:'Kingdom of Ascadia', type:'plains', x:1348, y:559},
+  {id:'t11', name:'Ascadia (W)', region:'Kingdom of Ascadia', type:'plains', x:978, y:492},
+  {id:'t12', name:'Ascadia (C)', region:'Kingdom of Ascadia', type:'plains', x:926, y:630},
+  {id:'t13', name:'Bear\'s Den', region:'Kingdom of Ascadia', type:'plains', x:1060, y:646, settlement:'The Bear\'s Den', settleKind:'settlement'},
+  {id:'t14', name:'Ascadia Forest', region:'Kingdom of Ascadia', type:'forest', x:1295, y:668},
+  {id:'t15', name:'Breten', region:'Kingdom of Ascadia', type:'plains', x:1482, y:714, settlement:'Breten', settleKind:'settlement'},
+  {id:'t16', name:'Toulounne Plains', region:'Kingdom of Lesonia', type:'plains', x:1649, y:717, settlement:'Toulounne', settleKind:'settlement'},
+  {id:'t17', name:'Lesonia (N)', region:'Kingdom of Lesonia', type:'plains', x:1921, y:655},
+  {id:'t18', name:'Rur Forest', region:'Kingdom of Lesonia', type:'forest', x:1978, y:773},
+  {id:'t19', name:'Lesonia Hills', region:'Kingdom of Lesonia', type:'mountain', x:2082, y:872},
+  {id:'t20', name:'Lesonia (E)', region:'Kingdom of Lesonia', type:'plains', x:2214, y:719},
+  {id:'t21', name:'Lesonia (NE)', region:'Kingdom of Lesonia', type:'plains', x:2371, y:691},
+  {id:'t22', name:'Lesonia (SE)', region:'Kingdom of Lesonia', type:'plains', x:2410, y:865},
+  {id:'t23', name:'Aurion', region:'Kingdom of Lesonia', type:'plains', x:2199, y:862, settlement:'Aurion', settleKind:'settlement'},
+  {id:'t24', name:'Chettenaum Forest', region:'Chettenaum Forest', type:'forest', x:2165, y:1036},
+  {id:'t25', name:'Alania (N)', region:'Kingdom of Alania', type:'plains', x:2350, y:1080},
+  {id:'t26', name:'Alania (C)', region:'Kingdom of Alania', type:'plains', x:2373, y:1214},
+  {id:'t27', name:'Alania (E)', region:'Kingdom of Alania', type:'plains', x:2383, y:1373},
+  {id:'t28', name:'Alania (SE)', region:'Kingdom of Alania', type:'plains', x:2410, y:1600},
+  {id:'t29', name:'Alania (S)', region:'Kingdom of Alania', type:'plains', x:2294, y:1719},
+  {id:'t30', name:'Besalar', region:'Kingdom of Alania', type:'plains', x:2248, y:1575, settlement:'Besalar', settleKind:'settlement'},
+  {id:'t31', name:'Canmor', region:'Kingdom of Alania', type:'plains', x:2192, y:1330, settlement:'Canmor', settleKind:'settlement'},
+  {id:'t32', name:'Achlan Coast', region:'Achlan Bay', type:'plains', x:1997, y:1419},
+  {id:'t33', name:'Varinn Marsh', region:'Achlan Bay', type:'swamp', x:1926, y:1252, settlement:'Varinn', settleKind:'settlement'},
+  {id:'t34', name:'Garm Forest', region:'Kingdom of Alania', type:'forest', x:2092, y:1168},
+  {id:'t35', name:'Lesonia (S)', region:'Kingdom of Lesonia', type:'plains', x:1979, y:991},
+  {id:'t36', name:'Lesonia Lowlands', region:'Kingdom of Lesonia', type:'plains', x:1809, y:1102},
+  {id:'t37', name:'Silver', region:'Kingdom of Lesonia', type:'plains', x:1737, y:947, settlement:'Silver', settleKind:'settlement'},
+  {id:'t38', name:'Ridley', region:'Kingdom of Lesonia', type:'plains', x:1585, y:1060, settlement:'Ridley', settleKind:'settlement'},
+  {id:'t39', name:'Valien Marsh', region:'Pulse Empire', type:'swamp', x:1581, y:1175},
+  {id:'t40', name:'Pulse (N)', region:'Pulse Empire', type:'plains', x:1376, y:984},
+  {id:'t41', name:'Mount Gypcian', region:'Pointy Mountains', type:'mountain', x:1522, y:906},
+  {id:'t42', name:'Pointy Mtns (Alcoy)', region:'Pointy Mountains', type:'mountain', x:1278, y:783, settlement:'Alcoy', settleKind:'settlement'},
+  {id:'t43', name:'Pointy Mtns (W)', region:'Pointy Mountains', type:'mountain', x:1183, y:760},
+  {id:'t44', name:'Larche', region:'Pointy Mountains', type:'plains', x:1190, y:834, settlement:'Larche', settleKind:'settlement'},
+  {id:'t45', name:'Great Oak Grove (W)', region:'Great Oak Grove', type:'forest', x:1015, y:930, settlement:'Lamparshion', settleKind:'settlement'},
+  {id:'t46', name:'Great Oak Grove (E)', region:'Great Oak Grove', type:'forest', x:1139, y:934, settlement:'Lausan', settleKind:'settlement'},
+  {id:'t47', name:'Shanain Woods', region:'Pulse Empire', type:'forest', x:1269, y:1033, settlement:'Shanain', settleKind:'settlement'},
+  {id:'t48', name:'Valien Marsh (S)', region:'Pulse Empire', type:'swamp', x:1536, y:1254},
+  {id:'t49', name:'Arlotar Forest', region:'Arlotar Forest', type:'forest', x:1595, y:1412},
+  {id:'t50', name:'Pulse Heartland', region:'Pulse Empire', type:'plains', x:1440, y:1307},
+  {id:'t51', name:'Tesara Plains', region:'Pulse Empire', type:'plains', x:1265, y:1221, settlement:'Tesara', settleKind:'settlement'},
+  {id:'t52', name:'Bercy', region:'Western Peninsula', type:'plains', x:1002, y:1224, settlement:'Bercy', settleKind:'settlement'},
+  {id:'t53', name:'W Peninsula (N)', region:'Western Peninsula', type:'plains', x:820, y:1040},
+  {id:'t54', name:'Caboalto', region:'Western Peninsula', type:'plains', x:542, y:1172, settlement:'Caboalto', settleKind:'settlement'},
+  {id:'t55', name:'Low Cape Forest', region:'Low Cape Forest', type:'forest', x:711, y:1266},
+  {id:'t56', name:'W Peninsula (C)', region:'Western Peninsula', type:'plains', x:810, y:1169},
+  {id:'t57', name:'Monteazul', region:'Pulse Empire', type:'plains', x:804, y:1449, settlement:'Monteazul', settleKind:'settlement'},
+  {id:'t58', name:'Western Mtns (W)', region:'Western Mountains', type:'mountain', x:975, y:1390},
+  {id:'t59', name:'Western Mtns (E)', region:'Western Mountains', type:'mountain', x:1074, y:1390},
+  {id:'t60', name:'Salzor', region:'Pulse Empire', type:'plains', x:1249, y:1409, settlement:'Salzor', settleKind:'settlement'},
+  {id:'t61', name:'Pulse (S)', region:'Pulse Empire', type:'plains', x:1354, y:1511, settlement:'Castro', settleKind:'settlement'},
+  {id:'t62', name:'Conor Coast', region:'Pulse Empire', type:'plains', x:1054, y:1612, settlement:'Conor', settleKind:'settlement'},
+  {id:'i1e', name:'Fang Island (Cromgull)', region:'Fang Island', type:'volcanic', x:2745, y:242, settlement:'Cromgull', settleKind:'evil'},
+  {id:'i2e', name:'Blood Kingdom (Uzhul)', region:'Blood Kingdom', type:'mountain', x:3335, y:321, settlement:'Uzhul', settleKind:'evil'},
+  {id:'i3e', name:'Red Island', region:'Blood Kingdom', type:'volcanic', x:3423, y:301},
+  {id:'i4e', name:'Northern Gate Island', region:'Northern Gate', type:'plains', x:3365, y:488, settlement:'Northern Gate', settleKind:'settlement'},
+  {id:'i5e', name:'Snake Island', region:'Snake Island', type:'mountain', x:3630, y:316},
+  {id:'i6e', name:'Roaring Island', region:'Roaring Island', type:'volcanic', x:4102, y:368},
+  {id:'i7e', name:'Krogg (S)', region:'Kingdom of Krogg', type:'volcanic', x:4255, y:592},
+  {id:'i8e', name:'Crab Island (Maozz)', region:'Kingdom of Krogg', type:'volcanic', x:4380, y:395, settlement:'Maozz', settleKind:'evil'},
+  {id:'i9e', name:'Krogg (Krazz)', region:'Kingdom of Krogg', type:'mountain', x:4462, y:462, settlement:'Krazz', settleKind:'evil'},
+  {id:'i10e', name:'Anvil Island', region:'Anvil Island', type:'mountain', x:4932, y:240},
+  {id:'i11e', name:'Origin Island (White Havens)', region:'Origin Island', type:'mountain', x:4148, y:745, settlement:'White Havens', settleKind:'settlement'},
+  {id:'i12e', name:'Swamp Island (Burkabur)', region:'Swamp Island', type:'swamp', x:4523, y:1142, settlement:'Burkabur', settleKind:'evil'},
+  {id:'i13e', name:'Totem Island', region:'Totem Island', type:'mountain', x:4317, y:1234},
+  {id:'t1e', name:'Lycanthrope Lands (N)', region:'Lycanthrope Lands', type:'forest', x:2614, y:457},
+  {id:'t2e', name:'Lycanthrope Lands (E)', region:'Lycanthrope Lands', type:'forest', x:2769, y:457},
+  {id:'t3e', name:'Seal Bay (Larkfall)', region:'Seal Bay', type:'glacier', x:3003, y:471, settlement:'Larkfall', settleKind:'settlement'},
+  {id:'t4e', name:'Frozen Moor (W)', region:'Frozen Moor', type:'plains', x:3184, y:587},
+  {id:'t5e', name:'Frozen Moor (C)', region:'Frozen Moor', type:'plains', x:3454, y:520},
+  {id:'t6e', name:'Frozen Moor (E)', region:'Frozen Moor', type:'plains', x:3732, y:532},
+  {id:'t7e', name:'Asthalien Coast', region:'Kingdom of Asthalien', type:'plains', x:3913, y:604},
+  {id:'t8e', name:'Doren Coast', region:'Kingdom of Asthalien', type:'plains', x:4015, y:760, settlement:'Doren', settleKind:'settlement'},
+  {id:'t9e', name:'Asthal', region:'Kingdom of Asthalien', type:'plains', x:3827, y:691, settlement:'Asthal', settleKind:'settlement'},
+  {id:'t10e', name:'Troll Forest (E)', region:'Troll Forest', type:'plains', x:3648, y:732},
+  {id:'t11e', name:'Grey Mountains (Orkhuz)', region:'Grey Mountains', type:'mountain', x:3552, y:643, settlement:'Orkhuz', settleKind:'evil'},
+  {id:'t12e', name:'Troll Forest (C)', region:'Troll Forest', type:'forest', x:3474, y:780},
+  {id:'t13e', name:'Troll Forest (W)', region:'Troll Forest', type:'forest', x:3335, y:845},
+  {id:'t14e', name:'Frozen Moor (S)', region:'Frozen Moor', type:'plains', x:3151, y:726},
+  {id:'t15e', name:'Torath Forest (Varzul)', region:'Torath Forest', type:'forest', x:3030, y:587, settlement:'Varzul', settleKind:'evil'},
+  {id:'t16e', name:'Torath Forest (Thorzul)', region:'Torath Forest', type:'forest', x:2884, y:546, settlement:'Thorzul', settleKind:'evil'},
+  {id:'t17e', name:'Torath Hills', region:'Torath Forest', type:'mountain', x:2687, y:543},
+  {id:'t18e', name:'Torath (Rizul)', region:'Torath Forest', type:'forest', x:2565, y:580, settlement:'Rizul', settleKind:'evil'},
+  {id:'t19e', name:'Torath (S)', region:'Torath Forest', type:'forest', x:2694, y:643},
+  {id:'t20e', name:'Bibal (N)', region:'Kingdom of Bibal', type:'plains', x:2826, y:702},
+  {id:'t21e', name:'Bibal Lake (Bibal)', region:'Kingdom of Bibal', type:'plains', x:2824, y:964, settlement:'Bibal', settleKind:'settlement'},
+  {id:'t22e', name:'Vallack Woods', region:'Kingdom of Bibal', type:'forest', x:2575, y:1006, settlement:'Vallack', settleKind:'settlement'},
+  {id:'t23e', name:'Barrock', region:'Kingdom of Alania (E)', type:'plains', x:2561, y:1307, settlement:'Barrock', settleKind:'settlement'},
+  {id:'t24e', name:'Aitania', region:'Kingdom of Alania (E)', type:'plains', x:2571, y:1419, settlement:'Aitania', settleKind:'settlement'},
+  {id:'t25e', name:'Guardian Woods', region:'Kingdom of Alania (E)', type:'forest', x:2670, y:1558},
+  {id:'t26e', name:'Verneck', region:'Kingdom of Alania (E)', type:'plains', x:2680, y:1673, settlement:'Verneck', settleKind:'settlement'},
+  {id:'t27e', name:'Carrick', region:'Kingdom of Alania (E)', type:'plains', x:2779, y:1380, settlement:'Carrick', settleKind:'settlement'},
+  {id:'t28e', name:'Guardian Hills', region:'Kingdom of Alania (E)', type:'mountain', x:2717, y:1241},
+  {id:'t29e', name:'Sudfall', region:'Kingdom of Alania (E)', type:'plains', x:2943, y:1115, settlement:'Sudfall', settleKind:'settlement'},
+  {id:'t30e', name:'Norkfall', region:'Kingdom of Alania (E)', type:'plains', x:3080, y:1015, settlement:'Norkfall', settleKind:'settlement'},
+  {id:'t31e', name:'Bibal Lake (E)', region:'Kingdom of Bibal', type:'plains', x:3006, y:888},
+  {id:'t32e', name:'Nimfall', region:'Kingdom of Alania (E)', type:'plains', x:3396, y:988, settlement:'Nimfall', settleKind:'settlement'},
+  {id:'t33e', name:'Kurgan Border', region:'Kurgan Clans', type:'plains', x:3521, y:878},
+  {id:'t34e', name:'Kamaer Mtns (W)', region:'Kamaer Mountains', type:'mountain', x:3667, y:862},
+  {id:'t35e', name:'Menoa', region:'Kingdom of Kamaer', type:'mountain', x:3827, y:787, settlement:'Menoa', settleKind:'settlement'},
+  {id:'t36e', name:'Kamaer (S)', region:'Kingdom of Kamaer', type:'mountain', x:3946, y:831},
+  {id:'t38e', name:'S Eternal Forest', region:'Kingdom of Kamaer', type:'forest', x:3768, y:1030},
+  {id:'t39e', name:'Kamaer Lowlands', region:'Kingdom of Kamaer', type:'plains', x:3637, y:1070},
+  {id:'t40e', name:'Kurgan Clans', region:'Kurgan Clans', type:'plains', x:3475, y:1115},
+  {id:'t41e', name:'Muddy Hills (W)', region:'The Muddy Hills', type:'swamp', x:3188, y:1224},
+  {id:'t42e', name:'Asdurag Marsh', region:'Kingdom of Alania (E)', type:'swamp', x:3020, y:1381},
+  {id:'t43e', name:'Thai Border', region:'Thai-Shiang Empire', type:'plains', x:2900, y:1575},
+  {id:'t44e', name:'Issi-Thai', region:'Thai-Shiang Empire', type:'plains', x:2917, y:1723, settlement:'Issi-Thai', settleKind:'settlement'},
+  {id:'t45e', name:'Thai Plains', region:'Thai-Shiang Empire', type:'plains', x:3178, y:1723},
+  {id:'t46e', name:'Tamor Forest', region:'Tamor Forest', type:'forest', x:3064, y:1600},
+  {id:'t47e', name:'Aris-Thai', region:'Thai-Shiang Empire', type:'plains', x:3211, y:1449, settlement:'Aris-Thai', settleKind:'settlement'},
+  {id:'t48e', name:'Muddy Hills (S)', region:'The Muddy Hills', type:'plains', x:3382, y:1362},
+  {id:'t49e', name:'Barbarian Steppes', region:'Barbarian Steppes', type:'plains', x:3584, y:1307},
+  {id:'t50e', name:'Kurgan (E)', region:'Kurgan Clans', type:'plains', x:3778, y:1165},
+  {id:'t51e', name:'Steppe Border', region:'Barbarian Steppes', type:'plains', x:3942, y:1160},
+  {id:'t52e', name:'Kamaer Coast', region:'Kingdom of Kamaer', type:'plains', x:4089, y:1020},
+  {id:'t53e', name:'East Steppe', region:'Barbarian Steppes', type:'plains', x:4197, y:1175},
+  {id:'t54e', name:'Cave Hills (E)', region:'Cave Hills', type:'mountain', x:4090, y:1306},
+  {id:'t55e', name:'Cave Hills (Drunn)', region:'Cave Hills', type:'mountain', x:3926, y:1313, settlement:'Drunn', settleKind:'settlement'},
+  {id:'t56e', name:'Drugni Tribes', region:'Drugni Tribes', type:'plains', x:4086, y:1438},
+  {id:'t57e', name:'Shaman\'s Forest', region:'Siaron Tribes', type:'forest', x:3940, y:1515},
+  {id:'t58e', name:'Gagarian Tribes', region:'Gagarian Tribes', type:'desert', x:3785, y:1307},
+  {id:'t59e', name:'Steppe (S)', region:'Barbarian Steppes', type:'plains', x:3590, y:1442},
+  {id:'t60e', name:'Thamor', region:'Barbarian Steppes', type:'plains', x:3392, y:1505, settlement:'Thamor', settleKind:'settlement'},
+  {id:'t61e', name:'Thamey', region:'Thai-Shiang Empire', type:'plains', x:3422, y:1713, settlement:'Thamey', settleKind:'settlement'},
+  {id:'t62e', name:'Shion-Thai', region:'Thai-Shiang Empire', type:'plains', x:3538, y:1699, settlement:'Shion-Thai', settleKind:'settlement'},
+  {id:'t63e', name:'Wild Boar Forest', region:'Wild Boar Forest', type:'forest', x:3653, y:1554},
+  {id:'t64e', name:'Isdra Swamps (W)', region:'Isdra Swamps', type:'swamp', x:3899, y:1717},
+  {id:'t65e', name:'Isdra Swamps (E)', region:'Isdra Swamps', type:'swamp', x:4141, y:1691},
+  {id:'t66e', name:'Ibram Approach', region:'Ibram Bay', type:'plains', x:4213, y:1469},
+  {id:'t67e', name:'Ibram Bay (W)', region:'Ibram Bay', type:'plains', x:4370, y:1524},
+  {id:'t68e', name:'Krazmor', region:'Kingdom of Bandmor', type:'volcanic', x:4229, y:1714, settlement:'Krazmor', settleKind:'evil'},
+  {id:'t69e', name:'Mtns of Doom (W)', region:'Kingdom of Bandmor', type:'mountain', x:4410, y:1740},
+  {id:'t70e', name:'Mtns of Doom (E)', region:'Kingdom of Bandmor', type:'mountain', x:4631, y:1740},
+  {id:'t71e', name:'Red River Coast', region:'Kingdom of Bandmor', type:'plains', x:4909, y:1714},
+  {id:'t72e', name:'Bandmor (SE)', region:'Kingdom of Bandmor', type:'mountain', x:4753, y:1737},
+  {id:'t73e', name:'Bandmor City', region:'Kingdom of Bandmor', type:'mountain', x:4739, y:1652, settlement:'Bandmor', settleKind:'evil'},
+  {id:'t74e', name:'Agramor', region:'Kingdom of Bandmor', type:'mountain', x:4592, y:1632, settlement:'Agramor', settleKind:'evil'},
+  {id:'t75e', name:'Bandmor (W)', region:'Kingdom of Bandmor', type:'mountain', x:4419, y:1656},
+  {id:'t76e', name:'Maramor', region:'Kingdom of Bandmor', type:'mountain', x:4523, y:1544, settlement:'Maramor', settleKind:'evil'},
+  {id:'t77e', name:'Bandmor (N)', region:'Kingdom of Bandmor', type:'mountain', x:4651, y:1509},
+  {id:'t78e', name:'Bandmor Volcano', region:'Kingdom of Bandmor', type:'volcanic', x:4775, y:1538},
+  {id:'t79e', name:'Iron Hills', region:'The Iron Hills', type:'mountain', x:4932, y:1492},
+  {id:'t80e', name:'Grim Lands', region:'Grim Lands', type:'plains', x:4886, y:1289},
+  {id:'t81e', name:'Thoronbur Woods', region:'Kingdom of the Reborn', type:'forest', x:4719, y:1332, settlement:'Thoronbur', settleKind:'evil'},
+  {id:'t82e', name:'Ibram Bay (E)', region:'Kingdom of the Reborn', type:'plains', x:4606, y:1352},
+  {id:'t83e', name:'Reborn Marsh (S)', region:'Kingdom of the Reborn', type:'swamp', x:4635, y:1234},
+  {id:'t84e', name:'Reborn Marsh (E)', region:'Kingdom of the Reborn', type:'swamp', x:4778, y:1224},
+  {id:'t85e', name:'Vulgrabur', region:'Kingdom of the Reborn', type:'plains', x:4939, y:1077, settlement:'Vulgrabur', settleKind:'evil'},
+  {id:'t86e', name:'Cemetery Marshes', region:'Kingdom of the Reborn', type:'swamp', x:4716, y:1070},
+  {id:'t87e', name:'Forest of the Witches', region:'Forest of the Witches', type:'forest', x:4860, y:989},
+  {id:'t88e', name:'Kirfall', region:'Kingdom of the Reborn', type:'plains', x:4884, y:860, settlement:'Kirfall', settleKind:'settlement'},
+  {id:'t89e', name:'Reborn Coast', region:'Kingdom of the Reborn', type:'plains', x:4905, y:742},
+  {id:'t37e', name:'Kamaer Vale', region:'Kingdom of Kamaer', type:'mountain', x:3781, y:950},
 ];
 
 var TRAVEL_EVENTS = {
+  // Threshold = minimum D6 roll to trigger an event. Cards drawn at random when triggered.
+  // Mountain deck transcribed from the physical DUN Travel Event cards.
   mountain: {
     threshold: 5,
     cards: [
@@ -1011,19 +1141,237 @@ var TRAVEL_EVENTS = {
       { title:"It's Collapsing!", effect:'You walk under an ice bridge when you hear one of its blocks crack. All Characters must pass an Agility test. Those who fail suffer 3 damage dice against Natural Armor.', epic:null }
     ]
   },
-  forest:   { threshold:5, cards:[{title:'Pending',effect:'Upload Forest event card screenshots to add real events.',epic:null}] },
-  plains:   { threshold:5, cards:[{title:'Pending',effect:'Upload Plains event card screenshots to add real events.',epic:null}] },
-  desert:   { threshold:5, cards:[{title:'Pending',effect:'Upload Desert event card screenshots to add real events.',epic:null}] },
-  swamp:    { threshold:5, cards:[{title:'Pending',effect:'Upload Swamp event card screenshots to add real events.',epic:null}] },
-  volcanic: { threshold:5, cards:[{title:'Pending',effect:'Upload Volcanic event card screenshots to add real events.',epic:null}] },
-  glacier:  { threshold:5, cards:[{title:'Pending',effect:'Upload Glacier event card screenshots to add real events.',epic:null}] },
+  forest:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Forest event card screenshots to add the real deck.', epic:null}] },
+  plains:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Plains event card screenshots to add the real deck.', epic:null}] },
+  desert:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Desert event card screenshots to add the real deck.', epic:null}] },
+  swamp:      { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Swamp event card screenshots to add the real deck.', epic:null}] },
+  volcanic:   { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Volcanic event card screenshots to add the real deck.', epic:null}] },
+  glacier:    { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Glacier event card screenshots to add the real deck.', epic:null}] },
+  settlement: { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Settlement (Castle/Town/City) event card screenshots to add the real deck.', epic:null}] }
 };
 
 // ── Travel state ────────────────────────────────────────
-var travelState = { territoryId: null, turn: 1, log: [] };
+var travelState = { territoryId: null, turn: 1, log: [], inSettlement: false };
+var ADJ_DIST = 320; // px — territories within this distance count as adjacent
+
+function terrById(id) { return TERRITORIES.find(function(t){ return t.id === id; }); }
+
+function adjacentIds(id) {
+  var t = terrById(id);
+  if (!t) return [];
+  return TERRITORIES.filter(function(o){
+    if (o.id === id) return false;
+    var dx = o.x - t.x, dy = o.y - t.y;
+    return Math.sqrt(dx*dx + dy*dy) <= ADJ_DIST;
+  }).map(function(o){ return o.id; });
+}
+
+// ── Territory node layer on the map ─────────────────────
+function renderTerritories() {
+  var svg = document.getElementById('map-svg');
+  var old = svg.querySelector('.terr-layer');
+  if (old) old.remove();
+  var NS = 'http://www.w3.org/2000/svg';
+  var layer = document.createElementNS(NS,'g');
+  layer.setAttribute('class','terr-layer');
+
+  var adj = travelState.territoryId ? adjacentIds(travelState.territoryId) : [];
+
+  TERRITORIES.forEach(function(t){
+    var isCur = t.id === travelState.territoryId;
+    var isAdj = adj.indexOf(t.id) >= 0;
+    var g = document.createElementNS(NS,'g');
+    g.style.cursor = 'pointer';
+
+    // Invisible hit area
+    var hit = document.createElementNS(NS,'circle');
+    hit.setAttribute('cx',t.x); hit.setAttribute('cy',t.y); hit.setAttribute('r','24');
+    hit.setAttribute('fill','rgba(0,0,0,0)');
+    g.appendChild(hit);
+
+    // Visible ring
+    var ring = document.createElementNS(NS,'circle');
+    ring.setAttribute('cx',t.x); ring.setAttribute('cy',t.y);
+    ring.setAttribute('r', isCur ? '18' : isAdj ? '15' : '11');
+    ring.setAttribute('fill', isCur ? 'rgba(80,220,80,0.22)' : isAdj ? 'rgba(245,216,0,0.18)' : 'rgba(255,255,255,0.05)');
+    ring.setAttribute('stroke', isCur ? '#50dc50' : isAdj ? '#f5d800' : 'rgba(255,255,255,0.30)');
+    ring.setAttribute('stroke-width', isCur ? '3' : isAdj ? '2.5' : '1.2');
+    g.appendChild(ring);
+
+    // Tooltip
+    var tip = document.createElementNS(NS,'title');
+    tip.textContent = t.id.toUpperCase() + ' — ' + t.name + ' (' + t.region + ' · ' + t.type + ')'
+      + (t.settlement ? ' · ' + t.settlement : '');
+    g.appendChild(tip);
+
+    g.addEventListener('click', function(e){
+      e.stopPropagation();
+      onTerritoryClick(t.id);
+    });
+    layer.appendChild(g);
+  });
+
+  // Insert below pins/party: right after defs if present, else first
+  var defs = svg.querySelector('defs');
+  if (defs && defs.nextSibling) svg.insertBefore(layer, defs.nextSibling);
+  else svg.insertBefore(layer, svg.firstChild);
+}
+
+function onTerritoryClick(id) {
+  if (!travelState.territoryId) {
+    // First placement — no roll, no turn
+    var t = terrById(id);
+    travelState.territoryId = id;
+    travelState.inSettlement = false;
+    travelState.log.unshift('Turn ' + travelState.turn + ': Party placed at ' + t.name + ' (' + t.region + ').');
+    saveTravel(); renderMap(); refreshTravelPanel();
+    return;
+  }
+  if (id === travelState.territoryId) { refreshTravelPanel(); return; }
+
+  var isAdj = adjacentIds(travelState.territoryId).indexOf(id) >= 0;
+  var t = terrById(id);
+  if (!isAdj) {
+    if (!confirm(t.name + ' is not adjacent to your current territory.\nMove anyway? (still costs 1 week)')) return;
+  }
+  travelTo(id);
+}
+
+// ── Actions (rulebook: 1 adjacent territory per campaign turn/week) ──
+function travelTo(id) {
+  var t = terrById(id);
+  if (!t) return;
+  var from = terrById(travelState.territoryId);
+  travelState.territoryId  = id;
+  travelState.inSettlement = false;
+  travelState.log.unshift('Turn ' + travelState.turn + ': Travelled to ' + t.name + ' (' + t.region + ')' + (from ? ' from ' + from.name : '') + '.');
+  // Rulebook: event roll on ENTERING a territory
+  rollEvent(t.type, 'Entering ' + t.name);
+  travelState.turn++;
+  saveTravel(); renderMap(); refreshTravelPanel();
+}
+
+function travelStay() {
+  var t = terrById(travelState.territoryId);
+  if (!t) return;
+  travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + '.');
+  // Rulebook: event roll on REMAINING in a territory
+  rollEvent(travelState.inSettlement ? 'settlement' : t.type, 'Staying in ' + (travelState.inSettlement && t.settlement ? t.settlement : t.name));
+  travelState.turn++;
+  saveTravel(); refreshTravelPanel();
+}
+
+function settlementToggle() {
+  var t = terrById(travelState.territoryId);
+  if (!t || !t.settlement) return;
+  if (!travelState.inSettlement) {
+    travelState.inSettlement = true;
+    travelState.log.unshift('Turn ' + travelState.turn + ': Entered ' + t.settlement + '.');
+    // Rulebook: event roll on ENTERING a settlement (same campaign turn)
+    rollEvent('settlement', 'Entering ' + t.settlement);
+  } else {
+    travelState.inSettlement = false;
+    travelState.log.unshift('Turn ' + travelState.turn + ': Left ' + t.settlement + '.');
+    // Rulebook: leaving a settlement rolls on the surrounding territory deck
+    rollEvent(t.type, 'Leaving ' + t.settlement);
+  }
+  saveTravel(); refreshTravelPanel();
+}
+
+function travelSetLocation() {
+  var sel = document.getElementById('tp-territory-select');
+  if (!sel || !sel.value) { alert('Select a territory first.'); return; }
+  var t = terrById(sel.value);
+  if (!t) return;
+  travelState.territoryId  = t.id;
+  travelState.inSettlement = false;
+  travelState.log.unshift('Turn ' + travelState.turn + ': Party location set to ' + t.name + ' (' + t.region + ').');
+  saveTravel(); renderMap(); refreshTravelPanel();
+}
+
+function travelTurn(delta) {
+  travelState.turn = Math.max(1, travelState.turn + delta);
+  saveTravel(); refreshTravelPanel();
+}
+
+// ── Event roll: D6, threshold+ triggers a random card ────
+function rollEvent(deckKey, label) {
+  var deck = TRAVEL_EVENTS[deckKey] || TRAVEL_EVENTS['plains'];
+  var threshold = deck.threshold || 5;
+  var roll = Math.ceil(Math.random() * 6);
+  var triggered = roll >= threshold;
+
+  document.getElementById('tp-roll-result').style.display = 'block';
+  var numEl = document.getElementById('tp-roll-num');
+  numEl.textContent = roll + ' / 6';
+  numEl.style.color = triggered ? 'var(--gold)' : 'var(--text-muted)';
+  document.getElementById('tp-roll-deck').textContent =
+    label.toUpperCase() + ' · ' + deckKey.toUpperCase() + ' DECK (event on ' + threshold + '+)';
+
+  var cardDiv = document.getElementById('tp-roll-card');
+  if (!triggered) {
+    cardDiv.style.display = 'none';
+    travelState.log.unshift('· Rolled ' + roll + ' — no event.');
+  } else {
+    var card = deck.cards[Math.floor(Math.random() * deck.cards.length)];
+    cardDiv.style.display = 'block';
+    document.getElementById('tp-roll-title').textContent = card.title;
+    document.getElementById('tp-roll-text').textContent  = card.effect;
+    var epicEl = document.getElementById('tp-roll-epic');
+    if (card.epic) {
+      epicEl.style.display = 'block';
+      epicEl.textContent = '⚔ Epic Event: "' + card.epic + '"';
+    } else {
+      epicEl.style.display = 'none';
+    }
+    travelState.log.unshift('· Rolled ' + roll + ' — EVENT: ' + card.title + '.');
+  }
+}
+
+// ── Panel refresh / init ─────────────────────────────────
+function refreshTravelPanel() {
+  var t = travelState.territoryId ? terrById(travelState.territoryId) : null;
+  document.getElementById('tp-loc-name').textContent = t
+    ? t.id.toUpperCase() + ' — ' + t.name + (travelState.inSettlement && t.settlement ? ' (in ' + t.settlement + ')' : '')
+    : 'Not set — click a territory on the map';
+  document.getElementById('tp-loc-sub').textContent = t ? t.region + ' · ' + t.type.toUpperCase() : '';
+  document.getElementById('tp-turn-num').textContent = travelState.turn;
+
+  document.getElementById('tp-btn-stay').style.display = t ? 'block' : 'none';
+
+  var sb = document.getElementById('tp-btn-settle');
+  if (t && t.settlement) {
+    sb.style.display = 'block';
+    sb.textContent = travelState.inSettlement
+      ? '🚪 Leave ' + t.settlement
+      : (t.settleKind === 'evil' ? '💀 Enter ' : '🏰 Enter ') + t.settlement;
+  } else {
+    sb.style.display = 'none';
+  }
+
+  var logDiv = document.getElementById('tp-log');
+  logDiv.innerHTML = travelState.log.length
+    ? travelState.log.slice(0,16).map(function(e){
+        return '<div class="tp-log-entry">' + e + '</div>';
+      }).join('')
+    : '<span style="color:var(--text-muted);font-style:italic;font-size:10px;">No entries yet.</span>';
+}
+
+function saveTravel() { saveState(); }
+function toggleTravelPanel() { refreshTravelPanel(); }
 
 function initTravel() {
-  // Populate territory dropdown
+  // Drop stale territory ids from older saves
+  if (travelState.territoryId && !terrById(travelState.territoryId)) {
+    travelState.territoryId = null;
+  }
+  if (!travelState.inSettlement) travelState.inSettlement = false;
+  // Apply campaign starting territory if nothing set
+  if (!travelState.territoryId && campaign && campaign.startingTerritory && terrById(campaign.startingTerritory)) {
+    travelState.territoryId = campaign.startingTerritory;
+    travelState.log.unshift('Turn 1: Campaign begins at ' + terrById(campaign.startingTerritory).name + '.');
+  }
+  // Populate setup dropdown grouped by region
   var sel = document.getElementById('tp-territory-select');
   if (sel && sel.options.length <= 1) {
     var lastRegion = '';
@@ -1040,77 +1388,8 @@ function initTravel() {
       sel.appendChild(opt);
     });
   }
+  renderMap();
   refreshTravelPanel();
-  renderParty();
-}
-
-function saveTravel() {
-  // Save travel state as part of the main play save
-  saveState();
-}
-
-function toggleTravelPanel() { refreshTravelPanel(); }
-
-function travelTurn(delta) {
-  travelState.turn = Math.max(1, travelState.turn + delta);
-  saveTravel();
-  refreshTravelPanel();
-}
-
-function travelReset() {
-  document.getElementById('tp-roll-result').style.display = 'none';
-  refreshTravelPanel();
-}
-
-function travelRoll() {
-  var sel = document.getElementById('tp-territory-select');
-  var tid = sel ? sel.value : null;
-  if (!tid) { alert('Select a territory from the dropdown first.'); return; }
-  var t = TERRITORIES.find(function(x){ return x.id===tid; });
-  if (!t) return;
-  var deck = TRAVEL_EVENTS[t.type] || TRAVEL_EVENTS['plains'];
-  var threshold = deck.threshold || 5;
-  var roll = Math.ceil(Math.random() * 6);
-  var triggered = roll >= threshold;
-
-  document.getElementById('tp-roll-result').style.display = 'block';
-  var numEl = document.getElementById('tp-roll-num');
-  numEl.textContent = roll + ' / 6';
-  numEl.style.color = triggered ? 'var(--gold)' : 'var(--text-muted)';
-  document.getElementById('tp-roll-deck').textContent =
-    t.region.toUpperCase() + ' · ' + t.type.toUpperCase() + ' DECK  (triggers on '+threshold+'+)';
-
-  var cardDiv = document.getElementById('tp-roll-card');
-  if (!triggered) {
-    cardDiv.style.display = 'none';
-    travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' — rolled '+roll+', no event.');
-  } else {
-    var card = deck.cards[Math.floor(Math.random() * deck.cards.length)];
-    cardDiv.style.display = 'block';
-    document.getElementById('tp-roll-title').textContent = card.title;
-    document.getElementById('tp-roll-text').textContent  = card.effect;
-    var epicEl = document.getElementById('tp-roll-epic');
-    if (card.epic) {
-      epicEl.style.display = 'block';
-      epicEl.textContent = '⚔ Epic Event: "'+card.epic+'"';
-    } else {
-      epicEl.style.display = 'none';
-    }
-    travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' — rolled '+roll+': '+card.title+'.');
-  }
-  saveTravel();
-  refreshTravelPanel();
-}
-
-function refreshTravelPanel() {
-  document.getElementById('tp-turn-num').textContent = travelState.turn;
-
-  var logDiv = document.getElementById('tp-log');
-  logDiv.innerHTML = travelState.log.length
-    ? travelState.log.slice(0,12).map(function(e){
-        return '<div class="tp-log-entry">'+e+'</div>';
-      }).join('')
-    : '<span style="color:var(--text-muted);font-style:italic;font-size:10px;">No entries yet.</span>';
 }
 
 load();
