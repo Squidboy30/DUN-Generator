@@ -147,6 +147,19 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 .tp-roll-epic{font-family:Cinzel,serif;font-size:9px;color:#c8a050;font-style:italic;margin-top:4px;}
 .tp-log{max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
 .tp-log-entry{font-family:'IM Fell English',Georgia,serif;font-size:10px;color:var(--text-muted);padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.04);line-height:1.4;}
+
+/* ── CAMPAIGN OVERVIEW MODAL ── */
+.ov-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center;}
+.ov-overlay.show{display:flex;}
+.ov-modal{width:520px;max-width:92vw;max-height:88vh;overflow-y:auto;background:var(--bg-panel,#1a1208);border:2px solid var(--border-gold);box-shadow:0 8px 40px rgba(0,0,0,.8);padding:22px 26px;}
+.ov-title{font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--gold);letter-spacing:2px;margin-bottom:2px;}
+.ov-sub{font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+.ov-label{font-family:Cinzel,serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin:12px 0 5px;}
+.ov-story{width:100%;min-height:110px;background:#0e0b07;border:1px solid var(--border);color:var(--text);font-family:'IM Fell English',Georgia,serif;font-size:13px;line-height:1.6;padding:8px 10px;resize:vertical;box-sizing:border-box;}
+.ov-select{width:100%;background:#0e0b07;border:1px solid var(--border);color:var(--text);font-family:'IM Fell English',Georgia,serif;font-size:12px;padding:6px 8px;cursor:pointer;box-sizing:border-box;}
+.ov-hint{font-size:10px;color:var(--text-muted);font-style:italic;margin-top:3px;line-height:1.5;}
+.ov-begin{margin-top:18px;width:100%;font-family:Cinzel,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:11px;border:1px solid var(--gold);background:rgba(160,120,32,.12);color:var(--gold);cursor:pointer;transition:all .15s;}
+.ov-begin:hover{background:rgba(160,120,32,.28);}
 </style>
 </head>
 <body>
@@ -160,6 +173,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   </div>
   <div class="hdr-right">
     <div class="hdr-progress" id="hdr-progress"></div>
+    <button class="hdr-btn" onclick="openOverview()">📜 Overview</button>
     <button class="hdr-btn danger" onclick="confirmReset()">↺ Reset</button>
   </div>
 </div>
@@ -227,6 +241,16 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
         </div>
       </div>
 
+      <div style="border-top:1px solid var(--border);padding-top:8px;">
+        <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:#c05050;text-transform:uppercase;margin-bottom:5px;">💀 Dark Player</div>
+        <div style="font-family:'IM Fell English',Georgia,serif;font-size:11px;color:var(--text-muted);margin-bottom:6px;">
+          Stronghold: <span id="tp-dp-start" style="color:var(--text);">not set</span><br>
+          Danger markers: <span id="tp-dp-count" style="color:#e06060;">0</span> / 10
+        </div>
+        <button class="tp-btn" onclick="restAtInn()" id="tp-btn-rest" style="display:none;">🛏 Rest at Inn (spawn roll)</button>
+        <button class="tp-btn" onclick="addDangerManual()" style="font-size:8px;color:var(--text-muted);">＋ Place Danger Marker (manual)</button>
+      </div>
+
       <div>
         <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px;">Journey Log</div>
         <div class="tp-log" id="tp-log"><span style="color:var(--text-muted);font-style:italic;font-size:10px;">No entries yet.</span></div>
@@ -251,6 +275,26 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
       <span class="brief-badge" id="b-badge"></span>
     </div>
     <div class="brief-scroll" id="b-body"></div>
+  </div>
+</div>
+
+<!-- Campaign Overview modal -->
+<div class="ov-overlay" id="ov-overlay">
+  <div class="ov-modal">
+    <div class="ov-title" id="ov-name">Campaign</div>
+    <div class="ov-sub">Campaign Overview</div>
+
+    <div class="ov-label">The Story</div>
+    <textarea class="ov-story" id="ov-story" placeholder="Set the scene for your campaign — the threat, the stakes, the road ahead..."></textarea>
+
+    <div class="ov-label">⚑ Party Starting Territory</div>
+    <select class="ov-select" id="ov-party-select"><option value="">— Select territory —</option></select>
+
+    <div class="ov-label">💀 Enemy Starting Territory (Dark Player)</div>
+    <select class="ov-select" id="ov-dp-select"><option value="">— Select territory —</option></select>
+    <div class="ov-hint">Danger markers spawn at the enemy stronghold when the party rests at an inn (1D6 per 10 VP of the group — each 6 places a marker) and advance one territory toward the party every campaign turn. Max 10 markers on the map; only the stronghold may hold more than one.</div>
+
+    <button class="ov-begin" id="ov-begin-btn" onclick="beginCampaign()">⚔ Begin Campaign</button>
   </div>
 </div>
 
@@ -413,6 +457,7 @@ function confirmReset() {
 // ── RENDER ────────────────────────────────────────────────────
 function renderMap() {
   renderTerritories();
+  renderDangers();
   renderConnections();
   renderPins();
   renderParty();
@@ -1151,7 +1196,7 @@ var TRAVEL_EVENTS = {
 };
 
 // ── Travel state ────────────────────────────────────────
-var travelState = { territoryId: null, turn: 1, log: [], inSettlement: false };
+var travelState = { territoryId: null, turn: 1, log: [], inSettlement: false, dpStartId: null, dangers: [], dangerSeq: 1, groupVP: 100, overviewSeen: false };
 var ADJ_DIST = 320; // px — territories within this distance count as adjacent
 
 function terrById(id) { return TERRITORIES.find(function(t){ return t.id === id; }); }
@@ -1247,6 +1292,10 @@ function travelTo(id) {
   travelState.log.unshift('Turn ' + travelState.turn + ': Travelled to ' + t.name + ' (' + t.region + ')' + (from ? ' from ' + from.name : '') + '.');
   // Rulebook: event roll on ENTERING a territory
   rollEvent(t.type, 'Entering ' + t.name);
+  // Heroes walking into a danger marker triggers it
+  checkDangerContact();
+  // Rulebook: after the travel event roll, the Dark Player moves all danger markers
+  dpPhase();
   travelState.turn++;
   saveTravel(); renderMap(); refreshTravelPanel();
 }
@@ -1257,8 +1306,10 @@ function travelStay() {
   travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + '.');
   // Rulebook: event roll on REMAINING in a territory
   rollEvent(travelState.inSettlement ? 'settlement' : t.type, 'Staying in ' + (travelState.inSettlement && t.settlement ? t.settlement : t.name));
+  // Rulebook: after the travel event roll, the Dark Player moves all danger markers
+  dpPhase();
   travelState.turn++;
-  saveTravel(); refreshTravelPanel();
+  saveTravel(); renderMap(); refreshTravelPanel();
 }
 
 function settlementToggle() {
@@ -1349,6 +1400,12 @@ function refreshTravelPanel() {
     sb.style.display = 'none';
   }
 
+  // Dark Player section
+  var dpT = travelState.dpStartId ? terrById(travelState.dpStartId) : null;
+  document.getElementById('tp-dp-start').textContent = dpT ? dpT.id.toUpperCase() + ' — ' + dpT.name : 'not set (see Overview)';
+  document.getElementById('tp-dp-count').textContent = travelState.dangers.length;
+  document.getElementById('tp-btn-rest').style.display = (t && travelState.inSettlement) ? 'block' : 'none';
+
   var logDiv = document.getElementById('tp-log');
   logDiv.innerHTML = travelState.log.length
     ? travelState.log.slice(0,16).map(function(e){
@@ -1360,12 +1417,246 @@ function refreshTravelPanel() {
 function saveTravel() { saveState(); }
 function toggleTravelPanel() { refreshTravelPanel(); }
 
+// ── DANGER MARKERS (rulebook: Dark Player campaign role) ──
+function renderDangers() {
+  var svg = document.getElementById('map-svg');
+  var old = svg.querySelector('.danger-layer');
+  if (old) old.remove();
+  var NS = 'http://www.w3.org/2000/svg';
+  var layer = document.createElementNS(NS,'g');
+  layer.setAttribute('class','danger-layer');
+
+  // Enemy stronghold marker (always shown when set)
+  var dpT = travelState.dpStartId ? terrById(travelState.dpStartId) : null;
+  if (dpT) {
+    var fort = document.createElementNS(NS,'rect');
+    var s = 26;
+    fort.setAttribute('x', dpT.x - s/2); fort.setAttribute('y', dpT.y - s/2);
+    fort.setAttribute('width', s); fort.setAttribute('height', s);
+    fort.setAttribute('transform', 'rotate(45 ' + dpT.x + ' ' + dpT.y + ')');
+    fort.setAttribute('fill', 'rgba(120,10,10,0.30)');
+    fort.setAttribute('stroke', '#a01818'); fort.setAttribute('stroke-width', '2.5');
+    layer.appendChild(fort);
+    var ftip = document.createElementNS(NS,'title');
+    ftip.textContent = 'Enemy stronghold — danger markers spawn here';
+    fort.appendChild(ftip);
+  }
+
+  travelState.dangers.forEach(function(d){
+    var t = terrById(d.tid);
+    if (!t) return;
+    var g = document.createElementNS(NS,'g');
+    g.style.cursor = 'pointer';
+    // Offset multiple markers stacked at the stronghold
+    var stackIdx = travelState.dangers.filter(function(o){ return o.tid===d.tid && o.id<d.id; }).length;
+    var ox = t.x + (stackIdx % 3) * 16 - 8;
+    var oy = t.y - 26 - Math.floor(stackIdx / 3) * 16;
+
+    var disc = document.createElementNS(NS,'circle');
+    disc.setAttribute('cx', ox); disc.setAttribute('cy', oy); disc.setAttribute('r', '11');
+    disc.setAttribute('fill', '#1a0505');
+    disc.setAttribute('stroke', d.fresh ? '#e0a040' : '#e02020');
+    disc.setAttribute('stroke-width', '2');
+    g.appendChild(disc);
+
+    var skull = document.createElementNS(NS,'text');
+    skull.setAttribute('x', ox); skull.setAttribute('y', oy);
+    skull.setAttribute('text-anchor','middle'); skull.setAttribute('dominant-baseline','central');
+    skull.setAttribute('font-size','12'); skull.setAttribute('fill','#e05050');
+    skull.setAttribute('pointer-events','none');
+    skull.textContent = '☠';
+    g.appendChild(skull);
+
+    var tip = document.createElementNS(NS,'title');
+    tip.textContent = 'Danger marker at ' + t.name + (d.fresh ? ' (just placed — moves next turn)' : '') + ' — click to remove';
+    g.appendChild(tip);
+
+    g.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (confirm('Remove this danger marker at ' + t.name + '?\n(Use after resolving a Campaign Danger card.)')) {
+        travelState.dangers = travelState.dangers.filter(function(o){ return o.id !== d.id; });
+        travelState.log.unshift('Danger marker removed at ' + t.name + '.');
+        saveTravel(); renderMap(); refreshTravelPanel();
+      }
+    });
+    layer.appendChild(g);
+  });
+
+  svg.appendChild(layer);
+}
+
+function spawnDanger(n) {
+  var dpT = travelState.dpStartId ? terrById(travelState.dpStartId) : null;
+  if (!dpT) { alert('Set the Enemy Starting Territory first (📜 Overview).'); return 0; }
+  var placed = 0;
+  for (var i = 0; i < n; i++) {
+    if (travelState.dangers.length >= 10) break; // rulebook: max 10 on the map
+    travelState.dangers.push({ id: travelState.dangerSeq++, tid: travelState.dpStartId, fresh: true });
+    placed++;
+  }
+  return placed;
+}
+
+function restAtInn() {
+  var t = terrById(travelState.territoryId);
+  if (!t || !travelState.inSettlement) return;
+  var vp = prompt('Group Value Points (VP)? The Dark Player rolls 1D6 per 10 VP; each 6 spawns a danger marker at the stronghold.', travelState.groupVP || 100);
+  if (vp === null) return;
+  vp = parseInt(vp, 10);
+  if (isNaN(vp) || vp < 0) { alert('Enter a number.'); return; }
+  travelState.groupVP = vp;
+  var nDice = Math.floor(vp / 10);
+  var rolls = [], sixes = 0;
+  for (var i = 0; i < nDice; i++) {
+    var r = Math.ceil(Math.random() * 6);
+    rolls.push(r);
+    if (r === 6) sixes++;
+  }
+  travelState.log.unshift('Turn ' + travelState.turn + ': Rested at the inn in ' + (t.settlement || t.name) + ' — Fortune replenished.');
+  var placed = sixes > 0 ? spawnDanger(sixes) : 0;
+  travelState.log.unshift('· Dark Player rolls ' + nDice + 'D6 [' + rolls.join(',') + '] — ' + sixes + ' six' + (sixes===1?'':'es') + (placed ? ', ' + placed + ' danger marker' + (placed===1?'':'s') + ' placed at the stronghold.' : ', no markers placed.'));
+  saveTravel(); renderMap(); refreshTravelPanel();
+}
+
+function addDangerManual() {
+  var placed = spawnDanger(1);
+  if (placed) {
+    travelState.log.unshift('Danger marker placed at the stronghold (manual).');
+    saveTravel(); renderMap(); refreshTravelPanel();
+  } else if (travelState.dpStartId) {
+    alert('Maximum of 10 danger markers already on the map.');
+  }
+}
+
+// After the heroes' travel event roll: move every marker one territory
+// toward the heroes by the shortest route (ignores rivers/sea).
+function dpPhase() {
+  var heroT = terrById(travelState.territoryId);
+  if (!heroT || !travelState.dangers.length) {
+    travelState.dangers.forEach(function(d){ d.fresh = false; });
+    return;
+  }
+  var moved = 0;
+  travelState.dangers.forEach(function(d){
+    if (d.fresh) { d.fresh = false; return; } // just placed — moves next turn
+    if (d.tid === travelState.territoryId) return; // already in contact (resolved below)
+    var here = terrById(d.tid);
+    if (!here) return;
+    var candidates = adjacentIds(d.tid).map(terrById);
+    if (!candidates.length) {
+      // Isolated node (island) — markers ignore obstacles, jump to nearest territory
+      var nearest = null, best = Infinity;
+      TERRITORIES.forEach(function(o){
+        if (o.id === d.tid) return;
+        var dd = Math.hypot(o.x - here.x, o.y - here.y);
+        if (dd < best) { best = dd; nearest = o; }
+      });
+      if (nearest) candidates = [nearest];
+    }
+    // Pick the candidate closest to the heroes; skip occupied territories
+    // (rulebook: max one marker per territory, except the stronghold)
+    candidates.sort(function(a, b){
+      return Math.hypot(a.x - heroT.x, a.y - heroT.y) - Math.hypot(b.x - heroT.x, b.y - heroT.y);
+    });
+    for (var i = 0; i < candidates.length; i++) {
+      var c = candidates[i];
+      // Never move away from the heroes
+      if (Math.hypot(c.x - heroT.x, c.y - heroT.y) >= Math.hypot(here.x - heroT.x, here.y - heroT.y) && c.id !== travelState.territoryId) continue;
+      var occupied = travelState.dangers.some(function(o){ return o.id !== d.id && o.tid === c.id; });
+      if (occupied && c.id !== travelState.dpStartId && c.id !== travelState.territoryId) continue;
+      d.tid = c.id;
+      moved++;
+      break;
+    }
+  });
+  if (moved) travelState.log.unshift('· Dark Player advances ' + moved + ' danger marker' + (moved===1?'':'s') + '.');
+  checkDangerContact();
+}
+
+function checkDangerContact() {
+  var hits = travelState.dangers.filter(function(d){ return d.tid === travelState.territoryId; });
+  if (!hits.length) return;
+  var t = terrById(travelState.territoryId);
+  hits.forEach(function(d){
+    travelState.log.unshift('☠ DANGER at ' + t.name + '! Draw a random Campaign Danger card and resolve it.');
+  });
+  // Remove resolved markers
+  travelState.dangers = travelState.dangers.filter(function(d){ return d.tid !== travelState.territoryId; });
+  alert('☠ DANGER!\n' + hits.length + ' danger marker' + (hits.length===1?'':'s') + ' reached the party at ' + t.name + '.\n\nDraw a random Campaign Danger card from your physical deck and resolve it' + (hits.length>1 ? ' (one per marker)' : '') + '.');
+}
+
+// ── CAMPAIGN OVERVIEW ─────────────────────────────────────
+function populateTerrSelect(selId) {
+  var sel = document.getElementById(selId);
+  if (!sel || sel.options.length > 1) return;
+  var lastRegion = '';
+  TERRITORIES.forEach(function(t) {
+    if (t.region !== lastRegion) {
+      var og = document.createElement('optgroup');
+      og.label = t.region;
+      sel.appendChild(og);
+      lastRegion = t.region;
+    }
+    var opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.id.toUpperCase() + ' — ' + t.name;
+    sel.appendChild(opt);
+  });
+}
+
+function openOverview() {
+  populateTerrSelect('ov-party-select');
+  populateTerrSelect('ov-dp-select');
+  document.getElementById('ov-name').textContent = campaign.name;
+  document.getElementById('ov-story').value = campaign.description || '';
+  document.getElementById('ov-party-select').value = travelState.territoryId || campaign.startingTerritory || '';
+  document.getElementById('ov-dp-select').value = travelState.dpStartId || campaign.dpStartingTerritory || '';
+  document.getElementById('ov-begin-btn').textContent = travelState.overviewSeen ? '💾 Save & Close' : '⚔ Begin Campaign';
+  document.getElementById('ov-overlay').classList.add('show');
+}
+
+function beginCampaign() {
+  var story   = document.getElementById('ov-story').value.trim();
+  var partyId = document.getElementById('ov-party-select').value;
+  var dpId    = document.getElementById('ov-dp-select').value;
+
+  // Persist story on the campaign record
+  campaign.description = story;
+  try {
+    var camps = JSON.parse(localStorage.getItem('dun_campaigns') || '[]');
+    var idx = camps.findIndex(function(c){ return c.id === campaign.id; });
+    if (idx >= 0) { camps[idx].description = story; localStorage.setItem('dun_campaigns', JSON.stringify(camps)); }
+  } catch(e) {}
+
+  var first = !travelState.overviewSeen;
+  if (partyId && terrById(partyId) && partyId !== travelState.territoryId) {
+    travelState.territoryId = partyId;
+    travelState.inSettlement = false;
+    travelState.log.unshift('Turn ' + travelState.turn + ': Party ' + (first ? 'begins at ' : 'location set to ') + terrById(partyId).name + '.');
+  }
+  if (dpId && terrById(dpId) && dpId !== travelState.dpStartId) {
+    travelState.dpStartId = dpId;
+    travelState.log.unshift((first ? 'The enemy gathers at ' : 'Enemy stronghold set to ') + terrById(dpId).name + '.');
+  }
+  travelState.overviewSeen = true;
+  document.getElementById('ov-overlay').classList.remove('show');
+  saveTravel(); renderMap(); refreshTravelPanel();
+}
+
 function initTravel() {
   // Drop stale territory ids from older saves
   if (travelState.territoryId && !terrById(travelState.territoryId)) {
     travelState.territoryId = null;
   }
   if (!travelState.inSettlement) travelState.inSettlement = false;
+  // Migrate saves that predate the Dark Player fields
+  if (!travelState.dangers)   travelState.dangers   = [];
+  if (!travelState.dangerSeq) travelState.dangerSeq = 1;
+  if (!travelState.groupVP)   travelState.groupVP   = 100;
+  if (travelState.dpStartId && !terrById(travelState.dpStartId)) travelState.dpStartId = null;
+  if (!travelState.dpStartId && campaign && campaign.dpStartingTerritory && terrById(campaign.dpStartingTerritory)) {
+    travelState.dpStartId = campaign.dpStartingTerritory;
+  }
   // Apply campaign starting territory if nothing set
   if (!travelState.territoryId && campaign && campaign.startingTerritory && terrById(campaign.startingTerritory)) {
     travelState.territoryId = campaign.startingTerritory;
@@ -1390,6 +1681,8 @@ function initTravel() {
   }
   renderMap();
   refreshTravelPanel();
+  // First visit: show the campaign overview to set story and starting positions
+  if (!travelState.overviewSeen) openOverview();
 }
 
 load();

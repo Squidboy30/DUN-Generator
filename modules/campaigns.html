@@ -1369,11 +1369,18 @@ body {
       <textarea class="form-textarea" id="nc-desc" placeholder="Brief description of the campaign..."></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label">Starting Territory</label>
+      <label class="form-label">Party Starting Territory</label>
       <select class="form-input" id="nc-territory" style="cursor:pointer;">
         <option value="">— Choose starting location —</option>
       </select>
       <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Where does the party begin on the world map?</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Enemy Starting Territory (Dark Player)</label>
+      <select class="form-input" id="nc-dp-territory" style="cursor:pointer;">
+        <option value="">— Choose enemy stronghold —</option>
+      </select>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Danger markers spawn here and hunt the party across the map.</div>
     </div>
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeModal('modal-new-campaign')">Cancel</button>
@@ -2599,9 +2606,10 @@ function saveCampaign() {
 function newCampaign() {
   document.getElementById('nc-name').value = '';
   document.getElementById('nc-desc').value = '';
-  // Populate territory dropdown from TERRITORIES data
-  var tsel = document.getElementById('nc-territory');
-  if (tsel && tsel.options.length <= 1) {
+  // Populate territory dropdowns from TERRITORIES data
+  ['nc-territory','nc-dp-territory'].forEach(function(selId){
+    var tsel = document.getElementById(selId);
+    if (!tsel || tsel.options.length > 1) return;
     var lastRegion = '';
     TERRITORIES.forEach(function(t) {
       if (t.region !== lastRegion) {
@@ -2615,7 +2623,7 @@ function newCampaign() {
       opt.textContent = t.id.toUpperCase() + ' — ' + t.name;
       tsel.appendChild(opt);
     });
-  }
+  });
   document.getElementById('modal-new-campaign').classList.add('open');
 }
 
@@ -2623,7 +2631,8 @@ function createCampaign() {
   var name = document.getElementById('nc-name').value.trim() || 'Unnamed Campaign';
   var desc = document.getElementById('nc-desc').value.trim();
   var territory = document.getElementById('nc-territory').value;
-  activeCampaign = { id: 'camp_' + Date.now(), name: name, description: desc, nodes: [], connections: [], startingTerritory: territory || null };
+  var dpTerritory = document.getElementById('nc-dp-territory').value;
+  activeCampaign = { id: 'camp_' + Date.now(), name: name, description: desc, nodes: [], connections: [], startingTerritory: territory || null, dpStartingTerritory: dpTerritory || null };
   document.getElementById('campaign-name').value = name;
   saveLocal();
   closeModal('modal-new-campaign');
