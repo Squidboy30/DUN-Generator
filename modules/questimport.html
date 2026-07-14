@@ -85,6 +85,7 @@ var SITE_IMG = 'https://worldofarasca.dungeonuniversalis.com/imagenes/tilesrnd/'
 var parsed = null;   // { placed:{id:elem}, tileNames:[...] }
 var sizeInfo = {};   // name -> {w,h,src:'auto'|'known'|'unknown'}
 var annotations = []; // [{iddiv,text,solution,success,failure}]
+var mission = null;   // {number,name,intro,objective,faction,setup,conclusion}
 
 function stripHtml(h) {
   var d = document.createElement('div');
@@ -155,6 +156,26 @@ function parseCapture(html) {
   if (annEl && annEl.textContent.trim().length > 4) {
     annotations = parseAnnotations(annEl.textContent);
   }
+  // scenario info tabs (Nombre / Introducción / Misión / Facción / Preparativos / Conclusión)
+  function tabText(id) {
+    var el = doc.getElementById(id);
+    return el ? el.textContent.replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim() : '';
+  }
+  mission = {
+    intro:      tabText('ed_introduccion'),
+    objective:  tabText('ed_mision'),
+    faction:    tabText('ed_faccion'),
+    setup:      tabText('ed_preparativos'),
+    conclusion: tabText('ed_conclusion')
+  };
+  var nameRaw = tabText('ed_mapa');
+  var nm = nameRaw.match(/^(\d+)\s*[-–—.]?\s*(.*)$/);
+  mission.number = nm ? nm[1] : '';
+  mission.name   = (nm ? nm[2] : nameRaw).replace(/\.\s*$/,'').trim();
+  if (mission.name && !document.getElementById('map-title').value) {
+    document.getElementById('map-title').value =
+      (mission.number ? mission.number + ' — ' : '') + mission.name;
+  }
   var divs = doc.querySelectorAll('div[id^="tl-"],div[id^="acc-"],div[id^="mob-"]');
   var placed = {};
   divs.forEach(function(d) {
@@ -194,7 +215,12 @@ function parseCapture(html) {
   document.getElementById('parse-result').innerHTML =
     '<span class="ok">&#10003; Parsed:</span> ' + tiles.length + ' tiles (' + names.length + ' unique), ' +
     (counts['puerta']||0) + ' doors, ' + (counts['elemento']||0) + ' furniture, ' +
-    (counts['marcadorpersonalizado']||0) + ' markers.';
+    (counts['marcadorpersonalizado']||0) + ' markers.' +
+    (mission && mission.name
+      ? '<br><span class="ok">&#10003; Mission:</span> ' +
+        (mission.number ? mission.number+' — ' : '') + mission.name +
+        (mission.objective ? ' · <i>'+mission.objective+'</i>' : '')
+      : '<br><span class="warn">No scenario info tabs found in this capture.</span>');
   refreshNotesBox();
   resolveSizes(names);
 }
@@ -322,7 +348,8 @@ function buildQuest() {
     furniture: furniture, markers: markers,
     entrance: special.entrada||null, goal: special.salafinal||null, leader: special.lider||null,
     notes: notes,
-    annotations: attached
+    annotations: attached,
+    mission: mission
   };
 }
 

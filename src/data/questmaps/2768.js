@@ -262,7 +262,7 @@ var QUESTMAP_2768 = {
   },
   {
    "id": "mob-3516",
-   "name": "Armer\u00eda",
+   "name": "Armería",
    "x": 4585.0,
    "y": 4782.0,
    "rot": -90.0,
@@ -426,5 +426,15 @@ var QUESTMAP_2768 = {
    "text": "The Leader is an Undead Champion. He uses a broadsword, a shield, and chainmail. He has the extra skill 'Aura'.",
    "attach": "leader"
   }
- ]
+ ],
+ "mission": {
+  "number": "02",
+  "name": "La guarida de Rorg",
+  "intro": "En el interior del bosque de Rohuan se alza un caserón tan grande que bien podría parecer un pequeño fuerte. En uno de los extremos han levantado un torreón con sillares de mampostería y las ventanas del piso bajo del edificio han sido cegadas con tablones. Se dice que aquella es la guarida de Rorg, un veterano mercenario que abandonó su profesión para labrarse una carrera al margen de la ley. Le sigue un grupo de fieles que ensalzan su fuerza y determinación. Algunos fueron compañeros de oficio. Otros han sido escogidos entre los mejores rateros y asesinos de la región. Juntos forman una pequeña familia de forajidos que a menudo desciende al sur para asolar la región de Verneck.",
+  "objective": "Dejar Fuera de combate a Rorg.",
+  "faction": "Forajidos.",
+  "setup": "Prepara el contador de Logros y de Puntos de Reserva. Antes de preparar los mazos de Jugador Oscuro, descarta del juego las cartas siguientes de Obstáculos: Acertijo, Foso, Explosión mágica, Escombros, Destrucción de la mente, Muro de piedra, Muro de fuego, Muro de hielo, Paredes que se cierran, Grieta profunda, Roca rodante, Cánticos terroríficos, Zona inundada, Bola de fuego, Bloque de piedra, Desprendimiento.&nbsp; Deja a un lado, boca arriba, una de las cartas de Obstáculos denominada \"Puerta cerrada con llave\". El Jugador Oscuro debe gastar 5 Puntos de Reserva por el Líder. Losetas: 02A/a, 06B/c, 07B/c, 08B/c,&nbsp; 12A/c, 18A/c, 20B/d, 37B/g,&nbsp; 107A/i, 109A/i, 113B/i",
+  "conclusion": "Misión conseguida: lee el nexo narrativo T3 cuando regreséis a Verneck. Misión fallida: lee el nexo narrativo T4 cuando regreséis a Verneck. Recompensas: +1 PX si los héroes han logrado&nbsp; la misión en el primer intento. +1 PX si los héroes han obtenido más puntos por Logros que el Jugador Oscuro. Héroes PV: 0"
+ },
+ "title": "02 — La guarida de Rorg"
 };

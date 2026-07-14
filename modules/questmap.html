@@ -40,6 +40,7 @@ body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;}
     <h3>Floors</h3>
     <div id="lvls"></div>
     <div class="hint">Sections on other floors may sit apart on the map — they connect by stairs, not walls.</div>
+    <div id="mission-box"></div>
     <h3>Quest Notes</h3>
     <div id="notes"></div>
     <h3>Discoveries</h3>
@@ -286,6 +287,18 @@ function renderBtns(){
 renderBtns();
 
 // ---- notes ----
+var mb=document.getElementById('mission-box');
+if(Q.mission && (Q.mission.name||Q.mission.objective)){
+  var h='';
+  if(Q.mission.name)h+='<h3>Mission'+(Q.mission.number?' '+Q.mission.number:'')+'</h3>'+
+    '<div class="note" style="font-weight:bold;">'+Q.mission.name+'</div>';
+  if(Q.mission.intro)h+='<div class="note" style="font-style:italic;">'+Q.mission.intro+'</div>';
+  if(Q.mission.objective)h+='<h3>Objective</h3><div class="note">'+Q.mission.objective+'</div>';
+  if(Q.mission.faction)h+='<div class="note">Faction: '+Q.mission.faction+'</div>';
+  if(Q.mission.setup)h+='<h3>Set-Up</h3><div class="note">'+Q.mission.setup+'</div>';
+  if(Q.mission.conclusion)h+='<h3>Conclusion</h3><div class="note">'+Q.mission.conclusion+'</div>';
+  mb.innerHTML=h;
+}
 var nb=document.getElementById('notes');
 (Q.notes||[]).forEach(function(n){
   var e=document.createElement('div');e.className='note';
