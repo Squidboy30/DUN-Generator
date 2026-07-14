@@ -42,6 +42,9 @@ body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;}
     <div class="hint">Sections on other floors may sit apart on the map — they connect by stairs, not walls.</div>
     <h3>Quest Notes</h3>
     <div id="notes"></div>
+    <h3>Discoveries</h3>
+    <div id="discoveries"></div>
+    <div class="hint">Click a marked ? on the map to reveal its scenario note.</div>
     <h3>Exploration Log</h3>
     <div id="log"></div>
     <div class="hint">Click a gold door to open it and reveal what lies beyond.</div>
@@ -64,6 +67,8 @@ var Q = (function(){
 })();
 document.querySelector('.hdr-title').textContent = '⚔ ' + (Q.title || ('QUEST MAP ' + Q.mapId));
 document.title = (Q.title || 'Quest Map ' + Q.mapId) + ' — Dungeon Universalis';
+var annById = {};
+(Q.annotations||[]).forEach(function(a){ annById[a.iddiv] = a; });
 var SQ = 40;                 // canvas px per dungeon square (site uses 50px)
 var SC = SQ / Q.gridPx;      // site-px -> canvas-px
 var PAD = 60;
@@ -206,8 +211,12 @@ function draw(){
     if(!visible[m.id])return;
     var host=tileOfPoint(m.x,m.y); var dim=host&&dimmed(host);
     ctx.save();ctx.globalAlpha=dim?0.15:0.9;
-    ctx.strokeStyle=m.kind==='white'?'#fff':'#5090ff';ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(X(m.x),Y(m.y),SQ*0.22,0,7);ctx.stroke();ctx.restore();
+    var col=m.kind==='white'?'#fff':'#5090ff';
+    ctx.strokeStyle=col;ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(X(m.x),Y(m.y),SQ*0.22,0,7);ctx.stroke();
+    if(annById[m.id]){ctx.fillStyle=col;ctx.font='bold 12px Cinzel,serif';ctx.textAlign='center';
+      ctx.fillText('?',X(m.x),Y(m.y)+4);}
+    ctx.restore();
   });
   status();
 }
@@ -228,7 +237,24 @@ cv.addEventListener('click',function(ev){
       openDoor(d); return;
     }
   }
+  for(var j=0;j<Q.markers.length;j++){
+    var m=Q.markers[j];
+    if(!visible[m.id]||!annById[m.id])continue;
+    if(Math.abs(mx-X(m.x))<SQ*0.4 && Math.abs(my-Y(m.y))<SQ*0.4){
+      showDiscovery(annById[m.id]); return;
+    }
+  }
 });
+function showDiscovery(a){
+  var box=document.getElementById('discoveries');
+  var e=document.createElement('div');e.className='note';
+  var t='&#10067; '+a.text;
+  if(a.solution)t+='<br><i>Solution: '+a.solution+'</i>';
+  if(a.success)t+='<br><i>Success: '+a.success+'</i>';
+  if(a.failure)t+='<br><i>Failure: '+a.failure+'</i>';
+  e.innerHTML=t;
+  box.insertBefore(e,box.firstChild);
+}
 function openDoor(d){
   opened[d.id]=1;
   var revealedTiles=[];
@@ -241,6 +267,7 @@ function openDoor(d){
   var e=document.createElement('div');
   e.textContent='🚪 Door opened — revealed: '+(revealedTiles.join(', ')||'passage');
   log.insertBefore(e,log.firstChild);
+  if(annById[d.id]) showDiscovery(annById[d.id]);
   draw();
 }
 
@@ -260,8 +287,11 @@ renderBtns();
 
 // ---- notes ----
 var nb=document.getElementById('notes');
-Q.notes.forEach(function(n){
-  var e=document.createElement('div');e.className='note';e.textContent=n.text;nb.appendChild(e);
+(Q.notes||[]).forEach(function(n){
+  var e=document.createElement('div');e.className='note';
+  var t=n.text;
+  if(n.solution)t+='\nSolution: '+n.solution;
+  e.textContent=t;nb.appendChild(e);
 });
 
 draw();

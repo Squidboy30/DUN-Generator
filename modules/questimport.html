@@ -39,18 +39,22 @@ tr.unknown td{background:rgba(160,60,40,.12);}
 
 <div class="step">
 <h2>Step 1 — Capture the map</h2>
-<div class="hint">With the quest map open on the official site, open DevTools (F12) &rarr; Console, paste this line and press Enter. It downloads the page as an HTML file:</div>
-<div class="codeblock">const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([document.documentElement.outerHTML],{type:'text/html'}));a.download='mapaonline_'+(location.search.match(/\d+/)||['map'])[0]+'.html';a.click()</div>
+<div class="hint">With the quest map open on the official site, open DevTools (F12) &rarr; Console, paste this and press Enter. It fetches the map's scenario notes (objective, special rules, riddles) and downloads the page with them embedded:</div>
+<div class="codeblock">(async()=>{let t='';try{t=await(await fetch('ajax-mapas.php')).text();if(t.trim().length&lt;5){const idm=(location.search.match(/\d+/)||[''])[0];t=await(await fetch('ajax-mapas.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'idm='+idm})).text();}}catch(e){}const s=document.createElement('script');s.id='dun-annotations';s.type='application/json';s.textContent=t;document.body.appendChild(s);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([document.documentElement.outerHTML],{type:'text/html'}));a.download='mapaonline_'+(location.search.match(/\d+/)||['map'])[0]+'.html';a.click()})()</div>
+<div class="hint">Older captures made without this still import — you can load the annotations separately below.</div>
 </div>
 
 <div class="step">
 <h2>Step 2 — Load the capture</h2>
 <input type="file" id="file-in" accept=".html,.htm">
+<div class="hint" style="margin-top:6px;">Optional — annotations captured separately (ajax-mapas.php response saved as .json/.txt):</div>
+<input type="file" id="ann-in" accept=".json,.txt">
 <div style="margin-top:8px;">
   Map ID: <input type="text" id="map-id" placeholder="e.g. 2768" style="width:100px;">
   &nbsp; Title: <input type="text" id="map-title" placeholder="e.g. The Sunken Crypt" style="width:280px;">
 </div>
 <div id="parse-result" class="hint"></div>
+<div id="ann-result" class="hint"></div>
 </div>
 
 <div class="step" id="review-step" style="display:none;">
@@ -80,6 +84,59 @@ var SITE_IMG = 'https://worldofarasca.dungeonuniversalis.com/imagenes/tilesrnd/'
 
 var parsed = null;   // { placed:{id:elem}, tileNames:[...] }
 var sizeInfo = {};   // name -> {w,h,src:'auto'|'known'|'unknown'}
+var annotations = []; // [{iddiv,text,solution,success,failure}]
+
+function stripHtml(h) {
+  var d = document.createElement('div');
+  d.innerHTML = h;
+  return (d.textContent || '').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function parseAnnotations(jsonText) {
+  var out = [];
+  try {
+    var obj = JSON.parse(jsonText);
+    Object.keys(obj).forEach(function(k) {
+      var a = obj[k];
+      var text = stripHtml(a.texto || '');
+      if (!text && !a.solucion) return;
+      out.push({
+        iddiv: a.iddiv || k,
+        text: text,
+        solution: stripHtml(a.solucion || '') || undefined,
+        success:  stripHtml(a.acierto  || '') || undefined,
+        failure:  stripHtml(a.fallo    || '') || undefined
+      });
+    });
+  } catch(e) {}
+  return out;
+}
+
+document.getElementById('ann-in').addEventListener('change', function(ev) {
+  var f = ev.target.files[0];
+  if (!f) return;
+  var r = new FileReader();
+  r.onload = function() {
+    annotations = parseAnnotations(r.result);
+    refreshNotesBox();
+  };
+  r.readAsText(f);
+});
+
+function refreshNotesBox() {
+  if (!annotations.length) return;
+  var ta = document.getElementById('notes-in');
+  var attached = 0;
+  var lines = annotations.map(function(a) {
+    var inMap = parsed && parsed.placed[a.iddiv];
+    if (inMap) attached++;
+    return a.text + (a.solution ? ' [Solution: '+a.solution+']' : '');
+  });
+  ta.value = lines.join('\n');
+  document.getElementById('ann-result').innerHTML =
+    '<span class="ok">&#10003; '+annotations.length+' scenario notes loaded</span>' +
+    (parsed ? ' — '+attached+' pinned to map elements, the rest shown as general quest notes.' : '');
+}
 
 document.getElementById('file-in').addEventListener('change', function(ev) {
   var f = ev.target.files[0];
@@ -93,6 +150,11 @@ document.getElementById('file-in').addEventListener('change', function(ev) {
 
 function parseCapture(html) {
   var doc = new DOMParser().parseFromString(html, 'text/html');
+  // scenario annotations embedded by the capture one-liner
+  var annEl = doc.getElementById('dun-annotations');
+  if (annEl && annEl.textContent.trim().length > 4) {
+    annotations = parseAnnotations(annEl.textContent);
+  }
   var divs = doc.querySelectorAll('div[id^="tl-"],div[id^="acc-"],div[id^="mob-"]');
   var placed = {};
   divs.forEach(function(d) {
@@ -133,6 +195,7 @@ function parseCapture(html) {
     '<span class="ok">&#10003; Parsed:</span> ' + tiles.length + ' tiles (' + names.length + ' unique), ' +
     (counts['puerta']||0) + ' doors, ' + (counts['elemento']||0) + ' furniture, ' +
     (counts['marcadorpersonalizado']||0) + ' markers.';
+  refreshNotesBox();
   resolveSizes(names);
 }
 
@@ -235,9 +298,18 @@ function buildQuest() {
   }
   Object.keys(levels).forEach(function(t){ tiles[t].level=levels[t]; });
 
-  var notes = document.getElementById('notes-in').value.split('\n')
-    .map(function(s){return s.trim();}).filter(Boolean)
-    .map(function(s){return {text:s};});
+  var notes = [];
+  var attached = [];
+  if (annotations.length) {
+    annotations.forEach(function(a) {
+      if (placed[a.iddiv]) attached.push(a);
+      else notes.push({ text: a.text, solution: a.solution, success: a.success, failure: a.failure });
+    });
+  } else {
+    notes = document.getElementById('notes-in').value.split('\n')
+      .map(function(s){return s.trim();}).filter(Boolean)
+      .map(function(s){return {text:s};});
+  }
 
   var id = document.getElementById('map-id').value.trim() || 'map';
   return {
@@ -249,7 +321,8 @@ function buildQuest() {
     doors: Object.values(doors),
     furniture: furniture, markers: markers,
     entrance: special.entrada||null, goal: special.salafinal||null, leader: special.lider||null,
-    notes: notes
+    notes: notes,
+    annotations: attached
   };
 }
 
