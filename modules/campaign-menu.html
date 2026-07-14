@@ -77,7 +77,7 @@ function renderList() {
   list.innerHTML = '';
   var maps = loadImported();
   // Built-in map 2768 always available
-  if (!maps['2768']) maps['2768'] = { mapId: 2768, builtin: true, title: 'Quest Map 2768', tileCount: 10 };
+  if (!maps['2768']) maps['2768'] = { mapId: 2768, builtin: true, title: '02 — La guarida de Rorg', tileCount: 10 };
   var ids = Object.keys(maps).sort(function(a,b){ return Number(a)-Number(b); });
   ids.forEach(function(id) {
     var m = maps[id];
