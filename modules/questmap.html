@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest Map — Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c8a44d;--parch:#e8dcc0;--ink:#2a2018;--panel:#1c1710;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;}
+.hdr{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:2px solid var(--gold);}
+.hdr-title{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);letter-spacing:2px;}
+.hdr a{color:var(--parch);text-decoration:none;font-size:13px;opacity:.8;}
+.hdr a:hover{opacity:1;}
+.wrap{display:flex;gap:0;height:calc(100vh - 46px);}
+#stage{flex:1;position:relative;overflow:auto;background:#0a0908;}
+#cv{display:block;image-rendering:pixelated;cursor:pointer;}
+.side{width:270px;background:var(--panel);border-left:2px solid var(--gold);padding:12px;overflow-y:auto;font-size:14px;}
+.side h3{font-family:'Cinzel',serif;color:var(--gold);font-size:13px;letter-spacing:1px;margin:12px 0 6px;border-bottom:1px solid #3a3226;padding-bottom:3px;}
+.side h3:first-child{margin-top:0;}
+.note{background:#241e14;border:1px solid #3a3226;border-radius:4px;padding:6px 8px;margin-bottom:6px;font-size:13px;line-height:1.35;}
+.lvlbtn{display:inline-block;background:#241e14;border:1px solid var(--gold);color:var(--parch);border-radius:4px;padding:3px 10px;margin:0 4px 4px 0;cursor:pointer;font-family:'Cinzel',serif;font-size:12px;}
+.lvlbtn.on{background:var(--gold);color:var(--ink);}
+#log{font-size:12.5px;line-height:1.4;color:#b8a888;}
+#log div{margin-bottom:3px;}
+.hint{font-size:12px;color:#8a7a5e;font-style:italic;margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <span class="hdr-title">⚔ QUEST MAP 2768</span>
+  <a href="../index.html">← Home</a>
+  <span style="flex:1"></span>
+  <span id="status" style="font-size:13px;color:#b8a888;"></span>
+</div>
+<div class="wrap">
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <div class="side">
+    <h3>Floors</h3>
+    <div id="lvls"></div>
+    <div class="hint">Sections on other floors may sit apart on the map — they connect by stairs, not walls.</div>
+    <h3>Quest Notes</h3>
+    <div id="notes"></div>
+    <h3>Exploration Log</h3>
+    <div id="log"></div>
+    <div class="hint">Click a gold door to open it and reveal what lies beyond.</div>
+  </div>
+</div>
+<script src="../src/data/images.js"></script>
+<script src="../src/data/questmaps/2768.js"></script>
+<script>
+(function(){
+'use strict';
+var Q = QUESTMAP_2768;
+var SQ = 40;                 // canvas px per dungeon square (site uses 50px)
+var SC = SQ / Q.gridPx;      // site-px -> canvas-px
+var PAD = 60;
+
+// ---- bounds from tile footprints (rotation about centre) ----
+function bbox(t){
+  var W=t.w*Q.gridPx, H=t.h*Q.gridPx, cx=t.x+W/2, cy=t.y+H/2;
+  if(Math.abs(t.rot)%180===90){var s=W;W=H;H=s;}
+  return {x:cx-W/2, y:cy-H/2, w:W, h:H};
+}
+var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+Q.tiles.forEach(function(t){var b=bbox(t);
+  minX=Math.min(minX,b.x);minY=Math.min(minY,b.y);
+  maxX=Math.max(maxX,b.x+b.w);maxY=Math.max(maxY,b.y+b.h);});
+function X(px){return (px-minX)*SC+PAD;}
+function Y(px){return (px-minY)*SC+PAD;}
+
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+cv.width=(maxX-minX)*SC+PAD*2; cv.height=(maxY-minY)*SC+PAD*2;
+ctx.imageSmoothingEnabled=false;
+
+// ---- game state ----
+var visible={}, opened={}, lvlFilter='all';
+function initVis(){
+  visible={}; opened={};
+  Q.tiles.forEach(function(t){ if(!t.hidden) visible[t.id]=1; });
+  Q.doors.forEach(function(d){ if(!d.hidden) visible[d.id]=1; });
+  Q.furniture.forEach(function(f){ if(!f.hidden) visible[f.id]=1; });
+  Q.markers.forEach(function(m){ if(!m.hidden) visible[m.id]=1; });
+  ['entrance','goal','leader'].forEach(function(k){ if(Q[k] && !Q[k].hidden) visible[Q[k].id]=1; });
+}
+initVis();
+
+// ---- tile artwork ----
+var imgs={};
+Q.tiles.forEach(function(t){
+  if(typeof TILE_IMAGES!=='undefined' && TILE_IMAGES[t.tile] && !imgs[t.tile]){
+    var im=new Image(); im.onload=draw; im.src=TILE_IMAGES[t.tile]; imgs[t.tile]=im;
+  }
+});
+
+var levels=[]; Q.tiles.forEach(function(t){ if(levels.indexOf(t.level)<0) levels.push(t.level); });
+levels.sort();
+
+function dimmed(t){ return lvlFilter!=='all' && t.level!==lvlFilter; }
+function tileOfPoint(px,py){ // site px -> owning visible tile (for level dimming of props)
+  for(var i=0;i<Q.tiles.length;i++){var t=Q.tiles[i],b=bbox(t);
+    if(px>=b.x&&px<=b.x+b.w&&py>=b.y&&py<=b.y+b.h) return t;}
+  return null;
+}
+
+function draw(){
+  ctx.fillStyle='#0a0908'; ctx.fillRect(0,0,cv.width,cv.height);
+  // tiles
+  Q.tiles.forEach(function(t){
+    if(!visible[t.id]) return;
+    var b=bbox(t);
+    ctx.save();
+    ctx.globalAlpha = dimmed(t)?0.15:1;
+    var im=imgs[t.tile];
+    if(im && im.complete && im.naturalWidth){
+      ctx.translate(X(t.x)+t.w*SQ/2, Y(t.y)+t.h*SQ/2);
+      ctx.rotate(t.rot*Math.PI/180);
+      ctx.drawImage(im, -t.w*SQ/2, -t.h*SQ/2, t.w*SQ, t.h*SQ);
+    }else{
+      ctx.fillStyle = t.stairs?'#52422a':'#3a3a52';
+      ctx.fillRect(X(b.x),Y(b.y),b.w*SC,b.h*SC);
+      ctx.strokeStyle='#c8841e'; ctx.lineWidth=2;
+      ctx.strokeRect(X(b.x),Y(b.y),b.w*SC,b.h*SC);
+      if(t.stairs){ // treads
+        var steps=Math.max(t.w,t.h);
+        for(var i=1;i<steps;i++){
+          ctx.beginPath();
+          if(b.h>b.w){ctx.moveTo(X(b.x),Y(b.y)+b.h*SC*i/steps);ctx.lineTo(X(b.x)+b.w*SC,Y(b.y)+b.h*SC*i/steps);}
+          else{ctx.moveTo(X(b.x)+b.w*SC*i/steps,Y(b.y));ctx.lineTo(X(b.x)+b.w*SC*i/steps,Y(b.y)+b.h*SC);}
+          ctx.stroke();
+        }
+      }
+      ctx.fillStyle='#e8dcc0'; ctx.font='11px Cinzel,serif'; ctx.textAlign='center';
+      ctx.fillText(t.tile, X(b.x)+b.w*SC/2, Y(b.y)+b.h*SC/2);
+    }
+    ctx.restore();
+    // level badge
+    if(levels.length>1){
+      ctx.save(); ctx.globalAlpha = dimmed(t)?0.2:0.9;
+      ctx.fillStyle='#000'; ctx.fillRect(X(b.x)+3,Y(b.y)+3,26,15);
+      ctx.fillStyle='#c8a44d'; ctx.font='10px Cinzel,serif'; ctx.textAlign='left';
+      ctx.fillText('L'+t.level, X(b.x)+7, Y(b.y)+14); ctx.restore();
+    }
+  });
+  // furniture
+  Q.furniture.forEach(function(f){
+    if(!visible[f.id]) return;
+    var host=tileOfPoint(f.x,f.y); var dim=host&&dimmed(host);
+    ctx.save(); ctx.globalAlpha=dim?0.15:1;
+    ctx.fillStyle='#8fce8f';
+    ctx.fillRect(X(f.x)+SQ*0.15, Y(f.y)+SQ*0.15, SQ*0.7, SQ*0.7);
+    ctx.fillStyle='#0a0908'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(f.name.substring(0,10), X(f.x)+SQ/2, Y(f.y)+SQ*0.6);
+    ctx.restore();
+  });
+  // doors
+  Q.doors.forEach(function(d){
+    if(!visible[d.id]) return;
+    var host=tileOfPoint(d.x,d.y); var dim=host&&dimmed(host);
+    ctx.save(); ctx.globalAlpha=dim?0.2:1;
+    var open=opened[d.id];
+    ctx.fillStyle = open?'#5a4a2a':(d.kind==='puertad'?'#e0b0ff':d.kind==='puertad1'?'#80d0ff':'#ffd700');
+    ctx.fillRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+    ctx.strokeStyle='#000'; ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+    if(open){ctx.strokeStyle='#c8a44d';ctx.beginPath();
+      ctx.moveTo(X(d.x)-SQ*0.3,Y(d.y));ctx.lineTo(X(d.x)+SQ*0.3,Y(d.y));ctx.stroke();}
+    ctx.restore();
+  });
+  // specials
+  function star(o,color,label){
+    if(!o||!visible[o.id])return;
+    ctx.save();ctx.fillStyle=color;ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+    ctx.fillText('★',X(o.x)+SQ/2,Y(o.y)+SQ*0.75);
+    ctx.font='10px Cinzel,serif';ctx.fillText(label,X(o.x)+SQ/2,Y(o.y)+SQ*1.15);ctx.restore();
+  }
+  star(Q.entrance,'#40e040','ENTRANCE');
+  star(Q.goal,'#ff5050','GOAL');
+  if(Q.leader&&visible[Q.leader.id]){
+    ctx.save();ctx.fillStyle='#ff2020';ctx.font='bold 20px sans-serif';ctx.textAlign='center';
+    ctx.fillText('✖',X(Q.leader.x)+SQ/2,Y(Q.leader.y)+SQ*0.7);
+    ctx.font='10px Cinzel,serif';ctx.fillText('LEADER',X(Q.leader.x)+SQ/2,Y(Q.leader.y)-4);ctx.restore();
+  }
+  // markers
+  Q.markers.forEach(function(m){
+    if(!visible[m.id])return;
+    var host=tileOfPoint(m.x,m.y); var dim=host&&dimmed(host);
+    ctx.save();ctx.globalAlpha=dim?0.15:0.9;
+    ctx.strokeStyle=m.kind==='white'?'#fff':'#5090ff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(X(m.x),Y(m.y),SQ*0.22,0,7);ctx.stroke();ctx.restore();
+  });
+  status();
+}
+
+function status(){
+  var tv=Q.tiles.filter(function(t){return visible[t.id];}).length;
+  document.getElementById('status').textContent = tv+' / '+Q.tiles.length+' tiles revealed';
+}
+
+// ---- door clicking / fog reveal via elemabre ----
+cv.addEventListener('click',function(ev){
+  var r=cv.getBoundingClientRect();
+  var mx=ev.clientX-r.left, my=ev.clientY-r.top;
+  for(var i=0;i<Q.doors.length;i++){
+    var d=Q.doors[i];
+    if(!visible[d.id]||opened[d.id])continue;
+    if(Math.abs(mx-X(d.x))<SQ*0.5 && Math.abs(my-Y(d.y))<SQ*0.5){
+      openDoor(d); return;
+    }
+  }
+});
+function openDoor(d){
+  opened[d.id]=1;
+  var revealedTiles=[];
+  d.reveals.forEach(function(id){
+    visible[id]=1;
+    var t=Q.tiles.find(function(t){return t.id===id;});
+    if(t) revealedTiles.push(t.tile+(t.stairs?' (stairs)':''));
+  });
+  var log=document.getElementById('log');
+  var e=document.createElement('div');
+  e.textContent='🚪 Door opened — revealed: '+(revealedTiles.join(', ')||'passage');
+  log.insertBefore(e,log.firstChild);
+  draw();
+}
+
+// ---- level filter UI ----
+var lv=document.getElementById('lvls');
+function mkbtn(label,val){
+  var b=document.createElement('span');b.className='lvlbtn'+(lvlFilter===val?' on':'');
+  b.textContent=label;b.onclick=function(){lvlFilter=val;renderBtns();draw();};
+  lv.appendChild(b);
+}
+function renderBtns(){
+  lv.innerHTML='';
+  mkbtn('All','all');
+  levels.forEach(function(l){mkbtn('Floor '+l,l);});
+}
+renderBtns();
+
+// ---- notes ----
+var nb=document.getElementById('notes');
+Q.notes.forEach(function(n){
+  var e=document.createElement('div');e.className='note';e.textContent=n.text;nb.appendChild(e);
+});
+
+draw();
+setTimeout(draw,600); // after images decode
+})();
+</script>
+</body>
+</html>
