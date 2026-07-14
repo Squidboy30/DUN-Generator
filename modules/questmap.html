@@ -160,11 +160,20 @@ function draw(){
     var host=tileOfPoint(d.x,d.y); var dim=host&&dimmed(host);
     ctx.save(); ctx.globalAlpha=dim?0.2:1;
     var open=opened[d.id];
-    ctx.fillStyle = open?'#5a4a2a':(d.kind==='puertad'?'#e0b0ff':d.kind==='puertad1'?'#80d0ff':'#ffd700');
-    ctx.fillRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
-    ctx.strokeStyle='#000'; ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
-    if(open){ctx.strokeStyle='#c8a44d';ctx.beginPath();
-      ctx.moveTo(X(d.x)-SQ*0.3,Y(d.y));ctx.lineTo(X(d.x)+SQ*0.3,Y(d.y));ctx.stroke();}
+    var col=(d.kind==='puertad'?'#e0b0ff':d.kind==='puertad1'?'#80d0ff':'#ffd700');
+    if(open){
+      // stays in situ: hollow frame + swung-open leaf
+      ctx.strokeStyle=col; ctx.lineWidth=3;
+      ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+      ctx.beginPath();
+      ctx.moveTo(X(d.x)-SQ*0.4, Y(d.y)+SQ*0.4);
+      ctx.lineTo(X(d.x)+SQ*0.25, Y(d.y)-SQ*0.25);
+      ctx.stroke(); ctx.lineWidth=1;
+    }else{
+      ctx.fillStyle=col;
+      ctx.fillRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+      ctx.strokeStyle='#000'; ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+    }
     ctx.restore();
   });
   // specials

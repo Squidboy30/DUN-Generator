@@ -307,91 +307,91 @@ var QUESTMAP_2768 = {
    "kind": "white",
    "x": 3614.0,
    "y": 4732.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar37",
    "kind": "blue",
    "x": 4004.0,
    "y": 4311.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar38",
    "kind": "blue",
    "x": 4414.0,
    "y": 4579.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar39",
    "kind": "blue",
    "x": 4413.0,
    "y": 4527.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar40",
    "kind": "blue",
    "x": 4353.0,
    "y": 4307.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar41",
    "kind": "blue",
    "x": 4277.0,
    "y": 4610.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar42",
    "kind": "blue",
    "x": 4864.0,
    "y": 4805.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar43",
    "kind": "blue",
    "x": 4594.0,
    "y": 4787.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar44",
    "kind": "blue",
    "x": 4555.0,
    "y": 5256.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar45",
    "kind": "blue",
    "x": 4334.0,
    "y": 4896.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcar46",
    "kind": "blue",
    "x": 4091.0,
    "y": 5093.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcbr47",
    "kind": "white",
    "x": 3608.0,
    "y": 5170.0,
-   "hidden": false
+   "hidden": true
   },
   {
    "id": "acc-marcbr51",
    "kind": "white",
    "x": 3873.0,
    "y": 4549.0,
-   "hidden": false
+   "hidden": true
   }
  ],
  "entrance": {

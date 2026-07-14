@@ -800,6 +800,7 @@ function positionPopover(pinImgX, pinImgY) {
   pop.style.display = 'flex'; // temporarily show to measure
   var pw = pop.offsetWidth || 230;
   var ph = pop.offsetHeight || 200;
+  pop.style.display = ''; // clear inline style — .open class controls visibility
 
   // Convert image coords to screen coords
   var vp = document.getElementById('map-vp').getBoundingClientRect();
@@ -822,7 +823,9 @@ function positionPopover(pinImgX, pinImgY) {
 
 function closePopover() {
   openNodeId = null;
-  document.getElementById('popover').classList.remove('open');
+  var pop = document.getElementById('popover');
+  pop.classList.remove('open');
+  pop.style.display = '';
   document.getElementById('map-svg').classList.remove('interactive');
   renderPins();
 }
@@ -1219,6 +1222,7 @@ function renderTerritories() {
   var NS = 'http://www.w3.org/2000/svg';
   var layer = document.createElementNS(NS,'g');
   layer.setAttribute('class','terr-layer');
+  layer.setAttribute('pointer-events','all'); // parent #map-svg is pointer-events:none
 
   var adj = travelState.territoryId ? adjacentIds(travelState.territoryId) : [];
 
