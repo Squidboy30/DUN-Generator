@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Campaigns — Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0a0806;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:30px 16px;}
+.home-title{font-family:'Cinzel',serif;font-size:34px;color:#f6ead7;letter-spacing:5px;margin-bottom:10px;text-align:center;}
+.home-sub{font-family:'Cinzel',serif;font-size:17px;color:#dfccb3;letter-spacing:3px;margin-bottom:54px;text-align:center;}
+.home-options{display:flex;border:1px solid #7a6040;flex-wrap:wrap;justify-content:center;}
+.home-btn{font-family:'Cinzel',serif;padding:40px 52px;background:#0e0b07;color:#f6ead7;cursor:pointer;transition:all .2s;border:none;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:270px;border-right:1px solid #7a6040;}
+.home-btn:last-child{border-right:none;}
+.home-btn:hover{background:#1a1410;}
+.btn-icon{font-size:48px;transition:transform .2s;}
+.home-btn:hover .btn-icon{transform:scale(1.08);}
+.btn-label{font-size:19px;letter-spacing:3px;}
+.btn-desc{font-size:17px;color:#efe0ca;font-family:'Crimson Text',serif;font-style:italic;max-width:200px;text-align:center;line-height:1.6;}
+.back{font-family:'Cinzel',serif;font-size:16px;letter-spacing:2px;color:#dfccb3;text-decoration:none;margin-top:44px;border:1px solid #7a6040;padding:11px 26px;transition:all .2s;background:#0e0b07;}
+.back:hover{color:#f8ecd4;border-color:#c8a060;}
+/* official campaigns panel */
+.off-panel{display:none;width:100%;max-width:760px;margin-top:44px;border:1px solid #7a6040;background:#0e0b07;padding:24px;}
+.off-panel.open{display:block;}
+.off-head{font-family:'Cinzel',serif;font-size:19px;letter-spacing:3px;color:#f6ead7;margin-bottom:6px;}
+.off-note{font-family:'Crimson Text',serif;font-size:17px;font-style:italic;color:#dfccb3;margin-bottom:18px;line-height:1.5;}
+.off-list{display:flex;flex-direction:column;gap:10px;}
+.off-item{display:flex;align-items:center;gap:14px;border:1px solid #5a4428;padding:13px 16px;text-decoration:none;color:#e8d8b0;transition:all .15s;background:#120e09;}
+.off-item:hover{border-color:#c8a060;background:#1a1410;}
+.off-item .oi-icon{font-size:22px;}
+.off-item .oi-name{font-family:'Cinzel',serif;font-size:17px;letter-spacing:1px;flex:1;}
+.off-item .oi-meta{font-family:'Crimson Text',serif;font-size:16px;font-style:italic;color:#dfccb3;}
+.off-import{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-family:'Cinzel',serif;font-size:15px;letter-spacing:2px;color:#f6ead7;border:1px solid #7a6040;padding:11px 20px;text-decoration:none;background:#0e0b07;transition:all .2s;}
+.off-import:hover{border-color:#c8a060;background:#1a1410;}
+.off-empty{font-family:'Crimson Text',serif;font-size:17px;font-style:italic;color:#c4ad89;padding:8px 0;}
+</style>
+</head>
+<body>
+<div class="home-title">&#128220; CAMPAIGNS</div>
+<div class="home-sub">CHOOSE YOUR PATH</div>
+<div class="home-options">
+  <a class="home-btn" href="#" onclick="toggleOfficial(event)">
+    <span class="btn-icon">&#127963;</span>
+    <span class="btn-label">OFFICIAL CAMPAIGNS</span>
+    <span class="btn-desc">Play quest maps imported from the official World of Arasca campaigns</span>
+  </a>
+  <a class="home-btn" href="campaigns.html">
+    <span class="btn-icon">&#128220;</span>
+    <span class="btn-label">CUSTOM CAMPAIGNS</span>
+    <span class="btn-desc">Play and manage your own multi-dungeon campaigns and missions</span>
+  </a>
+  <a class="home-btn" href="campaigns.html#new">
+    <span class="btn-icon">&#10022;</span>
+    <span class="btn-label">CREATE A CAMPAIGN</span>
+    <span class="btn-desc">Start a new campaign — design it yourself or generate one by theme</span>
+  </a>
+</div>
+
+<div class="off-panel" id="off-panel">
+  <div class="off-head">&#127963; OFFICIAL QUEST MAPS</div>
+  <div class="off-note">Quest maps imported from worldofarasca.dungeonuniversalis.com. Use Import to add more from the official campaigns.</div>
+  <div class="off-list" id="off-list"></div>
+  <a class="off-import" href="questimport.html">&#10515; IMPORT A QUEST MAP</a>
+</div>
+
+<a class="back" href="../index.html">&#8592; BACK TO MAIN MENU</a>
+
+<script>
+'use strict';
+function loadImported() {
+  try { return JSON.parse(localStorage.getItem('dun_questmaps') || '{}'); }
+  catch(e) { return {}; }
+}
+function renderList() {
+  var list = document.getElementById('off-list');
+  list.innerHTML = '';
+  var maps = loadImported();
+  // Built-in map 2768 always available
+  if (!maps['2768']) maps['2768'] = { mapId: 2768, builtin: true, title: 'Quest Map 2768', tileCount: 10 };
+  var ids = Object.keys(maps).sort(function(a,b){ return Number(a)-Number(b); });
+  ids.forEach(function(id) {
+    var m = maps[id];
+    var a = document.createElement('a');
+    a.className = 'off-item';
+    a.href = 'questmap.html?map=' + id;
+    var tiles = m.tileCount || (m.tiles ? m.tiles.length : '?');
+    a.innerHTML = '<span class="oi-icon">&#9876;</span>' +
+      '<span class="oi-name">' + (m.title || ('Quest Map ' + id)) + '</span>' +
+      '<span class="oi-meta">' + tiles + ' tiles' + (m.builtin ? ' · built-in' : '') + '</span>';
+    list.appendChild(a);
+  });
+  if (!ids.length) {
+    list.innerHTML = '<div class="off-empty">No quest maps imported yet.</div>';
+  }
+}
+function toggleOfficial(e) {
+  e.preventDefault();
+  var p = document.getElementById('off-panel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) renderList();
+}
+renderList();
+</script>
+</body>
+</html>

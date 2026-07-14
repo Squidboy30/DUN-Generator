@@ -22,7 +22,7 @@
   --panel-border: #6a4a20;
   --gold-light: #e0b840;
   --text-light: #f5e8c0;
-  --text-muted: #c8a060;
+  --text-muted: #e3cfaf;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,7 +66,7 @@ body {
 
 .tab-btn {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 2px;
   text-transform: uppercase;
   padding: 6px 14px;
@@ -106,7 +106,7 @@ body {
 
 .sidebar-title {
   font-family: 'Cinzel', serif;
-  font-size: 12px;
+  font-size:14px;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -137,12 +137,12 @@ body {
 
 .mission-card-name {
   font-family: 'Cinzel', serif;
-  font-size: 13px;
+  font-size:15px;
   color: var(--text-light);
   margin-bottom: 3px;
 }
 .mission-card-meta {
-  font-size: 12px;
+  font-size:14px;
   color: var(--text-muted);
   font-style: italic;
 }
@@ -152,7 +152,7 @@ body {
   top: 6px;
   right: 8px;
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 1px;
   padding: 2px 6px;
   border-radius: 2px;
@@ -164,7 +164,7 @@ body {
 }
 .badge-custom {
   background: rgba(139,26,26,0.3);
-  color: #e06060;
+  color: #f2bdbd;
   border: 1px solid var(--accent-red);
 }
 
@@ -225,14 +225,14 @@ body {
   border: 1px solid var(--border-gold);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   color: var(--gold-light);
   flex-shrink: 0;
 }
 
 .node-title {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 1px;
   color: var(--text-light);
   flex: 1;
@@ -246,7 +246,7 @@ body {
 }
 
 .node-goal {
-  font-size: 11px;
+  font-size:13px;
   color: var(--text-muted);
   font-style: italic;
   line-height: 1.4;
@@ -261,7 +261,7 @@ body {
 
 .node-setting {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 1px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -273,15 +273,15 @@ body {
   background: transparent;
   border: 1px solid var(--panel-border);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size:14px;
   line-height: 1;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
 .node-connect-btn:hover { border-color: var(--gold-light); color: var(--gold-light); }
-.node-connect-btn.connecting { border-color: var(--accent-red); color: #e06060; background: rgba(139,26,26,0.2); }
-.node-connect-btn.connectable { border-color: #6abe6a; color: #6abe6a; background: rgba(26,60,26,0.2); animation: pulse-connectable 1s infinite; }
+.node-connect-btn.connecting { border-color: var(--accent-red); color: #f2bdbd; background: rgba(139,26,26,0.2); }
+.node-connect-btn.connectable { border-color: #6abe6a; color: #b4deb4; background: rgba(26,60,26,0.2); animation: pulse-connectable 1s infinite; }
 
 @keyframes pulse-connectable {
   0%, 100% { box-shadow: 0 0 0 0 rgba(106,190,106,0.4); }
@@ -289,9 +289,9 @@ body {
 }
 
 /* ─── DUNGEON TYPE SELECTED STATES ───────────────────────── */
-.selected-dt-random   { border-color: #2d6e2d !important; color: #6abe6a !important; background: rgba(26,60,26,0.3) !important; }
-.selected-dt-planned  { border-color: #2d4e8e !important; color: #6a9abe !important; background: rgba(26,46,80,0.3) !important; }
-.selected-dt-scripted { border-color: #6e2d8e !important; color: #a06abe !important; background: rgba(60,26,80,0.3) !important; }
+.selected-dt-random   { border-color: #2d6e2d !important; color: #b4deb4 !important; background: rgba(26,60,26,0.3) !important; }
+.selected-dt-planned  { border-color: #2d4e8e !important; color: #b4ccde !important; background: rgba(26,46,80,0.3) !important; }
+.selected-dt-scripted { border-color: #6e2d8e !important; color: #cfb4de !important; background: rgba(60,26,80,0.3) !important; }
 
 /* SVG connections layer */
 .connections-svg {
@@ -312,7 +312,7 @@ body {
 }
 .conn-line.temp { stroke: #e06060; stroke-dasharray: 6 3; opacity: 0.8; }
 .conn-label-bg { fill: var(--bg-panel); }
-.conn-label-text { font-family: 'Cinzel', serif; font-size: 10px; fill: var(--text-muted); }
+.conn-label-text { font-family: 'Cinzel', serif; font-size:13px; fill: var(--text-muted); }
 
 /* ─── CANVAS TOOLBAR ──────────────────────────────────────── */
 .canvas-toolbar {
@@ -330,7 +330,7 @@ body {
 
 .tool-btn {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 5px 12px;
@@ -341,7 +341,7 @@ body {
   transition: all 0.15s;
 }
 .tool-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
-.tool-btn.danger:hover { border-color: var(--accent-red); color: #e06060; }
+.tool-btn.danger:hover { border-color: var(--accent-red); color: #f2bdbd; }
 
 /* ─── MISSION EDITOR PANEL ────────────────────────────────── */
 .editor-panel {
@@ -364,7 +364,7 @@ body {
 
 .editor-title {
   font-family: 'Cinzel', serif;
-  font-size: 12px;
+  font-size:14px;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -385,7 +385,7 @@ body {
 
 .form-label {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -399,7 +399,7 @@ body {
   border: 1px solid var(--panel-border);
   color: var(--text-light);
   font-family: 'IM Fell English', serif;
-  font-size: 13px;
+  font-size:15px;
   padding: 7px 10px;
   outline: none;
   transition: border-color 0.15s;
@@ -424,7 +424,7 @@ body {
 }
 .stoggle {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 1px;
   padding: 4px 10px;
   border: 1px solid var(--panel-border);
@@ -448,10 +448,10 @@ body {
   width: 22px; height: 22px;
   border-radius: 50%;
   background: #fff;
-  color: #000;
+  color: #141414;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   font-weight: 700;
   flex-shrink: 0;
   border: 1px solid #ccc;
@@ -464,7 +464,7 @@ body {
   border-bottom: 1px solid var(--panel-border);
   color: var(--text-light);
   font-family: 'IM Fell English', serif;
-  font-size: 12px;
+  font-size:14px;
   padding: 4px 8px;
   outline: none;
 }
@@ -473,7 +473,7 @@ body {
 
 .add-element-btn {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 5px 10px;
@@ -494,7 +494,7 @@ body {
 
 .save-btn {
   font-family: 'Cinzel', serif;
-  font-size: 12px;
+  font-size:14px;
   letter-spacing: 2px;
   text-transform: uppercase;
   padding: 8px 0;
@@ -516,7 +516,7 @@ body {
 }
 .official-view .ov-label {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -524,7 +524,7 @@ body {
   margin-bottom: 4px;
 }
 .official-view .ov-val {
-  font-size: 13px;
+  font-size:15px;
   color: var(--text-light);
   line-height: 1.6;
   font-style: italic;
@@ -535,7 +535,7 @@ body {
   padding: 0;
 }
 .rules-list li {
-  font-size: 12px;
+  font-size:14px;
   color: var(--text-light);
   font-style: italic;
   padding: 3px 0 3px 12px;
@@ -555,7 +555,7 @@ body {
 
 .ie-btn {
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 6px 12px;
@@ -595,12 +595,12 @@ body {
 
 .campaign-item-name {
   font-family: 'Cinzel', serif;
-  font-size: 13px;
+  font-size:15px;
   color: var(--gold-light);
   margin-bottom: 6px;
 }
 .campaign-item-meta {
-  font-size: 13px;
+  font-size:15px;
   color: var(--text-muted);
   font-style: italic;
   margin-bottom: 10px;
@@ -612,7 +612,7 @@ body {
 }
 .cim-pill {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 1px;
   padding: 2px 8px;
   border: 1px solid var(--panel-border);
@@ -621,7 +621,7 @@ body {
 
 .new-campaign-btn {
   font-family: 'Cinzel', serif;
-  font-size: 12px;
+  font-size:14px;
   letter-spacing: 2px;
   text-transform: uppercase;
   padding: 9px 20px;
@@ -657,7 +657,7 @@ body {
 
 .modal-title {
   font-family: 'Cinzel Decorative', serif;
-  font-size: 15px;
+  font-size:17px;
   color: var(--gold-light);
   margin-bottom: 16px;
 }
@@ -671,7 +671,7 @@ body {
 
 .modal-btn {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   padding: 7px 16px;
@@ -694,14 +694,14 @@ body {
 }
 .empty-canvas-title {
   font-family: 'Cinzel', serif;
-  font-size: 13px;
+  font-size:15px;
   color: var(--text-muted);
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 .empty-canvas-sub {
-  font-size: 11px;
+  font-size:13px;
   color: rgba(154,122,74,0.5);
   font-style: italic;
 }
@@ -717,7 +717,7 @@ body {
 }
 .campaign-name-input {
   font-family: 'Cinzel', serif;
-  font-size: 12px;
+  font-size:14px;
   background: transparent;
   border: none;
   border-bottom: 1px solid var(--panel-border);
@@ -730,7 +730,7 @@ body {
 .campaign-name-input::placeholder { color: var(--text-muted); }
 .campaign-name-label {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -761,7 +761,7 @@ body {
   background: transparent;
   border: 1px solid var(--panel-border);
   border-radius: 3px;
-  font-size: 11px;
+  font-size:13px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
@@ -773,7 +773,7 @@ body {
 .node-dt-btn.active { border-color: var(--gold-light); background: rgba(139,105,20,0.25); }
 .node-dt-label {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   letter-spacing: 1px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -781,7 +781,7 @@ body {
 }
 .node-launch-btn {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--gold-light);
@@ -800,7 +800,7 @@ body {
   background: transparent;
   border: 1px solid var(--panel-border);
   color: var(--text-muted);
-  font-size: 10px;
+  font-size:13px;
   line-height: 1;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -834,13 +834,13 @@ body {
 }
 .brief-title {
   font-family: 'Cinzel Decorative', serif;
-  font-size: 16px;
+  font-size:18px;
   color: var(--gold-light);
   margin-bottom: 4px;
 }
 .brief-subtitle {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 2px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -853,7 +853,7 @@ body {
 .brief-scroll::-webkit-scrollbar { width: 4px; }
 .brief-scroll::-webkit-scrollbar-thumb { background: var(--panel-border); }
 .brief-narrative {
-  font-size: 13px;
+  font-size:15px;
   color: var(--text-muted);
   font-style: italic;
   line-height: 1.7;
@@ -867,7 +867,7 @@ body {
 }
 .brief-section-label {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -875,7 +875,7 @@ body {
   margin-bottom: 5px;
 }
 .brief-section-body {
-  font-size: 13px;
+  font-size:15px;
   color: var(--text-light);
   line-height: 1.6;
 }
@@ -961,7 +961,7 @@ body {
   border: 1px solid var(--panel-border);
   color: var(--gold-light);
   font-family: 'Cinzel', serif;
-  font-size: 14px;
+  font-size:16px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
@@ -974,7 +974,7 @@ body {
   background: rgba(139,105,20,0.92);
   color: var(--bg-dark);
   font-family: 'Cinzel', serif;
-  font-size: 11px;
+  font-size:13px;
   letter-spacing: 2px;
   text-transform: uppercase;
   padding: 8px 16px;
@@ -997,7 +997,7 @@ body {
 .map-legend {
   margin-left: auto;
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   letter-spacing: 1px;
   color: var(--text-muted);
   display: flex;
@@ -1026,7 +1026,7 @@ body {
 
 .map-toggle-btn {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 4px 10px;
@@ -1051,7 +1051,7 @@ body {
   border: 1px solid var(--panel-border);
   color: var(--text-light);
   font-family: 'IM Fell English', serif;
-  font-size: 12px;
+  font-size:14px;
   padding: 4px 8px;
 }
 .loc-num-input {
@@ -1060,13 +1060,13 @@ body {
   border: 1px solid var(--panel-border);
   color: var(--gold-light);
   font-family: 'Cinzel', serif;
-  font-size: 12px;
+  font-size:14px;
   padding: 4px 6px;
   text-align: center;
   flex-shrink: 0;
 }
 .region-pin-btn {
-  font-size: 13px;
+  font-size:15px;
   background: transparent;
   border: 1px solid var(--panel-border);
   color: var(--text-muted);
@@ -1077,7 +1077,7 @@ body {
   flex-shrink: 0;
 }
 .region-pin-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
-.region-pin-btn.active { border-color: #6abe6a; color: #6abe6a; background: rgba(26,60,26,0.2); }
+.region-pin-btn.active { border-color: #6abe6a; color: #b4deb4; background: rgba(26,60,26,0.2); }
 
 
 /* ─── CONNECTION LABEL MODAL ──────────────────────────────── */
@@ -1089,7 +1089,7 @@ body {
 .outcome-btn {
   flex: 1;
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 8px 0;
@@ -1100,14 +1100,14 @@ body {
   transition: all 0.15s;
 }
 .outcome-btn:hover { background: rgba(255,255,255,0.05); }
-.outcome-btn.selected-victory { border-color: #a07820; color: #e0b840; background: rgba(160,120,32,0.15); }
-.outcome-btn.selected-defeat  { border-color: #8b1a1a; color: #e06060; background: rgba(139,26,26,0.15); }
-.outcome-btn.selected-custom  { border-color: #4a5a6e; color: #8aaabe; background: rgba(74,90,110,0.15); }
+.outcome-btn.selected-victory { border-color: #a07820; color: #efd99a; background: rgba(160,120,32,0.15); }
+.outcome-btn.selected-defeat  { border-color: #8b1a1a; color: #f2bdbd; background: rgba(139,26,26,0.15); }
+.outcome-btn.selected-custom  { border-color: #4a5a6e; color: #d3dfe6; background: rgba(74,90,110,0.15); }
 
 /* ─── AUTH UI ─────────────────────────────────────────────── */
 .auth-btn {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 1px;
   padding: 6px 14px;
   background: transparent;
@@ -1118,10 +1118,10 @@ body {
   text-transform: uppercase;
 }
 .auth-btn:hover { border-color: var(--border-gold); color: var(--gold-light); }
-.auth-btn.signed-in { border-color: #3a7a3a; color: #7aaa7a; }
+.auth-btn.signed-in { border-color: #3a7a3a; color: #bad3ba; }
 .auth-status {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   color: var(--text-muted);
   letter-spacing: 1px;
   display: flex;
@@ -1130,7 +1130,7 @@ body {
 }
 .auth-email {
   color: var(--gold-light);
-  font-size: 9px;
+  font-size:12px;
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1159,7 +1159,7 @@ body {
 .t-stroke { fill: none; stroke: rgba(200,160,80,0.4); stroke-width: 1; transition: stroke 0.15s; }
 .t-label {
   font-family: 'Cinzel', serif;
-  font-size: 8px;
+  font-size:11px;
   fill: rgba(255,230,160,0.75);
   text-anchor: middle;
   pointer-events: none;
@@ -1222,7 +1222,7 @@ body {
     <div class="sidebar">
       <div class="sidebar-header">
         <span class="sidebar-title">Missions</span>
-        <button class="tool-btn" style="padding:3px 8px;font-size:8px;" onclick="newMission()">+ New</button>
+        <button class="tool-btn" style="padding:3px 8px;font-size:11px;" onclick="newMission()">+ New</button>
       </div>
       <div class="sidebar-list" id="mission-list"></div>
     </div>
@@ -1232,7 +1232,7 @@ body {
       <div class="campaign-name-bar">
         <span class="campaign-name-label">Campaign:</span>
         <input class="campaign-name-input" id="campaign-name" type="text" placeholder="Enter campaign name..." value="The Dark Descent">
-        <span style="font-size:10px;color:var(--text-muted);font-style:italic;margin-left:auto;">Drag missions from list · Click ⊕ to connect</span>
+        <span style="font-size:13px;color:var(--text-muted);font-style:italic;margin-left:auto;">Drag missions from list · Click ⊕ to connect</span>
       </div>
 
       <div class="campaign-canvas-wrap" id="canvas-wrap">
@@ -1264,10 +1264,10 @@ body {
     <div class="editor-panel" id="editor-panel">
       <div class="editor-header">
         <span class="editor-title" id="editor-panel-title">Select a Mission</span>
-        <button class="tool-btn" style="padding:3px 8px;font-size:8px;" id="delete-mission-btn" onclick="deleteMission()" style="display:none">Delete</button>
+        <button class="tool-btn" style="padding:3px 8px;font-size:11px;" id="delete-mission-btn" onclick="deleteMission()" style="display:none">Delete</button>
       </div>
       <div class="editor-scroll" id="editor-content">
-        <div style="text-align:center;padding:40px 0;color:var(--text-muted);font-style:italic;font-size:12px;">
+        <div style="text-align:center;padding:40px 0;color:var(--text-muted);font-style:italic;font-size:14px;">
           Select a mission from the list to view or edit it
         </div>
       </div>
@@ -1300,7 +1300,7 @@ body {
       <div id="map-zoom-controls">
         <button onclick="mapZoom(0.2)">+</button>
         <button onclick="mapZoom(-0.2)">−</button>
-        <button onclick="mapResetView()" style="font-size:9px;letter-spacing:0;">Fit</button>
+        <button onclick="mapResetView()" style="font-size:12px;letter-spacing:0;">Fit</button>
       </div>
     </div>
     <div class="map-toolbar">
@@ -1322,14 +1322,14 @@ body {
 <div class="modal-overlay" id="modal-connection">
   <div class="modal-box">
     <div class="modal-title">Link Outcome</div>
-    <div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:14px;">What result from the previous mission leads here?</div>
+    <div style="font-size:14px;color:var(--text-muted);font-style:italic;margin-bottom:14px;">What result from the previous mission leads here?</div>
     <div class="outcome-btn-row">
       <button class="outcome-btn" id="ob-victory" onclick="selectOutcome('victory')">⚔ Victory</button>
       <button class="outcome-btn" id="ob-defeat"  onclick="selectOutcome('defeat')">💀 Defeat</button>
       <button class="outcome-btn" id="ob-custom"  onclick="selectOutcome('custom')">◆ Custom</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Label <span style="font-size:9px;font-style:italic;text-transform:none;letter-spacing:0;">(optional — shown on the arrow)</span></label>
+      <label class="form-label">Label <span style="font-size:12px;font-style:italic;text-transform:none;letter-spacing:0;">(optional — shown on the arrow)</span></label>
       <input class="form-input" id="conn-label-input" type="text" placeholder="e.g. Boss escaped · Relic retrieved...">
     </div>
     <div class="modal-actions">
@@ -1373,14 +1373,14 @@ body {
       <select class="form-input" id="nc-territory" style="cursor:pointer;">
         <option value="">— Choose starting location —</option>
       </select>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Where does the party begin on the world map?</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Where does the party begin on the world map?</div>
     </div>
     <div class="form-group">
       <label class="form-label">Enemy Starting Territory (Dark Player)</label>
       <select class="form-input" id="nc-dp-territory" style="cursor:pointer;">
         <option value="">— Choose enemy stronghold —</option>
       </select>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Danger markers spawn here and hunt the party across the map.</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Danger markers spawn here and hunt the party across the map.</div>
     </div>
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeModal('modal-new-campaign')">Cancel</button>
@@ -1393,7 +1393,7 @@ body {
 <div class="modal-overlay" id="modal-ai-gen">
   <div class="modal-box" style="max-width:560px;width:100%;">
     <div class="modal-title" style="display:flex;align-items:center;gap:8px;">✦ AI Campaign Generator</div>
-    <div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-bottom:18px;line-height:1.6;">Inspired by Advanced HeroQuest, Warhammer Fantasy and classic dungeon crawlers. The AI will write a full linked campaign and place missions on the world map.</div>
+    <div style="font-size:14px;color:var(--text-muted);font-style:italic;margin-bottom:18px;line-height:1.6;">Inspired by Advanced HeroQuest, Warhammer Fantasy and classic dungeon crawlers. The AI will write a full linked campaign and place missions on the world map.</div>
 
     <div class="form-group">
       <label class="form-label">Theme</label>
@@ -1402,7 +1402,7 @@ body {
 
     <div style="display:flex;gap:12px;margin-top:12px;">
       <div class="form-group" style="flex:1;">
-        <label class="form-label">Missions <span style="font-size:9px;font-style:italic;text-transform:none;letter-spacing:0;color:var(--text-muted);">(3–8)</span></label>
+        <label class="form-label">Missions <span style="font-size:12px;font-style:italic;text-transform:none;letter-spacing:0;color:var(--text-muted);">(3–8)</span></label>
         <div style="display:flex;gap:4px;margin-top:4px;">
           <button class="ai-num-btn active" data-val="3" onclick="setAINum('missions',3,this)">3</button>
           <button class="ai-num-btn" data-val="4" onclick="setAINum('missions',4,this)">4</button>
@@ -1423,11 +1423,11 @@ body {
     </div>
 
     <div class="form-group" style="margin-top:12px;">
-      <label class="form-label">Extra Notes <span style="font-size:9px;font-style:italic;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
+      <label class="form-label">Extra Notes <span style="font-size:12px;font-style:italic;text-transform:none;letter-spacing:0;color:var(--text-muted);">(optional)</span></label>
       <textarea class="form-textarea" id="ai-notes" placeholder="e.g. Set in the northern mountains · Include a betrayal · Start in a tavern..." style="height:56px;"></textarea>
     </div>
 
-    <div id="ai-status" style="display:none;padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);margin-top:10px;font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;color:var(--gold-light);text-align:center;"></div>
+    <div id="ai-status" style="display:none;padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--panel-border);margin-top:10px;font-family:Cinzel,serif;font-size:13px;letter-spacing:1px;color:var(--gold-light);text-align:center;"></div>
 
     <div class="modal-actions" style="margin-top:14px;">
       <button class="modal-btn" onclick="closeModal('modal-ai-gen')">Cancel</button>
@@ -1440,7 +1440,7 @@ body {
 /* ─── AI GENERATE MODAL ───────────────────────────────────── */
 .ai-theme-btn {
   font-family: 'Cinzel', serif;
-  font-size: 9px;
+  font-size:12px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 8px 10px;
@@ -1458,7 +1458,7 @@ body {
 .ai-theme-btn.selected { border-color: var(--gold-light); color: var(--gold-light); background: rgba(139,105,20,0.15); }
 .ai-num-btn {
   font-family: 'Cinzel', serif;
-  font-size: 10px;
+  font-size:13px;
   padding: 5px 10px;
   border: 1px solid var(--panel-border);
   background: transparent;
@@ -2391,7 +2391,7 @@ function renderEditor() {
 
   if (!m) {
     titleEl.textContent = 'Select a Mission';
-    content.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-style:italic;font-size:12px;">Select a mission from the list to view or edit it</div>';
+    content.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-style:italic;font-size:14px;">Select a mission from the list to view or edit it</div>';
     footer.style.display = 'none';
     return;
   }
@@ -2399,7 +2399,7 @@ function renderEditor() {
   footer.style.display = 'flex';
   var canvasNode = activeCampaign.nodes.find(function(n){ return n.missionId === m.id; });
   footer.innerHTML = canvasNode
-    ? '<span style="font-size:10px;color:var(--text-muted);font-style:italic;padding:6px;">✓ On canvas</span>'
+    ? '<span style="font-size:13px;color:var(--text-muted);font-style:italic;padding:6px;">✓ On canvas</span>'
     : '<button class="ie-btn primary" onclick="addToCanvas()">+ Add to Canvas</button>';
 
   // Region/map pin section — appended below footer
@@ -2415,15 +2415,15 @@ function renderEditor() {
   var hasPinVal = pinNode && pinNode.mapPin;
   var pinBtnClass = 'region-pin-btn' + (pinModeNodeId === (pinNode&&pinNode.id) ? ' active' : '');
   regionSection.innerHTML =
-    '<div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Map Location</div>' +
+    '<div style="font-family:Cinzel,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Map Location</div>' +
     (pinNode ?
       '<div class="region-row">' +
         '<input class="loc-num-input" id="loc-num-input" type="text" placeholder="#" value="' + (pinNode.locNum||'').replace(/"/g,'&quot;') + '" title="Location number shown on map pin" onchange="saveLocNum(\''+pinNode.id+'\',this.value)">' +
         '<input class="region-input" id="region-input" type="text" placeholder="Region name (e.g. Kingdom of Arasalia)" value="' + regionVal.replace(/"/g,'&quot;') + '" onchange="saveRegion(\''+pinNode.id+'\',this.value)">' +
         '<button class="' + pinBtnClass + '" onclick="togglePinMode(\'' + pinNode.id + '\')" title="Place pin on world map">' + (hasPinVal ? '📍' : '📍') + '</button>' +
       '</div>' +
-      (hasPinVal ? '<div style="font-size:9px;color:#6abe6a;margin-top:4px;font-style:italic;">✓ Pinned · <a href="#" onclick="openWorldMap();return false;" style="color:var(--gold-light);">View on map →</a></div>' : '<div style="font-size:9px;color:var(--text-muted);margin-top:4px;font-style:italic;">Not pinned — click 📍 to place on map</div>') :
-      '<div style="font-size:9px;color:var(--text-muted);font-style:italic;">Add mission to canvas to pin on map</div>'
+      (hasPinVal ? '<div style="font-size:12px;color:#6abe6a;margin-top:4px;font-style:italic;">✓ Pinned · <a href="#" onclick="openWorldMap();return false;" style="color:var(--gold-light);">View on map →</a></div>' : '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;font-style:italic;">Not pinned — click 📍 to place on map</div>') :
+      '<div style="font-size:12px;color:var(--text-muted);font-style:italic;">Add mission to canvas to pin on map</div>'
     );
 
   if (m.type === 'official') {
@@ -2448,7 +2448,7 @@ function renderOfficialView(m) {
   s += '<div class="official-view"><span class="ov-label">Special Rules</span><div class="ov-val">' + (m.specialRules||'—') + '</div></div>';
   if (m.specialElements && m.specialElements.length) {
     s += '<div class="official-view"><span class="ov-label">Special Elements</span>';
-    m.specialElements.forEach(function(el,i){ s += '<div class="ov-val" style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><span style="width:20px;height:20px;border-radius:50%;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0;">'+(i+1)+'</span>'+el+'</div>'; });
+    m.specialElements.forEach(function(el,i){ s += '<div class="ov-val" style="display:flex;align-items:center;gap:8px;margin-bottom:3px;"><span style="width:20px;height:20px;border-radius:50%;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">'+(i+1)+'</span>'+el+'</div>'; });
     s += '</div>';
   }
   if (m.furniture && m.furniture.length) s += '<div class="official-view"><span class="ov-label">Furniture</span><div class="ov-val">' + m.furniture.join(', ') + '</div></div>';
@@ -2492,7 +2492,7 @@ function renderCustomEditor(m) {
     '<div class="form-group"><label class="form-label">Special Rules</label>' +
     '<textarea class="form-textarea" onchange="updateField(\''+m.id+'\',\'specialRules\',this.value)">'+m.specialRules+'</textarea></div>' +
     '<hr class="section-sep">' +
-    '<div class="form-group"><label class="form-label">Special Elements <span style="font-size:9px;color:var(--text-muted);letter-spacing:0;font-family:IM Fell English;text-transform:none;font-style:italic;">(numbered tokens match dungeon builder)</span></label>' +
+    '<div class="form-group"><label class="form-label">Special Elements <span style="font-size:12px;color:var(--text-muted);letter-spacing:0;font-family:IM Fell English;text-transform:none;font-style:italic;">(numbered tokens match dungeon builder)</span></label>' +
     elHtml + '</div>' +
     '<div class="form-group"><label class="form-label">Furniture</label>' +
     '<input class="form-input" value="'+(m.furniture||[]).join(', ')+'" onchange="updateFieldCSV(\''+m.id+'\',\'furniture\',this.value)" placeholder="e.g. Throne, Forge..."></div>' +
@@ -2644,7 +2644,7 @@ function createCampaign() {
 function renderCampaigns() {
   var grid = document.getElementById('campaigns-grid');
   if (!campaigns.length) {
-    grid.innerHTML = '<div style="color:var(--text-muted);font-style:italic;font-size:12px;">No saved campaigns yet. Build one in the Campaign Designer and save it.</div>';
+    grid.innerHTML = '<div style="color:var(--text-muted);font-style:italic;font-size:14px;">No saved campaigns yet. Build one in the Campaign Designer and save it.</div>';
     return;
   }
   var allM = OFFICIAL_MISSIONS.concat(customMissions);
@@ -2764,7 +2764,7 @@ function openBrief(e, missionId) {
   if (m.specialRules) s += section('Special Rules', m.specialRules);
 
   if (m.specialElements && m.specialElements.length) {
-    var elStr = m.specialElements.map(function(el,i){ return '<span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="width:18px;height:18px;border-radius:50%;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0;">'+(i+1)+'</span>'+el+'</span><br>'; }).join('');
+    var elStr = m.specialElements.map(function(el,i){ return '<span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="width:18px;height:18px;border-radius:50%;background:#fff;color:#000;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">'+(i+1)+'</span>'+el+'</span><br>'; }).join('');
     s += '<div class="brief-section"><span class="brief-section-label">Special Elements</span><div class="brief-section-body">' + elStr + '</div></div>';
   }
   if (m.furniture && m.furniture.length) s += section('Furniture', m.furniture.join(', '));
@@ -2810,7 +2810,7 @@ function openAIGenerate() {
   var grid = document.getElementById('ai-theme-grid');
   grid.innerHTML = AI_THEMES.map(function(t) {
     return '<button class="ai-theme-btn" data-id="'+t.id+'" onclick="selectAITheme(\''+t.id+'\')">' +
-      '<span style="font-size:16px;flex-shrink:0;">'+t.icon+'</span>' +
+      '<span style="font-size:18px;flex-shrink:0;">'+t.icon+'</span>' +
       '<span>'+t.label+'</span>' +
     '</button>';
   }).join('');
@@ -3454,6 +3454,7 @@ function applyGeneratedCampaign(gen) {
 // ═══════════════════════════════════════════════════════════════
 
 init();
+if (location.hash === '#new') { try { newCampaign(); } catch(e){} }
 renderNodes();
 window.addEventListener('resize', function() {
   renderMapPins();
@@ -3911,11 +3912,11 @@ function travelRollEvent() {
     // Pick a random card from the deck
     var cards = deck.cards;
     var card  = cards[Math.floor(Math.random() * cards.length)];
-    var html  = '<strong style="color:var(--gold-light);font-size:11px;letter-spacing:1px;">'
+    var html  = '<strong style="color:var(--gold-light);font-size:13px;letter-spacing:1px;">'
               + card.title + '</strong><br>'
               + '<span style="color:var(--text-light);">' + card.effect + '</span>';
     if (card.epic) {
-      html += '<br><span style="color:#c8a050;font-style:italic;font-size:10px;">⚔ Epic Event available: &quot;' + card.epic + '&quot;</span>';
+      html += '<br><span style="color:#c8a050;font-style:italic;font-size:13px;">⚔ Epic Event available: &quot;' + card.epic + '&quot;</span>';
     }
     resultEl.innerHTML = html;
     travelState.log.unshift('Turn '+travelState.turn+': '+t.name+' — rolled '+roll+', event triggered: '+card.title+'.');
@@ -4006,21 +4007,21 @@ function renderTravelLog() {
 <div class="modal-overlay" id="modal-auth" onclick="closeAuthOnBackdrop(event)">
   <div class="modal-box" style="max-width:380px;">
     <div class="modal-title" id="auth-modal-title">Sign In</div>
-    <div style="font-family:'IM Fell English',serif;font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;" id="auth-modal-desc">
+    <div style="font-family:'IM Fell English',serif;font-size:15px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;" id="auth-modal-desc">
       Enter your email and we'll send you a magic link — no password needed.
     </div>
     <div id="auth-form">
       <input type="email" id="auth-email-input" placeholder="your@email.com"
-        style="width:100%;padding:10px 12px;background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;margin-bottom:12px;"
+        style="width:100%;padding:10px 12px;background:#0e0b07;border:1px solid var(--panel-border);color:var(--text-light);font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;margin-bottom:12px;"
         onkeydown="if(event.key==='Enter')sendMagicLink()">
       <button class="tool-btn primary" style="width:100%;padding:10px;" onclick="sendMagicLink()">Send Magic Link</button>
     </div>
     <div id="auth-sent" style="display:none;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">✉</div>
-      <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-light);letter-spacing:1px;">Magic link sent!</div>
-      <div style="font-family:'IM Fell English',serif;font-size:12px;color:var(--text-muted);margin-top:8px;">Check your email and click the link to sign in.</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold-light);letter-spacing:1px;">Magic link sent!</div>
+      <div style="font-family:'IM Fell English',serif;font-size:14px;color:var(--text-muted);margin-top:8px;">Check your email and click the link to sign in.</div>
     </div>
-    <div id="auth-status-msg" style="display:none;font-family:'Cinzel',serif;font-size:10px;margin-top:12px;text-align:center;"></div>
+    <div id="auth-status-msg" style="display:none;font-family:'Cinzel',serif;font-size:13px;margin-top:12px;text-align:center;"></div>
     <button class="tool-btn" style="margin-top:16px;width:100%;" onclick="closeModal('modal-auth')">Cancel</button>
   </div>
 </div>

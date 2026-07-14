@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Import Quest Map — Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#e0b878;--gold-dim:#d5c396;--parch:#f0e4c8;--muted:#f3ede3;--panel:#1c1710;--line:#5a4428;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;font-size:18px;padding:26px;max-width:1000px;margin:0 auto;}
+h1{font-family:'Cinzel',serif;font-size:24px;color:var(--gold);letter-spacing:3px;margin-bottom:6px;}
+h2{font-family:'Cinzel',serif;font-size:19px;color:var(--gold);letter-spacing:2px;margin:26px 0 10px;border-bottom:1px solid var(--line);padding-bottom:5px;}
+a{color:var(--gold);}
+.step{background:var(--panel);border:1px solid var(--line);padding:18px;margin-bottom:18px;}
+.hint{font-size:17px;color:var(--muted);font-style:italic;line-height:1.5;margin:6px 0;}
+code{background:#000;color:#c8e0a0;font-size:15px;padding:2px 6px;display:inline-block;max-width:100%;overflow-x:auto;white-space:pre;vertical-align:middle;}
+.codeblock{background:#000;color:#c8e0a0;font-size:15px;padding:10px;overflow-x:auto;white-space:pre;margin:8px 0;font-family:monospace;}
+input[type=file]{color:var(--parch);font-size:17px;margin:8px 0;}
+input[type=text],input[type=number]{background:#0e0b07;border:1px solid var(--line);color:var(--parch);font-family:inherit;font-size:17px;padding:6px 9px;}
+input[type=number]{width:62px;text-align:center;}
+textarea{width:100%;background:#0e0b07;border:1px solid var(--line);color:var(--parch);font-family:inherit;font-size:17px;padding:8px;min-height:70px;}
+button{background:#241c10;border:1px solid var(--gold-dim);color:var(--gold);font-family:'Cinzel',serif;font-size:17px;letter-spacing:1px;padding:10px 22px;cursor:pointer;transition:all .15s;}
+button:hover{border-color:var(--gold);background:#2e2416;}
+button.primary{background:var(--gold);color:#3f2c13;font-weight:700;}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:17px;}
+th{font-family:'Cinzel',serif;font-size:15px;letter-spacing:1px;color:var(--gold-dim);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);}
+td{padding:6px 8px;border-bottom:1px solid #2e2418;}
+tr.unknown td{background:rgba(160,60,40,.12);}
+.src-auto{color:#e1f2e1;} .src-known{color:var(--muted);} .src-unknown{color:#f2cabd;}
+#summary{font-size:17px;line-height:1.7;}
+.ok{color:#e1f2e1;} .warn{color:#efd59a;}
+#save-result{margin-top:12px;font-size:18px;}
+</style>
+</head>
+<body>
+<h1>&#10515; IMPORT QUEST MAP</h1>
+<div class="hint">Import a quest map captured from worldofarasca.dungeonuniversalis.com into the app. <a href="campaign-menu.html">&#8592; Back to campaigns</a></div>
+
+<div class="step">
+<h2>Step 1 — Capture the map</h2>
+<div class="hint">With the quest map open on the official site, open DevTools (F12) &rarr; Console, paste this line and press Enter. It downloads the page as an HTML file:</div>
+<div class="codeblock">const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([document.documentElement.outerHTML],{type:'text/html'}));a.download='mapaonline_'+(location.search.match(/\d+/)||['map'])[0]+'.html';a.click()</div>
+</div>
+
+<div class="step">
+<h2>Step 2 — Load the capture</h2>
+<input type="file" id="file-in" accept=".html,.htm">
+<div style="margin-top:8px;">
+  Map ID: <input type="text" id="map-id" placeholder="e.g. 2768" style="width:100px;">
+  &nbsp; Title: <input type="text" id="map-title" placeholder="e.g. The Sunken Crypt" style="width:280px;">
+</div>
+<div id="parse-result" class="hint"></div>
+</div>
+
+<div class="step" id="review-step" style="display:none;">
+<h2>Step 3 — Review tiles</h2>
+<div class="hint">Sizes are auto-detected from the site's tile images where possible (image pixels &divide; 50 = squares). Correct any marked <span class="src-unknown">unknown</span>, and tick tiles that are staircases — sections beyond stairs are placed on the next floor.</div>
+<table id="tile-table"><thead><tr><th>Tile</th><th>Used</th><th>Width</th><th>Height</th><th>Stairs</th><th>Size source</th></tr></thead><tbody></tbody></table>
+<h2>Quest notes (optional)</h2>
+<div class="hint">One note per line. On the site these appear in the map's annotation popups — copy any you want to keep.</div>
+<textarea id="notes-in" placeholder="Portcullis (at no cost)&#10;The Leader is an Undead Champion..."></textarea>
+<div style="margin-top:14px;display:flex;gap:12px;align-items:center;">
+  <button class="primary" onclick="saveQuest()">&#128190; SAVE QUEST MAP</button>
+  <button onclick="downloadJs()">&#10515; Download as .js</button>
+  <span id="save-result"></span>
+</div>
+<div id="summary" style="margin-top:14px;"></div>
+</div>
+
+<script>
+'use strict';
+// Known site-tile footprints in squares (verified against real maps)
+var KNOWN_SIZES = {
+  '02A_a':[8,10],'07B_c':[6,6],'101A_i':[2,4],'37B_g':[1,6],'18A_c':[6,6],
+  '20B_d':[4,4],'06B_c':[6,6],'08B_c':[6,6],'12A_c':[6,6]
+};
+var KNOWN_STAIRS = { '101A_i':true };
+var SITE_IMG = 'https://worldofarasca.dungeonuniversalis.com/imagenes/tilesrnd/';
+
+var parsed = null;   // { placed:{id:elem}, tileNames:[...] }
+var sizeInfo = {};   // name -> {w,h,src:'auto'|'known'|'unknown'}
+
+document.getElementById('file-in').addEventListener('change', function(ev) {
+  var f = ev.target.files[0];
+  if (!f) return;
+  var m = f.name.match(/(\d+)/);
+  if (m && !document.getElementById('map-id').value) document.getElementById('map-id').value = m[1];
+  var r = new FileReader();
+  r.onload = function() { parseCapture(r.result); };
+  r.readAsText(f);
+});
+
+function parseCapture(html) {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  var divs = doc.querySelectorAll('div[id^="tl-"],div[id^="acc-"],div[id^="mob-"]');
+  var placed = {};
+  divs.forEach(function(d) {
+    var tipo = d.getAttribute('tipo');
+    if (!tipo) return;
+    var st = d.getAttribute('style') || '';
+    var top  = st.match(/top:\s*(-?[\d.]+)px/);
+    var left = st.match(/left:\s*(-?[\d.]+)px/);
+    if (!top || !left) return;            // sidebar palette entry — skip
+    var rot = st.match(/rotate\((-?[\d.]+)deg\)/);
+    var hidden = d.getAttribute('ocultoplay') === '1' ||
+                 /display\s*:\s*none/.test(st);
+    var abre = d.getAttribute('elemabre');
+    placed[d.id] = {
+      id: d.id, tipo: tipo, nombre: d.getAttribute('nombre') || '',
+      x: parseFloat(left[1]), y: parseFloat(top[1]),
+      rot: rot ? parseFloat(rot[1]) : 0,
+      hidden: hidden,
+      reveals: abre ? abre.split(',') : []
+    };
+  });
+  // keep only reveal targets that exist (drop stale ids)
+  Object.keys(placed).forEach(function(id) {
+    placed[id].reveals = placed[id].reveals.filter(function(r){ return placed[r]; });
+  });
+  var tiles = Object.values(placed).filter(function(e){ return e.tipo==='tile'; });
+  var names = [];
+  tiles.forEach(function(t){ if (names.indexOf(t.nombre)<0) names.push(t.nombre); });
+  if (!tiles.length) {
+    document.getElementById('parse-result').innerHTML =
+      '<span class="warn">No placed tiles found — is this a mapaonline capture?</span>';
+    return;
+  }
+  parsed = { placed: placed, tileNames: names };
+  var counts = {};
+  Object.values(placed).forEach(function(e){ counts[e.tipo]=(counts[e.tipo]||0)+1; });
+  document.getElementById('parse-result').innerHTML =
+    '<span class="ok">&#10003; Parsed:</span> ' + tiles.length + ' tiles (' + names.length + ' unique), ' +
+    (counts['puerta']||0) + ' doors, ' + (counts['elemento']||0) + ' furniture, ' +
+    (counts['marcadorpersonalizado']||0) + ' markers.';
+  resolveSizes(names);
+}
+
+function resolveSizes(names) {
+  sizeInfo = {};
+  var pending = names.length;
+  names.forEach(function(n) {
+    if (KNOWN_SIZES[n]) {
+      sizeInfo[n] = { w:KNOWN_SIZES[n][0], h:KNOWN_SIZES[n][1], src:'known' };
+      if (--pending === 0) showReview();
+      return;
+    }
+    // try the site's tile image: natural pixels / 50 = squares
+    var img = new Image();
+    var done = false;
+    img.onload = function() {
+      if (done) return; done = true;
+      var w = Math.round(img.naturalWidth/50), h = Math.round(img.naturalHeight/50);
+      sizeInfo[n] = (w>0 && h>0) ? {w:w,h:h,src:'auto'} : {w:6,h:6,src:'unknown'};
+      if (--pending === 0) showReview();
+    };
+    img.onerror = function() {
+      if (done) return; done = true;
+      sizeInfo[n] = { w:6, h:6, src:'unknown' };
+      if (--pending === 0) showReview();
+    };
+    setTimeout(function(){ if (!done) { done=true; sizeInfo[n]={w:6,h:6,src:'unknown'}; if(--pending===0) showReview(); } }, 6000);
+    img.src = SITE_IMG + encodeURIComponent(n) + '.jpg';
+  });
+}
+
+function showReview() {
+  var tb = document.querySelector('#tile-table tbody');
+  tb.innerHTML = '';
+  var counts = {};
+  Object.values(parsed.placed).forEach(function(e){
+    if (e.tipo==='tile') counts[e.nombre]=(counts[e.nombre]||0)+1;
+  });
+  parsed.tileNames.forEach(function(n) {
+    var s = sizeInfo[n];
+    var tr = document.createElement('tr');
+    if (s.src==='unknown') tr.className='unknown';
+    tr.innerHTML = '<td>'+n+'</td><td>'+counts[n]+'&times;</td>' +
+      '<td><input type="number" min="1" max="20" value="'+s.w+'" data-n="'+n+'" data-k="w"></td>' +
+      '<td><input type="number" min="1" max="20" value="'+s.h+'" data-n="'+n+'" data-k="h"></td>' +
+      '<td><input type="checkbox" data-n="'+n+'" data-k="st"'+(KNOWN_STAIRS[n]?' checked':'')+'></td>' +
+      '<td class="src-'+s.src+'">'+(s.src==='auto'?'auto (site image)':s.src)+'</td>';
+    tb.appendChild(tr);
+  });
+  document.getElementById('review-step').style.display = 'block';
+}
+
+function readReview() {
+  var sizes = {}, stairs = {};
+  document.querySelectorAll('#tile-table input').forEach(function(inp) {
+    var n = inp.getAttribute('data-n'), k = inp.getAttribute('data-k');
+    if (k==='st') { if (inp.checked) stairs[n]=true; return; }
+    sizes[n] = sizes[n] || {};
+    sizes[n][k] = parseInt(inp.value,10) || 6;
+  });
+  return { sizes: sizes, stairs: stairs };
+}
+
+function buildQuest() {
+  var rv = readReview();
+  var placed = parsed.placed;
+  var tiles={}, doors={}, furniture=[], markers=[], special={};
+  Object.values(placed).forEach(function(e) {
+    if (e.tipo==='tile') {
+      tiles[e.id] = { id:e.id, tile:e.nombre, x:e.x, y:e.y, rot:e.rot,
+        w:rv.sizes[e.nombre].w, h:rv.sizes[e.nombre].h,
+        hidden:e.hidden, stairs:!!rv.stairs[e.nombre], level:0 };
+    } else if (e.tipo==='puerta') {
+      doors[e.id] = { id:e.id, kind:e.nombre, x:e.x, y:e.y, rot:e.rot,
+        hidden:e.hidden, reveals:e.reveals };
+    } else if (e.tipo==='elemento') {
+      furniture.push({ id:e.id, name:e.nombre, x:e.x, y:e.y, rot:e.rot, hidden:e.hidden });
+    } else if (e.tipo==='marcadorpersonalizado') {
+      markers.push({ id:e.id, kind:(e.nombre.indexOf('blanco')>=0?'white':'blue'),
+        x:e.x, y:e.y, hidden:e.hidden });
+    } else if (e.tipo==='exploratoria') {
+      special[e.nombre] = { id:e.id, x:e.x, y:e.y, hidden:e.hidden };
+    } else if (e.tipo==='lider') {
+      special.lider = { id:e.id, x:e.x, y:e.y, hidden:e.hidden };
+    }
+  });
+  // level BFS: doors revealed alongside a stairs tile lead to the next floor
+  var levels={}; Object.keys(tiles).forEach(function(t){ levels[t]=0; });
+  var queue=[], seen={};
+  Object.values(doors).forEach(function(d){ if(!d.hidden) queue.push([d.id,0]); });
+  while (queue.length) {
+    var it=queue.shift(), did=it[0], lvl=it[1];
+    if (seen[did]) continue; seen[did]=1;
+    var batch=doors[did].reveals;
+    var hasStairs=batch.some(function(r){ return tiles[r] && tiles[r].stairs; });
+    batch.forEach(function(r){
+      if (tiles[r]) levels[r]=lvl;
+      else if (doors[r]) queue.push([r, hasStairs?lvl+1:lvl]);
+    });
+  }
+  Object.keys(levels).forEach(function(t){ tiles[t].level=levels[t]; });
+
+  var notes = document.getElementById('notes-in').value.split('\n')
+    .map(function(s){return s.trim();}).filter(Boolean)
+    .map(function(s){return {text:s};});
+
+  var id = document.getElementById('map-id').value.trim() || 'map';
+  return {
+    mapId: id,
+    title: document.getElementById('map-title').value.trim() || ('Quest Map '+id),
+    source: 'worldofarasca.dungeonuniversalis.com',
+    gridPx: 50,
+    tiles: Object.values(tiles).sort(function(a,b){return a.level-b.level;}),
+    doors: Object.values(doors),
+    furniture: furniture, markers: markers,
+    entrance: special.entrada||null, goal: special.salafinal||null, leader: special.lider||null,
+    notes: notes
+  };
+}
+
+function saveQuest() {
+  if (!parsed) return;
+  var q = buildQuest();
+  var store;
+  try { store = JSON.parse(localStorage.getItem('dun_questmaps')||'{}'); } catch(e){ store={}; }
+  store[q.mapId] = q;
+  localStorage.setItem('dun_questmaps', JSON.stringify(store));
+  document.getElementById('save-result').innerHTML =
+    '<span class="ok">&#10003; Saved.</span> <a href="questmap.html?map='+q.mapId+'">Play it now &rarr;</a>';
+  var lvls = {};
+  q.tiles.forEach(function(t){ lvls[t.level]=(lvls[t.level]||0)+1; });
+  document.getElementById('summary').innerHTML =
+    'Floors: ' + Object.keys(lvls).map(function(l){return 'L'+l+' ('+lvls[l]+' tiles)';}).join(', ') +
+    ' · ' + q.doors.length + ' doors · entrance ' + (q.entrance?'&#10003;':'&#10007;') +
+    ' · goal ' + (q.goal?'&#10003;':'&#10007;') + ' · leader ' + (q.leader?'&#10003;':'&#10007;');
+}
+
+function downloadJs() {
+  if (!parsed) return;
+  var q = buildQuest();
+  var js = '/* Quest map '+q.mapId+' — imported from World of Arasca */\n' +
+           'var QUESTMAP_'+q.mapId+' = ' + JSON.stringify(q, null, 1) + ';\n';
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([js], {type:'text/javascript'}));
+  a.download = q.mapId + '.js';
+  a.click();
+}
+</script>
+</body>
+</html>

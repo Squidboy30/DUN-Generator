@@ -8,17 +8,17 @@
 <link rel="stylesheet" href="../src/styles/builder.css">
 <style>
 /* ── Generator modal ── */
-.ai-opt{flex:1;font-family:Cinzel,serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:7px 3px;border:1px solid #5a3e18;background:transparent;color:#b09060;cursor:pointer;transition:all .15s;line-height:1.5;}
-.ai-opt:hover{border-color:#a07820;color:#e0b840;}
-.ai-opt.active{border-color:#e0b840;color:#e0b840;background:rgba(139,105,20,0.2);}
-.ai-theme-btn{font-family:Cinzel,serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:8px 6px;border:1px solid #5a3e18;background:transparent;color:#b09060;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
-.ai-theme-btn:hover{border-color:#a07820;color:#e0b840;}
-.ai-theme-btn.active{border-color:#e0b840;color:#e0b840;background:rgba(139,105,20,0.2);}
+.ai-opt{flex:1;font-family:Cinzel,serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:7px 3px;border:1px solid #5a3e18;background:transparent;color:#d1bfa3;cursor:pointer;transition:all .15s;line-height:1.5;}
+.ai-opt:hover{border-color:#a07820;color:#efd99a;}
+.ai-opt.active{border-color:#e0b840;color:#efd99a;background:rgba(139,105,20,0.2);}
+.ai-theme-btn{font-family:Cinzel,serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:8px 6px;border:1px solid #5a3e18;background:transparent;color:#d1bfa3;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.ai-theme-btn:hover{border-color:#a07820;color:#efd99a;}
+.ai-theme-btn.active{border-color:#e0b840;color:#efd99a;background:rgba(139,105,20,0.2);}
 /* ── Floor tabs ── */
-.floor-tab{font-family:Cinzel,serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border:1px solid #3a2810;background:transparent;color:#706050;cursor:pointer;transition:all .15s;}
-.floor-tab:hover{border-color:#6a4820;color:#b09060;}
-.floor-tab.active{border-color:#a07820;color:#e0b840;background:rgba(139,105,20,0.15);}
-.floor-tab .del-f{margin-left:5px;opacity:0;color:#e07070;font-size:10px;}
+.floor-tab{font-family:Cinzel,serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border:1px solid #3a2810;background:transparent;color:#9d8a76;cursor:pointer;transition:all .15s;}
+.floor-tab:hover{border-color:#6a4820;color:#d1bfa3;}
+.floor-tab.active{border-color:#a07820;color:#efd99a;background:rgba(139,105,20,0.15);}
+.floor-tab .del-f{margin-left:5px;opacity:0;color:#f4cece;font-size:13px;}
 .floor-tab:hover .del-f{opacity:1;}
 </style>
 </head>
@@ -37,9 +37,9 @@
   </div>
   <!-- Floor tabs — hidden until multi-floor dungeon is generated -->
   <div id="floor-tabs" style="display:none;background:#130f09;border-bottom:1px solid #3a2810;padding:0 12px;align-items:center;gap:4px;min-height:32px;flex-shrink:0;">
-    <span style="font-family:Cinzel,serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#706050;margin-right:6px;">FLOOR</span>
+    <span style="font-family:Cinzel,serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#706050;margin-right:6px;">FLOOR</span>
     <div id="floor-tab-list" style="display:flex;gap:3px;"></div>
-    <button onclick="addFloor()" style="font-family:Cinzel,serif;font-size:11px;padding:2px 8px;border:1px solid #3a2810;background:transparent;color:#706050;cursor:pointer;margin-left:4px;">+</button>
+    <button onclick="addFloor()" style="font-family:Cinzel,serif;font-size:13px;padding:2px 8px;border:1px solid #3a2810;background:transparent;color:#706050;cursor:pointer;margin-left:4px;">+</button>
   </div>
   <div id="bld-body">
     <div id="bld-sidebar">
@@ -62,49 +62,49 @@
 <div id="gen-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:#1a1208;border:1px solid #a07820;width:560px;max-height:92vh;overflow-y:auto;font-family:Cinzel,serif;">
     <div style="padding:16px 20px 12px;border-bottom:1px solid #5a3e18;background:rgba(139,105,20,0.1);display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-size:14px;color:#e0b840;letter-spacing:2px;">✦ DUNGEON GENERATOR</div>
+      <div style="font-size:16px;color:#e0b840;letter-spacing:2px;">✦ DUNGEON GENERATOR</div>
       <button onclick="closeGenModal()" style="background:transparent;border:none;color:#b09060;font-size:18px;cursor:pointer;">×</button>
     </div>
     <div style="padding:18px 20px;">
-      <div style="font-size:11px;color:#b09060;font-style:italic;margin-bottom:16px;line-height:1.6;font-family:'Crimson Text',serif;">
+      <div style="font-size:13px;color:#b09060;font-style:italic;margin-bottom:16px;line-height:1.6;font-family:'Crimson Text',serif;">
         Procedurally generates a dungeon with multiple routes and branching paths — inspired by Advanced HeroQuest, Warhammer Quest and Diablo. Runs entirely offline.
       </div>
       <!-- Theme -->
       <div style="margin-bottom:14px;">
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:7px;">Theme</div>
+        <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:7px;">Theme</div>
         <div id="gen-theme-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;"></div>
       </div>
       <!-- Size / Routes / Floors -->
       <div style="display:flex;gap:10px;margin-bottom:14px;">
         <div style="flex:1;">
-          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:6px;">Size</div>
+          <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:6px;">Size</div>
           <div style="display:flex;gap:3px;">
-            <button class="ai-opt active" data-f="size" data-v="small"  onclick="setOpt(this)">Small<br><span style="font-size:8px;opacity:.6;">6–8</span></button>
-            <button class="ai-opt"        data-f="size" data-v="medium" onclick="setOpt(this)">Medium<br><span style="font-size:8px;opacity:.6;">10–14</span></button>
-            <button class="ai-opt"        data-f="size" data-v="large"  onclick="setOpt(this)">Large<br><span style="font-size:8px;opacity:.6;">16–20</span></button>
+            <button class="ai-opt active" data-f="size" data-v="small"  onclick="setOpt(this)">Small<br><span style="font-size:11px;opacity:.6;">6–8</span></button>
+            <button class="ai-opt"        data-f="size" data-v="medium" onclick="setOpt(this)">Medium<br><span style="font-size:11px;opacity:.6;">10–14</span></button>
+            <button class="ai-opt"        data-f="size" data-v="large"  onclick="setOpt(this)">Large<br><span style="font-size:11px;opacity:.6;">16–20</span></button>
           </div>
         </div>
         <div style="flex:1;">
-          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:6px;">Routes</div>
+          <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:6px;">Routes</div>
           <div style="display:flex;gap:3px;">
-            <button class="ai-opt active"  data-f="routes" data-v="linear"    onclick="setOpt(this)">Linear<br><span style="font-size:8px;opacity:.6;">1 path</span></button>
-            <button class="ai-opt"         data-f="routes" data-v="branching" onclick="setOpt(this)">Branch<br><span style="font-size:8px;opacity:.6;">2–3</span></button>
-            <button class="ai-opt"         data-f="routes" data-v="open"      onclick="setOpt(this)">Open<br><span style="font-size:8px;opacity:.6;">explore</span></button>
+            <button class="ai-opt active"  data-f="routes" data-v="linear"    onclick="setOpt(this)">Linear<br><span style="font-size:11px;opacity:.6;">1 path</span></button>
+            <button class="ai-opt"         data-f="routes" data-v="branching" onclick="setOpt(this)">Branch<br><span style="font-size:11px;opacity:.6;">2–3</span></button>
+            <button class="ai-opt"         data-f="routes" data-v="open"      onclick="setOpt(this)">Open<br><span style="font-size:11px;opacity:.6;">explore</span></button>
           </div>
         </div>
         <div style="flex:1;">
-          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:6px;">Floors</div>
+          <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#b09060;margin-bottom:6px;">Floors</div>
           <div style="display:flex;gap:3px;">
-            <button class="ai-opt active" data-f="floors" data-v="1" onclick="setOpt(this)">1<br><span style="font-size:8px;opacity:.6;">single</span></button>
-            <button class="ai-opt"        data-f="floors" data-v="2" onclick="setOpt(this)">2<br><span style="font-size:8px;opacity:.6;">two</span></button>
-            <button class="ai-opt"        data-f="floors" data-v="3" onclick="setOpt(this)">3<br><span style="font-size:8px;opacity:.6;">three</span></button>
+            <button class="ai-opt active" data-f="floors" data-v="1" onclick="setOpt(this)">1<br><span style="font-size:11px;opacity:.6;">single</span></button>
+            <button class="ai-opt"        data-f="floors" data-v="2" onclick="setOpt(this)">2<br><span style="font-size:11px;opacity:.6;">two</span></button>
+            <button class="ai-opt"        data-f="floors" data-v="3" onclick="setOpt(this)">3<br><span style="font-size:11px;opacity:.6;">three</span></button>
           </div>
         </div>
       </div>
-      <div id="gen-status" style="display:none;padding:10px 12px;background:rgba(0,0,0,0.4);border:1px solid #5a3e18;font-size:10px;color:#e0b840;letter-spacing:1px;margin-bottom:12px;text-align:center;"></div>
+      <div id="gen-status" style="display:none;padding:10px 12px;background:rgba(0,0,0,0.4);border:1px solid #5a3e18;font-size:13px;color:#e0b840;letter-spacing:1px;margin-bottom:12px;text-align:center;"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button onclick="closeGenModal()" style="font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border:1px solid #5a3e18;background:transparent;color:#b09060;cursor:pointer;">Cancel</button>
-        <button id="gen-go" onclick="runGen()" style="font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;border:1px solid #a07820;background:rgba(139,105,20,0.2);color:#e0b840;cursor:pointer;">✦ Generate</button>
+        <button onclick="closeGenModal()" style="font-family:Cinzel,serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border:1px solid #5a3e18;background:transparent;color:#b09060;cursor:pointer;">Cancel</button>
+        <button id="gen-go" onclick="runGen()" style="font-family:Cinzel,serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:8px 20px;border:1px solid #a07820;background:rgba(139,105,20,0.2);color:#e0b840;cursor:pointer;">✦ Generate</button>
       </div>
     </div>
   </div>
@@ -154,7 +154,7 @@ function openGenModal() {
   grid.innerHTML = GEN_THEMES.map(function(t){
     return '<button class="ai-theme-btn'+(genState.theme===t.id?' active':'')+
       '" data-id="'+t.id+'" onclick="pickTheme(\''+t.id+'\')">'+
-      '<span style="font-size:14px;">'+t.icon+'</span>'+t.label+'</button>';
+      '<span style="font-size:16px;">'+t.icon+'</span>'+t.label+'</button>';
   }).join('');
   document.getElementById('gen-status').style.display = 'none';
   var goBtn = document.getElementById('gen-go');
