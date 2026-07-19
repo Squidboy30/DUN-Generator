@@ -1239,7 +1239,20 @@ var TRAVEL_EVENTS = {
   },
   plains:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Plains event card screenshots to add the real deck.', epic:null}] },
   desert:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Desert event card screenshots to add the real deck.', epic:null}] },
-  swamp:      { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Swamp event card screenshots to add the real deck.', epic:null}] },
+  // Swamp/Marsh deck transcribed from the physical DUN Travel Event cards (EV 049–055).
+  // Cloud of insects appears twice in the physical deck (EV 052 & EV 053) — kept twice for accurate draw odds.
+  swamp: {
+    threshold: 5,
+    cards: [
+      { title:'Aquatic predators', effect:'The zone is crowded with Aquatic Predators. Crocodiles, giant snakes and all sorts of dangerous animals lurk around. All Characters must pass a Movement test or else suffer 3 damage dice.', epic:'Aquatic Predators' },
+      { title:'Swamp dwellers', effect:'A group of locals attack you from above as you cross an area of trees with twisted branches. All Characters must pass a Movement test or else suffer 2 damage dice.', epic:'Swamp Dwellers' },
+      { title:'Walking dead', effect:'Suddenly a number of walking dead rise out from the ground. Maybe this place used to be a graveyard or it was the domain of a necromancer. Each hero must roll Courage. Those who fail their roll instantly lose 1 Vitality point. Before rolling dice you can spend a Holy Water to avoid this event.', epic:'Risen out from the swamp' },
+      { title:'Cloud of insects', effect:'Swarms of insects mercilessly bite you as you cross a swamp area. All heroes suffer 1 damage die against Natural Armor. Those who lose 1 or more Vitality points get the condition "Diseased".', epic:null },
+      { title:'Cloud of insects', effect:'Swarms of insects mercilessly bite you as you cross a swamp area. All heroes suffer 1 damage die against Natural Armor. Those who lose 1 or more Vitality points get the condition "Diseased".', epic:null },
+      { title:"Will-o'-the-Wisps", effect:"Will-o'-the-Wisps try to ensorcell you into leaving the path. Each Character must pass an Intelligence test. If the test is failed, the Character is lured by the lost souls into a quagmire, suffering 3 damage dice against Natural Armor as the character struggles to free themselves.", epic:null },
+      { title:'Cart', effect:'Beside the road you find a cart almost completely sunk in the mud. Two heroes (only one is necessary if he is large size) must pass a Strength test to succeed in digging up the cart. If they both succeed, they will find something useful in the vehicle. Take one random Common Object.', epic:null }
+    ]
+  },
   volcanic:   { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Volcanic event card screenshots to add the real deck.', epic:null}] },
   glacier:    { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Glacier event card screenshots to add the real deck.', epic:null}] },
   settlement: { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Settlement (Castle/Town/City) event card screenshots to add the real deck.', epic:null}] }
