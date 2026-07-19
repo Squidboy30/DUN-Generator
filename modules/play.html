@@ -1221,7 +1221,22 @@ var TRAVEL_EVENTS = {
       { title:'Rumours', effect:'You get some information about a forthcoming stage in your journey that keeps you alert. The Dark Player removes the Danger marker which is closer to your current location.', epic:null }
     ]
   },
-  forest:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Forest event card screenshots to add the real deck.', epic:null}] },
+  // Forest deck transcribed from the physical DUN Travel Event cards (EV 019–028).
+  forest: {
+    threshold: 5,
+    cards: [
+      { title:'Witch hut', effect:'You find a hut in the middle of the forest which happens to be the abode of a witch. Roll 1D6 and check the following chart.\n1-4) The witch is inside the hut. Before she escapes she casts a spell. One random hero or mercenary suffers 3 damage dice against Courage.\n5-6) The witch is not at home. You search the hut and find 1 Components for Magic and one Potion.', epic:'Witch Hut' },
+      { title:'Large creature spotted', effect:'One of the heroes must pass a Perception test (pets may help). If the test is failed, all Characters must pass a Movement test. The Character with the lowest result among those who fail it will suffer 6 damage dice with a -1 to Armor.', epic:'Large Creature spotted' },
+      { title:'Spiderwebs', effect:'You suddenly find yourselves surrounded by thick spiderwebs hanging from the trees which block your way. All heroes must pass a Perception test. Those who fail are attacked and suffer 1 poisonous damage die (check the skill "Poisonous"). Before rolling dice you can spend a Flask of Greek Fire to avoid this event.', epic:'Giant Spiders' },
+      { title:'Sacred trees', effect:'You reach some millenary trees that locals believe are sacred. Each hero who chooses to make an offer to the ancient gods (any object with a selling price) must roll 1D6 and check the result in the following chart:\n1) The gods are offended by your offering. Character loses 1 Fortune point. If he had none, he instantly suffers 3 damage dice against Natural Armor.\n2-4) The gods seem to be busy somewhere else. Nothing relevant happens.\n5-6) Your offering pleases the gods. Character gets 1 extra Fortune point (once used, it won\'t be recovered).', epic:null },
+      { title:"The witches' curse", effect:'You bump into a coven. Women of all ages dance naked while they cast spells and make sacrifices. One of the heroes must pass an Intelligence test. Otherwise, all Characters suffer a -1 penalty on their Courage for their next quest.', epic:'Coven' },
+      { title:'Lurking predator', effect:'A beast tracks your smell and attacks you by surprise. One random Character must pass a Perception roll. Otherwise he suffers 4 damage dice.', epic:'Lurking Predator' },
+      { title:'Lost', effect:'One of the heroes must roll Perception (he may get help from his pet). If the roll is failed, the group is lost and it will take them some time to find their way again. The Dark Player will place a new danger marker on the Campaign map.', epic:null },
+      { title:'Wolves!', effect:"You've been hearing howls for days, however, they are really close now. You can hear the wolves' steps on the litterfall. All Characters must pass a Movement test. Those who fail aren't able to escape in time and suffer 3 damage dice. Before rolling dice you can spend a Greek Fire or a Torch to avoid this event.", epic:'Wolves!' },
+      { title:'Missing person', effect:'One of the heroes must pass a Perception test (pets and mercenaries may help). If he is successful you find someone who got lost and couldn\'t find his way home. His family gives you 5 coins for bringing him home. If the roll is failed, or you choose not to help, the Dark Player randomly removes a Danger marker among those placed on the Campaign map.', epic:null },
+      { title:'Help!', effect:'A group of heroes with your alignment is fighting against a number of creatures. If you choose to help them, all heroes suffer 2 damage dice. However, they will reward you with 5 coins for the whole group.', epic:'Help!' }
+    ]
+  },
   plains:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Plains event card screenshots to add the real deck.', epic:null}] },
   desert:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Desert event card screenshots to add the real deck.', epic:null}] },
   swamp:      { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Swamp event card screenshots to add the real deck.', epic:null}] },
