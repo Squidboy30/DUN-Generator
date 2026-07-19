@@ -317,10 +317,11 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   <div class="ov-modal" style="width:420px;text-align:center;">
     <div class="ov-title">Choose Your Route</div>
     <div class="ov-sub">Crossing to <span id="tm-dest">territory</span></div>
-    <div class="ov-hint" style="margin:14px 0 18px;">Travel the road for a safer, well-trodden path, or go overland through the <span id="tm-terrain">wilderness</span> — each draws from its own Travel Event deck.</div>
-    <div style="display:flex;gap:12px;justify-content:center;">
-      <button class="ov-begin" style="flex:1;" onclick="chooseTravelMode('road')">🛤 By Road</button>
-      <button class="ov-begin" style="flex:1;" onclick="chooseTravelMode('overland')">🌲 Overland</button>
+    <div class="ov-hint" style="margin:14px 0 18px;">Travel the road for a safer, well-trodden path, go overland through the <span id="tm-terrain">wilderness</span>, or take to the water by river — each draws from its own Travel Event deck.</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="ov-begin" style="flex:1;min-width:110px;" onclick="chooseTravelMode('road')">🛤 By Road</button>
+      <button class="ov-begin" style="flex:1;min-width:110px;" onclick="chooseTravelMode('overland')">🌲 Overland</button>
+      <button class="ov-begin" style="flex:1;min-width:110px;" onclick="chooseTravelMode('river')">🚣 By River</button>
     </div>
   </div>
 </div>
@@ -1237,6 +1238,18 @@ var TRAVEL_EVENTS = {
     ]
   },
   // Forest deck transcribed from the physical DUN Travel Event cards (EV 019–028).
+  // River deck transcribed from the physical DUN Travel Event cards (EV 066–071).
+  river: {
+    threshold: 5,
+    cards: [
+      { title:'Poisoned water', effect:'You drink water which happens to be poisoned. Each hero suffers 1 damage die against Natural Armor. If he loses 1 or more Vitality points he gets the condition "Diseased".', epic:null },
+      { title:'Pier', effect:'You find a small pier. You may approach it to have a look. If you do, play the Places and Services card "Pier/Dock". One of the heroes must pass an Intelligence test (+1 if he has the skill "Eloquence"). If he is successful the group gets a free Pack of Provisions.', epic:null },
+      { title:'Ambush in the river', effect:"A group of enemies attack you from the river bank. Each Hero suffers 2 damage dice. The attack also affects their boat, which loses 1D6 Structure points. If the boat's Structure value is reduced to 0, the boat instantly sinks. All pets and Characters reach the river bank and must continue their journey on foot. If Characters were sailing between two different territories they will appear in one of their choice.", epic:'Ambush in the river' },
+      { title:'Informer', effect:'You get unverified information from other ships that keeps you alert. The Dark Player randomly removes a Danger marker among those placed on the Campaign map.', epic:null },
+      { title:'Increased river flow', effect:'The river flow increases due to recent heavy rains and it helps you advance faster. The Dark Player will begin your next quest with 5 less Reserve points.', epic:null },
+      { title:'River monster', effect:'An aquatic Creature attacks your ship. All heroes must roll Strength. Those who fail the roll suffer 3 damage dice against Natural Armor. Your ship loses 2D6 Structure points. If the ship is destroyed and sinks, pets and Characters must continue on foot in the same area where this event took place. If Characters were sailing between two different territories they will appear in one of their choice.', epic:null }
+    ]
+  },
   forest: {
     threshold: 5,
     cards: [
@@ -1452,11 +1465,11 @@ function travelTo(id, mode) {
   var from = terrById(travelState.territoryId);
   travelState.territoryId  = id;
   travelState.inSettlement = false;
-  var via = (mode === 'road') ? ' by road' : ' overland';
+  var via = (mode === 'road') ? ' by road' : (mode === 'river') ? ' by river' : ' overland';
   travelState.log.unshift('Turn ' + travelState.turn + ': Travelled to ' + t.name + ' (' + t.region + ')' + (from ? ' from ' + from.name : '') + via + '.');
-  // Rulebook: event roll on ENTERING a territory — road deck if travelling the road, else terrain deck
-  var deckKey = (mode === 'road') ? 'road' : t.type;
-  rollEvent(deckKey, 'Entering ' + t.name + (mode === 'road' ? ' (road)' : ''));
+  // Rulebook: event roll on ENTERING a territory — road/river deck if travelling by path, else terrain deck
+  var deckKey = (mode === 'road') ? 'road' : (mode === 'river') ? 'river' : t.type;
+  rollEvent(deckKey, 'Entering ' + t.name + (mode === 'road' ? ' (road)' : mode === 'river' ? ' (river)' : ''));
   // Heroes walking into a danger marker triggers it
   checkDangerContact();
   // Rulebook: after the travel event roll, the Dark Player moves all danger markers
@@ -1511,10 +1524,11 @@ function travelStay(mode) {
     return;
   }
   if (!mode) { pendingStay = true; promptTravelMode(travelState.territoryId); return; }
-  var via = (mode === 'road') ? ' by road' : ' overland';
+  var via = (mode === 'road') ? ' by road' : (mode === 'river') ? ' by river' : ' overland';
   travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + via + '.');
-  // Rulebook: event roll on REMAINING in a territory — road or terrain deck
-  rollEvent(mode === 'road' ? 'road' : t.type, 'Staying in ' + t.name + (mode === 'road' ? ' (road)' : ''));
+  // Rulebook: event roll on REMAINING in a territory — road/river or terrain deck
+  var deckKey = (mode === 'road') ? 'road' : (mode === 'river') ? 'river' : t.type;
+  rollEvent(deckKey, 'Staying in ' + t.name + (mode === 'road' ? ' (road)' : mode === 'river' ? ' (river)' : ''));
   // Rulebook: after the travel event roll, the Dark Player moves all danger markers
   dpPhase();
   travelState.turn++;
