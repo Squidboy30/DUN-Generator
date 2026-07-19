@@ -317,11 +317,12 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   <div class="ov-modal" style="width:420px;text-align:center;">
     <div class="ov-title">Choose Your Route</div>
     <div class="ov-sub">Crossing to <span id="tm-dest">territory</span></div>
-    <div class="ov-hint" style="margin:14px 0 18px;">Travel the road for a safer, well-trodden path, go overland through the <span id="tm-terrain">wilderness</span>, or take to the water by river — each draws from its own Travel Event deck.</div>
+    <div class="ov-hint" style="margin:14px 0 18px;">Choose how you cross: road, overland through the <span id="tm-terrain">wilderness</span>, by river, or by sea — each draws from its own Travel Event deck.</div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button class="ov-begin" style="flex:1;min-width:110px;" onclick="chooseTravelMode('road')">🛤 By Road</button>
-      <button class="ov-begin" style="flex:1;min-width:110px;" onclick="chooseTravelMode('overland')">🌲 Overland</button>
-      <button class="ov-begin" style="flex:1;min-width:110px;" onclick="chooseTravelMode('river')">🚣 By River</button>
+      <button class="ov-begin" style="flex:1;min-width:100px;" onclick="chooseTravelMode('road')">🛤 By Road</button>
+      <button class="ov-begin" style="flex:1;min-width:100px;" onclick="chooseTravelMode('overland')">🌲 Overland</button>
+      <button class="ov-begin" style="flex:1;min-width:100px;" onclick="chooseTravelMode('river')">🚣 By River</button>
+      <button class="ov-begin" style="flex:1;min-width:100px;" onclick="chooseTravelMode('sea')">⛵ By Sea</button>
     </div>
   </div>
 </div>
@@ -1250,6 +1251,20 @@ var TRAVEL_EVENTS = {
       { title:'River monster', effect:'An aquatic Creature attacks your ship. All heroes must roll Strength. Those who fail the roll suffer 3 damage dice against Natural Armor. Your ship loses 2D6 Structure points. If the ship is destroyed and sinks, pets and Characters must continue on foot in the same area where this event took place. If Characters were sailing between two different territories they will appear in one of their choice.', epic:null }
     ]
   },
+  // Sea deck transcribed from the physical DUN Travel Event cards (EV 029–036).
+  sea: {
+    threshold: 5,
+    cards: [
+      { title:'Ocean colossus', effect:'A huge aquatic creature emerges under the keel of the boat and strikes you with fury. Your ship suffers 4D6 Structure points. All Characters suffer 2 damage dice against Natural Armor. If the ship is destroyed and sinks, all Characters suffer 2 extra damage dice (all non-flying pets die). Characters appear in the land area closest to the sea area they were travelling by.', epic:'Ocean Colossus' },
+      { title:'Good captain', effect:"The captain proves his expertise by using favourable winds and currents. Don't roll for Travel Events during the next two sea areas in this journey.", epic:null },
+      { title:"It's a fin!", effect:'A huge predator strikes the ship, which loses 2D6 structure points. All Characters must pass a Strength test or else suffer 3 damage dice against Natural Armor. If the ship is destroyed and sinks, Characters will suffer 2 extra damage dice. All non-flying pets die. Characters appear in the land area closest to the sea area they were travelling by.', epic:"It's a fin!" },
+      { title:'Disease', effect:'The water in your barrels is poisoned. You suffer from diarrhoea and vomits for most of your journey. Each hero suffers 1 damage die against Natural Armor. Those who lose one or more Vitality points get the condition "Diseased".', epic:null },
+      { title:'Tempest', effect:'A tempest breaks out. Your captain gives you instructions to hold to something so you are not swallowed by the huge waves. Each Character suffers 1 damage die against Strength. The ship loses 2D6 Structure points. If the ship is destroyed all Characters suffer 3 damage dice against Natural Armor. Characters appear in the land area closest to the sea area they were travelling by.', epic:null },
+      { title:'Favourable winds', effect:"Favourable winds help you advance faster. You won't have to roll for Travel Events when you cross the next sea area during this journey.", epic:null },
+      { title:'Strong currents', effect:"The sea currents help you advance faster. The Dark Player randomly removes a Danger marker among those placed on the Campaign map. Besides, you won't have to roll for Travel Events when you cross the next sea area during this journey.", epic:null },
+      { title:'Pirates!', effect:'(Only for Characters not aboard a war ship) A pirate ship attacks your vessel. If you choose to surrender they will let you go for 5 coins per hero. If you decide to fight, each Character suffers 3 damage dice and your ship loses 1D6 Structure points. If the ship is destroyed and sinks, each Character suffers 2 extra damage dice. All non-flying pets die. Characters appear in the land area closest to the sea area they were travelling by.', epic:'Pirates!' }
+    ]
+  },
   forest: {
     threshold: 5,
     cards: [
@@ -1465,11 +1480,11 @@ function travelTo(id, mode) {
   var from = terrById(travelState.territoryId);
   travelState.territoryId  = id;
   travelState.inSettlement = false;
-  var via = (mode === 'road') ? ' by road' : (mode === 'river') ? ' by river' : ' overland';
+  var via = (mode === 'road') ? ' by road' : (mode === 'river') ? ' by river' : (mode === 'sea') ? ' by sea' : ' overland';
   travelState.log.unshift('Turn ' + travelState.turn + ': Travelled to ' + t.name + ' (' + t.region + ')' + (from ? ' from ' + from.name : '') + via + '.');
-  // Rulebook: event roll on ENTERING a territory — road/river deck if travelling by path, else terrain deck
-  var deckKey = (mode === 'road') ? 'road' : (mode === 'river') ? 'river' : t.type;
-  rollEvent(deckKey, 'Entering ' + t.name + (mode === 'road' ? ' (road)' : mode === 'river' ? ' (river)' : ''));
+  // Rulebook: event roll on ENTERING a territory — road/river/sea deck if travelling by path, else terrain deck
+  var deckKey = (mode === 'road') ? 'road' : (mode === 'river') ? 'river' : (mode === 'sea') ? 'sea' : t.type;
+  rollEvent(deckKey, 'Entering ' + t.name + (mode === 'road' ? ' (road)' : mode === 'river' ? ' (river)' : mode === 'sea' ? ' (sea)' : ''));
   // Heroes walking into a danger marker triggers it
   checkDangerContact();
   // Rulebook: after the travel event roll, the Dark Player moves all danger markers
@@ -1524,11 +1539,11 @@ function travelStay(mode) {
     return;
   }
   if (!mode) { pendingStay = true; promptTravelMode(travelState.territoryId); return; }
-  var via = (mode === 'road') ? ' by road' : (mode === 'river') ? ' by river' : ' overland';
+  var via = (mode === 'road') ? ' by road' : (mode === 'river') ? ' by river' : (mode === 'sea') ? ' by sea' : ' overland';
   travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + via + '.');
-  // Rulebook: event roll on REMAINING in a territory — road/river or terrain deck
-  var deckKey = (mode === 'road') ? 'road' : (mode === 'river') ? 'river' : t.type;
-  rollEvent(deckKey, 'Staying in ' + t.name + (mode === 'road' ? ' (road)' : mode === 'river' ? ' (river)' : ''));
+  // Rulebook: event roll on REMAINING in a territory — road/river/sea or terrain deck
+  var deckKey = (mode === 'road') ? 'road' : (mode === 'river') ? 'river' : (mode === 'sea') ? 'sea' : t.type;
+  rollEvent(deckKey, 'Staying in ' + t.name + (mode === 'road' ? ' (road)' : mode === 'river' ? ' (river)' : mode === 'sea' ? ' (sea)' : ''));
   // Rulebook: after the travel event roll, the Dark Player moves all danger markers
   dpPhase();
   travelState.turn++;
