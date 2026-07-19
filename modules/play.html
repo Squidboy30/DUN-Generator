@@ -298,6 +298,19 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   </div>
 </div>
 
+<!-- Travel route choice: road vs overland -->
+<div class="ov-overlay" id="modal-travel-mode">
+  <div class="ov-modal" style="width:420px;text-align:center;">
+    <div class="ov-title">Choose Your Route</div>
+    <div class="ov-sub">Crossing to <span id="tm-dest">territory</span></div>
+    <div class="ov-hint" style="margin:14px 0 18px;">Travel the road for a safer, well-trodden path, or go overland through the <span id="tm-terrain">wilderness</span> — each draws from its own Travel Event deck.</div>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="ov-begin" style="flex:1;" onclick="chooseTravelMode('road')">🛤 By Road</button>
+      <button class="ov-begin" style="flex:1;" onclick="chooseTravelMode('overland')">🌲 Overland</button>
+    </div>
+  </div>
+</div>
+
 <!-- Mission popover -->
 <div id="popover">
   <div class="pop-header" id="pop-header">
@@ -323,6 +336,8 @@ var mScale = 1, mOX = 0, mOY = 0;
 var mDrag = false, mDSX = 0, mDSY = 0, mDOX = 0, mDOY = 0, mDidDrag = false;
 var partyDragMode = false;
 var openNodeId = null;  // which pin's popover is open
+var pendingTravelId = null; // territory awaiting a road/overland choice
+var pendingStay = false;    // route choice is for staying to cross, not entering
 
 // ── OFFICIAL MISSIONS ────────────────────────────────────────
 var OFFICIAL_MISSIONS = [
@@ -1189,6 +1204,23 @@ var TRAVEL_EVENTS = {
       { title:"It's Collapsing!", effect:'You walk under an ice bridge when you hear one of its blocks crack. All Characters must pass an Agility test. Those who fail suffer 3 damage dice against Natural Armor.', epic:null }
     ]
   },
+  // Road deck transcribed from the physical DUN Travel Event cards (EV 072–082).
+  road: {
+    threshold: 5,
+    cards: [
+      { title:'Enemy spies', effect:'The enemy has deployed several spies. You must be careful with what you say to the people you meet in the roads and taverns. All heroes must pass an Intelligence roll. For each failed roll the Dark Player will place a new Danger marker on the Campaign map.', epic:null },
+      { title:'Overturned cart', effect:'You find an overturned cart on one side of the road. Its draught animals have been stolen or just fled. You approach the cart to search it. Roll 1D6 and check the result in the following chart:\n1-3) You find nothing interesting.\n4) You find objects worth 2 coins.\n5) You find a Pack of Provisions.\n6) You find a detailed map of the area. The Dark Player removes the Danger marker which is closer to your current location.', epic:null },
+      { title:'Bridge', effect:'You must cross a bridge or else lose a considerable time finding an alternative route. Play the Places and Services card "Bridge".', epic:null },
+      { title:'Inn', effect:'You find a small inn to rest in. If you choose to lodge in it, play the Places and Services card "Inn". Roll 1D6. On a result of 6, one of the other guests offers you a random quest among those available in that territory or in the adjacent ones. If you choose to play it and you are successful he will pay you 5 extra coins as a reward, in addition to the usual reward of the quest.', epic:null },
+      { title:'Market', effect:'You find a small market near the road. You may choose to get closer and have a look. If you do, play the Places and Services card "Market".', epic:null },
+      { title:'Bandit attack!', effect:'Roads are usually safe places, until a band of bandits decide to attack some group of travellers. All heroes and mercenaries must pass a Combat Skill test. Those who fail the roll will lose 1 Vitality point. The group loses a number of coins equal to the number of heroes +1D3, even if they win all the combat test.', epic:'Bandit attack!' },
+      { title:'Area event', effect:'Roads are sometimes impassable or simply happen to be even more dangerous than remote, inhabited areas. A giant may have left his hiding place to go and steal cattle, a crocodile may have left his swamp or a sacred place may lay hidden on one side of the road. Draw one Travel Event card from the area your Characters are travelling by and apply its contents.', epic:null },
+      { title:'Lightning', effect:"A thunderbolt splits a tree in two in front of you. It's a bad omen. All heroes must roll Courage. For each failed roll the Dark Player will place a new Danger marker on the Campaign map.", epic:null },
+      { title:'Camp', effect:'You find a camp near the road. You may choose to get closer and have a look. If you do, play the Places and Services card "Camp".', epic:null },
+      { title:'Road fork', effect:'The road forks before you and you are not certain about which direction to take. One of the heroes must pass a Perception test. If he does, you take the right path. If he fails, you take the wrong direction and you will discover the mistake too late and will have to reverse part of the path. You will be considered to have chosen to remain in the territory and you will have to roll for Travel Events if you wish to cross it.', epic:null },
+      { title:'Rumours', effect:'You get some information about a forthcoming stage in your journey that keeps you alert. The Dark Player removes the Danger marker which is closer to your current location.', epic:null }
+    ]
+  },
   forest:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Forest event card screenshots to add the real deck.', epic:null}] },
   plains:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Plains event card screenshots to add the real deck.', epic:null}] },
   desert:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Desert event card screenshots to add the real deck.', epic:null}] },
@@ -1287,15 +1319,19 @@ function onTerritoryClick(id) {
 }
 
 // ── Actions (rulebook: 1 adjacent territory per campaign turn/week) ──
-function travelTo(id) {
+function travelTo(id, mode) {
   var t = terrById(id);
   if (!t) return;
+  // Ask route once: road or overland (terrain deck). Settlements have no wilderness to cross.
+  if (!mode) { promptTravelMode(id); return; }
   var from = terrById(travelState.territoryId);
   travelState.territoryId  = id;
   travelState.inSettlement = false;
-  travelState.log.unshift('Turn ' + travelState.turn + ': Travelled to ' + t.name + ' (' + t.region + ')' + (from ? ' from ' + from.name : '') + '.');
-  // Rulebook: event roll on ENTERING a territory
-  rollEvent(t.type, 'Entering ' + t.name);
+  var via = (mode === 'road') ? ' by road' : ' overland';
+  travelState.log.unshift('Turn ' + travelState.turn + ': Travelled to ' + t.name + ' (' + t.region + ')' + (from ? ' from ' + from.name : '') + via + '.');
+  // Rulebook: event roll on ENTERING a territory — road deck if travelling the road, else terrain deck
+  var deckKey = (mode === 'road') ? 'road' : t.type;
+  rollEvent(deckKey, 'Entering ' + t.name + (mode === 'road' ? ' (road)' : ''));
   // Heroes walking into a danger marker triggers it
   checkDangerContact();
   // Rulebook: after the travel event roll, the Dark Player moves all danger markers
@@ -1304,12 +1340,37 @@ function travelTo(id) {
   saveTravel(); renderMap(); refreshTravelPanel();
 }
 
-function travelStay() {
+// Route choice — road or overland — presented before the entering event roll
+function promptTravelMode(id) {
+  pendingTravelId = id;
+  var t = terrById(id);
+  document.getElementById('tm-dest').textContent = t.name;
+  document.getElementById('tm-terrain').textContent = (t.type || 'overland').charAt(0).toUpperCase() + (t.type || 'overland').slice(1);
+  document.getElementById('modal-travel-mode').classList.add('show');
+}
+function chooseTravelMode(mode) {
+  document.getElementById('modal-travel-mode').classList.remove('show');
+  if (pendingStay) { pendingStay = false; travelStay(mode); return; }
+  var id = pendingTravelId; pendingTravelId = null;
+  if (id) travelTo(id, mode);
+}
+
+function travelStay(mode) {
   var t = terrById(travelState.territoryId);
   if (!t) return;
-  travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + '.');
-  // Rulebook: event roll on REMAINING in a territory
-  rollEvent(travelState.inSettlement ? 'settlement' : t.type, 'Staying in ' + (travelState.inSettlement && t.settlement ? t.settlement : t.name));
+  // In a settlement, staying always rolls the settlement deck — no route choice.
+  if (travelState.inSettlement) {
+    travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + '.');
+    rollEvent('settlement', 'Staying in ' + (t.settlement ? t.settlement : t.name));
+    dpPhase(); travelState.turn++;
+    saveTravel(); renderMap(); refreshTravelPanel();
+    return;
+  }
+  if (!mode) { pendingStay = true; promptTravelMode(travelState.territoryId); return; }
+  var via = (mode === 'road') ? ' by road' : ' overland';
+  travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + via + '.');
+  // Rulebook: event roll on REMAINING in a territory — road or terrain deck
+  rollEvent(mode === 'road' ? 'road' : t.type, 'Staying in ' + t.name + (mode === 'road' ? ' (road)' : ''));
   // Rulebook: after the travel event roll, the Dark Player moves all danger markers
   dpPhase();
   travelState.turn++;
