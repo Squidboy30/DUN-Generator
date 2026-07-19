@@ -1281,7 +1281,18 @@ var TRAVEL_EVENTS = {
       { title:'Cart', effect:'Beside the road you find a cart almost completely sunk in the mud. Two heroes (only one is necessary if he is large size) must pass a Strength test to succeed in digging up the cart. If they both succeed, they will find something useful in the vehicle. Take one random Common Object.', epic:null }
     ]
   },
-  volcanic:   { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Volcanic event card screenshots to add the real deck.', epic:null}] },
+  // Volcanic deck transcribed from the physical DUN Travel Event cards (EV 043–048).
+  volcanic: {
+    threshold: 5,
+    cards: [
+      { title:'Attack in the wastelands', effect:'A party of enemy scouts ambush you as you pass through a gorge. Each hero must pass a Combat Skill test or else suffer 3 damage dice.', epic:'Attack in the wastelands' },
+      { title:'Hunger', effect:'You spot a vulture flying low over you. You are starving. Each Character must roll 1D6. On a 4+ (3+ in case he has the skill "Tough") the Character manages to overcome his need of food and keeps on walking. If the roll is failed, the Character loses 1 Vitality point. Before rolling the dice, Characters may avoid this event by spending 1 Pack of Provisions for the whole group.', epic:null },
+      { title:'Landslide!', effect:'A landslide happens as you cross a black rock hillside. All Characters must pass an Agility test or else suffer 3 damage dice.', epic:null },
+      { title:'Volcanic fumes!', effect:'A small earthquake tears the ground open. Burning fumes emerge from the ground at high temperatures. All Characters suffer 2 damage dice against Intelligence.', epic:null },
+      { title:'Black clouds', effect:'You spot some dark clouds in the horizon which seem to bring bad omens. All heroes must roll Courage. For every fail, the Dark Player will place a new danger marker on the Campaign map.', epic:null },
+      { title:'Toxic gas', effect:'The air in the area is filled with an invisible, odourless gas that rises to just over a metre above the ground. Each average or small size Character suffers 2 damage dice against Strength.', epic:null }
+    ]
+  },
   // Glacier deck transcribed from the physical DUN Travel Event cards (EV 037–042).
   // NOTE: overlaps heavily with the mountain deck — verify whether mountain shares these or was mis-scanned.
   glacier: {
