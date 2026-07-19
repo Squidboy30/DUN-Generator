@@ -298,6 +298,20 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   </div>
 </div>
 
+<!-- Settlement type choice: town / city / castle -->
+<div class="ov-overlay" id="modal-settle-type">
+  <div class="ov-modal" style="width:440px;text-align:center;">
+    <div class="ov-title">Settlement Type</div>
+    <div class="ov-sub">What kind of settlement is <span id="sm-name">this</span>?</div>
+    <div class="ov-hint" style="margin:14px 0 18px;">Each size draws from its own event deck. Your choice is remembered for this settlement.</div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="ov-begin" style="flex:1;" onclick="chooseSettleType('town')">🏘 Town</button>
+      <button class="ov-begin" style="flex:1;" onclick="chooseSettleType('city')">🏛 City</button>
+      <button class="ov-begin" style="flex:1;" onclick="chooseSettleType('castle')">🏰 Castle</button>
+    </div>
+  </div>
+</div>
+
 <!-- Travel route choice: road vs overland -->
 <div class="ov-overlay" id="modal-travel-mode">
   <div class="ov-modal" style="width:420px;text-align:center;">
@@ -338,6 +352,7 @@ var partyDragMode = false;
 var openNodeId = null;  // which pin's popover is open
 var pendingTravelId = null; // territory awaiting a road/overland choice
 var pendingStay = false;    // route choice is for staying to cross, not entering
+var pendingSettle = null;   // {id, cb} awaiting a town/city/castle choice
 
 // ── OFFICIAL MISSIONS ────────────────────────────────────────
 var OFFICIAL_MISSIONS = [
@@ -1255,7 +1270,28 @@ var TRAVEL_EVENTS = {
   },
   volcanic:   { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Volcanic event card screenshots to add the real deck.', epic:null}] },
   glacier:    { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Glacier event card screenshots to add the real deck.', epic:null}] },
-  settlement: { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Settlement (Castle/Town/City) event card screenshots to add the real deck.', epic:null}] }
+  // Settlement decks split by size: town / city / castle (player picks per settlement).
+  // Town deck transcribed from the physical DUN cards (EV 095–102 base; EV 115–119 expansion).
+  settlement_town: {
+    threshold: 5,
+    cards: [
+      { title:'Gratitude', effect:'The locals feel safer while you are in town. They show you their gratitude by giving each hero 1 coin.', epic:null },
+      { title:'Damaged gear', effect:'Your equipment is damaged after so many days of harsh weather and fierce combats. Choose a random hero. One of his non-magic weapons or armors (randomly) is damaged (just as if it had broken in combat).', epic:null },
+      { title:'Incursion!', effect:'The town is attacked by a band of looters. All Characters must pass a Combat Skill test. Those who fail it suffer 3 damage dice.', epic:'Incursion!' },
+      { title:'Infraction!', effect:'One random hero must pass an Intelligence test. If he fails, the heroes will be surprised by the guards after committing a small brawl or infraction. Play the Places and Services card "Guards".', epic:null },
+      { title:'Minstrel', effect:'You meet a minstrel during your stay. In their next quest all Characters get a +2 bonus on solving riddles and searching libraries.', epic:null },
+      { title:'The invitation', effect:'While you are crossing some farmland, the family that works on it invites you to have lunch with them at home. You accept, but before you begin to eat, you start to be suspicious of the good intentions of your hosts. All heroes must pass an Intelligence test. If one or more of you is successful he will alert the others regarding the cook\'s suspicious attitude and you will decline the invitation. If all of you fail the intelligence test, you will fall deeply asleep and wake up somewhere else in the territory. You lose half of your coins and a random object from each of your backpacks.', epic:null },
+      { title:'Frenzy mushrooms', effect:'A street vendor offers you his strange merchandise at a lower cost than usual (1 coin): 2 frenzy mushrooms.', epic:null },
+      { title:'Animal loyalty', effect:'You find a badly injured dog. If you ignore it, you keep going without any more mishaps. If you decide to heal it, you can do it using a Healing Potion or Healing Herbs. Heroes with the skill "First Aid" will not need to use any object to heal the animal. From this moment on the animal will be faithful to you. You will have a dog as a pet, at no cost.', epic:null },
+      { title:'Distrustful Villagers', effect:'Caution should be exercised when walking among the houses in the villages. Rumors run like the wind. If the population is not of an alignment opposite to that of the heroes, nothing of interest will happen — these are quiet days. If the population is of an alignment opposite to that of the heroes, rumors arise about your deeds. Some accuse you of stealing or even worse things. You must apply the Places and Services card "Guards" as soon as one of the heroes visits the Market. If no one visits the Market, nothing of interest will happen.', epic:null },
+      { title:'Curse the Outsider', effect:'Small towns are not as accustomed to outsiders as cities. If the population is not of an alignment opposite to that of the heroes, nothing of interest will happen — these are quiet days. If the population is of an opposite alignment to that of the heroes, a witch will curse you in whispers as you walk by her home. Each character in the group of heroes must pass a test. \u2713 Success: no effect. \u2717 Failure: you lose 1 Fortune point. If you have no Fortune points, you get the Diseased condition and lose 1 coin.', epic:null },
+      { title:"Let's get down to work!", effect:'Several houses in the village were destroyed in a fire. Do you want to help rebuild them? If you do not want to help rebuild the houses, nothing of interest will happen — however, it will cost you 1 extra coin to rest in that Village during the current year. If you want to help, each hero in the group must pass a test. \u2713 Success: the peasants reward your generosity; you get 1 coin. \u2717 Failure: you have not helped hard enough and think you got injured. If you failed with a blunder you lose 2 coins.', epic:null },
+      { title:'Wrongful Execution', effect:'An execution is about to take place before you. You do not know whether it is right or wrong, but there is a crowd cheering the executioners. If you do not want to intervene to prevent the execution, nothing of interest will happen. If you decide to intervene, choose a hero from your group. Roll Persuasion (against 3; against 5 if the population is of an alignment opposite to that of the heroes). \u2713 Success: you convince the person who ordered the execution and the prisoner will not be executed. A relative of his gives you 5 coins in gratitude. \u2717 Failure: the guards punish you for trying to save the prisoner. You lose 2 coins.', epic:null },
+      { title:'Festival', effect:"It is a time of celebrations in the town. Perhaps you can take advantage of the circumstances. If the population is of an alignment opposite to that of the heroes, nothing of interest will happen — it's a holiday, but no one sympathizes with you. If the population is not of an alignment opposite to that of the heroes, the heroes will be well received. Choose a hero from the group. Roll Persuasion (against 3). \u2713 Success: you get 1 Pack of Provisions and 1 Supreme Beer (Common Objects deck). \u2717 Failure: no effect. You're really not as nice as you think and the locals don't like you.", epic:null }
+    ]
+  },
+  settlement_city:   { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Settlement (City) event card screenshots to add the real deck.', epic:null}] },
+  settlement_castle: { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Settlement (Castle) event card screenshots to add the real deck.', epic:null}] }
 };
 
 // ── Travel state ────────────────────────────────────────
@@ -1383,15 +1419,34 @@ function chooseTravelMode(mode) {
   if (id) travelTo(id, mode);
 }
 
+// Settlement size (town/city/castle) → deck. Remembered per settlement; prompts once.
+function settleDeckKey(t, cb) {
+  if (!travelState.settleTypes) travelState.settleTypes = {};
+  var known = travelState.settleTypes[t.id];
+  if (known) { cb('settlement_' + known); return; }
+  pendingSettle = { id: t.id, cb: cb };
+  document.getElementById('sm-name').textContent = t.settlement || t.name;
+  document.getElementById('modal-settle-type').classList.add('show');
+}
+function chooseSettleType(kind) {
+  document.getElementById('modal-settle-type').classList.remove('show');
+  var p = pendingSettle; pendingSettle = null;
+  if (!p) return;
+  travelState.settleTypes[p.id] = kind;
+  p.cb('settlement_' + kind);
+}
+
 function travelStay(mode) {
   var t = terrById(travelState.territoryId);
   if (!t) return;
   // In a settlement, staying always rolls the settlement deck — no route choice.
   if (travelState.inSettlement) {
-    travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + '.');
-    rollEvent('settlement', 'Staying in ' + (t.settlement ? t.settlement : t.name));
-    dpPhase(); travelState.turn++;
-    saveTravel(); renderMap(); refreshTravelPanel();
+    var sk = settleDeckKey(t, function(deckKey){
+      travelState.log.unshift('Turn ' + travelState.turn + ': Remained in ' + t.name + '.');
+      rollEvent(deckKey, 'Staying in ' + (t.settlement ? t.settlement : t.name));
+      dpPhase(); travelState.turn++;
+      saveTravel(); renderMap(); refreshTravelPanel();
+    });
     return;
   }
   if (!mode) { pendingStay = true; promptTravelMode(travelState.territoryId); return; }
@@ -1412,7 +1467,11 @@ function settlementToggle() {
     travelState.inSettlement = true;
     travelState.log.unshift('Turn ' + travelState.turn + ': Entered ' + t.settlement + '.');
     // Rulebook: event roll on ENTERING a settlement (same campaign turn)
-    rollEvent('settlement', 'Entering ' + t.settlement);
+    settleDeckKey(t, function(deckKey){
+      rollEvent(deckKey, 'Entering ' + t.settlement);
+      saveTravel(); refreshTravelPanel();
+    });
+    return;
   } else {
     travelState.inSettlement = false;
     travelState.log.unshift('Turn ' + travelState.turn + ': Left ' + t.settlement + '.');
