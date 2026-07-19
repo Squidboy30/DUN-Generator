@@ -1253,7 +1253,20 @@ var TRAVEL_EVENTS = {
     ]
   },
   plains:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Plains event card screenshots to add the real deck.', epic:null}] },
-  desert:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Desert event card screenshots to add the real deck.', epic:null}] },
+  // Desert deck transcribed from the physical DUN cards (EV 013–018 base; EV 132–133 expansion).
+  desert: {
+    threshold: 5,
+    cards: [
+      { title:'Quicksand', effect:'One random hero or mercenary steps in quicksand. He must pass an Agility roll. Otherwise he will suffer 5 damage dice against his Natural Armor — or, if someone has a rope, only 2 damage dice against his Natural Armor instead.', epic:null },
+      { title:'Scorpion attack', effect:'A vicious sting emerges from the sand. All heroes and mercenaries must roll Perception. The Character with the lowest result among those who failed the roll suffers 1 poisonous damage die (check the skill "Poisonous").', epic:null },
+      { title:'Sandworm!', effect:'The ground suddenly swirls under your feet. A huge worm swallows half a ton of sand and then rises to the surface to swallow one of you. All heroes and mercenaries must pass an Agility roll. Otherwise they suffer 4 damage dice.', epic:'Swirling Sands' },
+      { title:'Hunger', effect:'You spot a vulture flying low over you. You are starving. Each Character must roll 1D6. On a 4+ (3+ in case he has the skill "Tough") the Character manages to overcome his need of food and keeps on walking. If the roll is failed, the Character loses 1 Vitality point. Before rolling the dice, Characters may avoid this event by spending 1 Pack of Provisions for the whole group.', epic:null },
+      { title:'Dark clouds', effect:'You spot ominous clouds on the horizon, which could be read as bad omens. All the heroes must roll Courage. For every fail, the Dark Player will place a new danger marker on the Campaign map.', epic:null },
+      { title:'Oasis', effect:'You reach a peaceful oasis where you can rest and recover some strength. Each hero recovers up to 2 lost Vitality and Mana points. The group gets a free Pack of Provisions.', epic:null },
+      { title:'Poisonous Snake', effect:'Hidden in the dry soil lurks a snake that attacks you without warning. Choose a random hero from the group. He must pass a test. \u2713 Success: you manage to avoid the snake. \u2717 Failure: you take 1 damage die. If you lose any Vitality, you get the Diseased condition.', epic:null },
+      { title:'Sandstorm', effect:'Suddenly, an enormous cloud of dust rises like a huge wave — you must run for cover! Each hero in the group must pass a test. \u2713 Success: no effect, you were able to take cover. \u2717 Failure: you take 2 damage dice and lose 1 random item from your backpack.', epic:null }
+    ]
+  },
   // Swamp/Marsh deck transcribed from the physical DUN Travel Event cards (EV 049–055).
   // Cloud of insects appears twice in the physical deck (EV 052 & EV 053) — kept twice for accurate draw odds.
   swamp: {
