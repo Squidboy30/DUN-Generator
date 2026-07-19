@@ -1282,7 +1282,19 @@ var TRAVEL_EVENTS = {
     ]
   },
   volcanic:   { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Volcanic event card screenshots to add the real deck.', epic:null}] },
-  glacier:    { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Glacier event card screenshots to add the real deck.', epic:null}] },
+  // Glacier deck transcribed from the physical DUN Travel Event cards (EV 037–042).
+  // NOTE: overlaps heavily with the mountain deck — verify whether mountain shares these or was mis-scanned.
+  glacier: {
+    threshold: 5,
+    cards: [
+      { title:'Travellers camp', effect:'A group of travellers give you food and shelter. Each hero recovers 1 lost Vitality point. The group gets 1 Pack of Provisions.', epic:null },
+      { title:"It's collapsing!", effect:'You walk under an ice bridge when you hear one of its blocks crack. All Characters must pass an Agility test. Those who fail suffer 3 damage dice against Natural Armor.', epic:null },
+      { title:'The ice is cracking!', effect:"You're walking across a lake frozen solid when the ice starts cracking under your feet. All Characters must pass an Agility test. Those who fail the roll suffer 2 damage dice against Natural Armor (4 if they equipped heavy armor).", epic:null },
+      { title:'Snowstorm!', effect:'A snowstorm falls upon you with such force that it seems to you that the gods are blowing against you to stop your advance. You must find a cave or you will have trouble surviving in the open. One of you must pass a Perception roll. If he does so, nothing else happens. If he fails, each Character suffers 2 damage dice against Natural Armor.', epic:null },
+      { title:"There's something out there", effect:'A Creature from that inhospitable landscape attacks the group. The hero with the lowest Movement (choose randomly if the lowest value applies to different Characters) suffers 4 damage dice.', epic:"There's something out there" },
+      { title:'Intense cold', effect:'The area is so cold that wind feels like razors. Each hero suffers 2 damage dice against Natural Armor. Before rolling dice you can use a flask of Greek Fire or a Torch to avoid this event.', epic:null }
+    ]
+  },
   // Settlement decks split by size: town / city / castle (player picks per settlement).
   // Town deck transcribed from the physical DUN cards (EV 095–102 base; EV 115–119 expansion).
   settlement_town: {
