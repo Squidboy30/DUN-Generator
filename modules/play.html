@@ -340,14 +340,11 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 </div>
 
 <!-- Places and Services: card result -->
-<div class="ov-overlay" id="modal-places-card">
-  <div class="ov-modal" style="width:440px;text-align:center;padding:0 0 22px;">
-    <img id="pl-card-img" src="" alt="" style="display:none;width:100%;height:auto;border-bottom:2px solid var(--border-gold);margin-bottom:14px;">
-    <div style="padding:0 26px;">
-      <div class="ov-title" id="pl-card-title">Location</div>
-      <div class="ov-hint" style="margin:12px 0 4px;text-align:left;font-size:14px;line-height:1.5;" id="pl-card-effect"></div>
-      <button class="ov-begin" style="margin-top:14px;" onclick="closePlacesCard()">Close</button>
-    </div>
+<div class="ov-overlay" id="modal-places-card" onclick="if(event.target===this) closePlacesCard();">
+  <div class="ov-modal" style="width:360px;text-align:center;padding:0;background:transparent;border:none;box-shadow:none;">
+    <img id="pl-card-img" src="" alt="" style="display:none;width:100%;height:auto;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.8);cursor:pointer;" onclick="closePlacesCard()">
+    <div id="pl-card-title" style="display:none;"></div>
+    <div id="pl-card-effect" style="display:none;"></div>
   </div>
 </div>
 
