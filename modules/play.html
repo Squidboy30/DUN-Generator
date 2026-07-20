@@ -173,6 +173,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
   </div>
   <div class="hdr-right">
     <div class="hdr-progress" id="hdr-progress"></div>
+    <button class="hdr-btn" onclick="openPartyPanel()">⚔ Party</button>
     <button class="hdr-btn" onclick="openOverview()">📜 Overview</button>
     <button class="hdr-btn danger" onclick="confirmReset()">↺ Reset</button>
   </div>
@@ -342,9 +343,25 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 <!-- Places and Services: card result -->
 <div class="ov-overlay" id="modal-places-card" onclick="if(event.target===this) closePlacesCard();">
   <div class="ov-modal" style="width:360px;text-align:center;padding:0;background:transparent;border:none;box-shadow:none;">
-    <img id="pl-card-img" src="" alt="" style="display:none;width:100%;height:auto;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.8);cursor:pointer;" onclick="closePlacesCard()">
+    <img id="pl-card-img" src="" alt="" title="Click to enlarge" style="display:none;width:100%;height:auto;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.8);cursor:zoom-in;" onclick="enlargePlacesCard(event)">
     <div id="pl-card-title" style="display:none;"></div>
     <div id="pl-card-effect" style="display:none;"></div>
+  </div>
+</div>
+
+
+<!-- Fullscreen card lightbox -->
+<div class="ov-overlay" id="card-lightbox" style="z-index:600;background:rgba(0,0,0,.93);cursor:zoom-out;" onclick="this.classList.remove('show')">
+  <img id="card-lightbox-img" src="" alt="" style="max-width:95vw;max-height:95vh;border-radius:12px;box-shadow:0 8px 60px rgba(0,0,0,.9);">
+</div>
+
+<!-- Party viewer -->
+<div class="ov-overlay" id="modal-party" onclick="if(event.target===this) closePartyPanel();">
+  <div class="ov-modal" style="width:900px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+    <div class="ov-title">The Party</div>
+    <div class="ov-sub" id="party-sub">Active party</div>
+    <div id="party-list" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px;"></div>
+    <button class="ov-begin" style="margin-top:16px;background:transparent;" onclick="closePartyPanel()">&#8592; Back to Map</button>
   </div>
 </div>
 
@@ -1993,6 +2010,82 @@ function checkDangerContact() {
   alert('☠ DANGER!\n' + hits.length + ' danger marker' + (hits.length===1?'':'s') + ' reached the party at ' + t.name + '.\n\nDraw a random Campaign Danger card from your physical deck and resolve it' + (hits.length>1 ? ' (one per marker)' : '') + '.');
 }
 
+
+// ── CARD LIGHTBOX ──────────────────────────────────────────
+function enlargePlacesCard(ev) {
+  if (ev) ev.stopPropagation();
+  var src = document.getElementById('pl-card-img').src;
+  if (!src) return;
+  document.getElementById('card-lightbox-img').src = src;
+  document.getElementById('card-lightbox').classList.add('show');
+}
+
+// ── PARTY VIEWER ───────────────────────────────────────────
+var RACE_NAMES = {10:'Humans',11:'Elves',12:'Dark Elves',13:'Halflings',14:'Orcs',15:'Ratfolk',17:'Centaurs',18:'Vampires',19:'Treefolk',20:'Celestials',21:'Cyclops',22:'Beastmen',23:'Infernals',24:'Birdfolk',28:'Renegade Dwarves',30:'Mumaks',32:'Aranhaiks',33:'Kobolds',34:'Zombies',35:'Iron Souls',36:'Half-Elves',37:'Ogres',38:'Minotaurs',41:'The Soulless',42:'Fairies',43:'Devastators',44:'Draconians'};
+var PARTY_ATTRS = [
+  ['movement','MOV'],['combatSkill','CS'],['strength','STR'],['shootingSkill','SS'],
+  ['agility','AGI'],['intelligence','INT'],['mana','MANA'],['courage','COU'],
+  ['naturalArmor','NA'],['vitality','VIT'],['dexterity','DEX'],['perception','PER']
+];
+function prettyClass(id) {
+  if (!id) return '';
+  return String(id).replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+}
+function openPartyPanel() {
+  var heroes = [], parties = [], activeId = '';
+  try { heroes  = JSON.parse(localStorage.getItem('dun_heroes_v2')  || '[]'); } catch(e) {}
+  try { parties = JSON.parse(localStorage.getItem('dun_parties_v2') || '[]'); } catch(e) {}
+  try { activeId = localStorage.getItem('dun_active_party') || ''; } catch(e) {}
+  var party = null;
+  for (var i = 0; i < parties.length; i++) if (parties[i].id === activeId) party = parties[i];
+  if (!party && parties.length) party = parties[0];
+  var members = [];
+  if (party && party.heroIds) {
+    party.heroIds.forEach(function(id) {
+      for (var i = 0; i < heroes.length; i++) if (heroes[i].id === id) members.push(heroes[i]);
+    });
+  } else {
+    members = heroes;
+  }
+  document.getElementById('party-sub').textContent = party ? party.name : 'All heroes';
+  var list = document.getElementById('party-list');
+  list.innerHTML = '';
+  if (!members.length) {
+    list.innerHTML = '<div style="opacity:.7;padding:20px;">No heroes found. Create your party in the Party Manager first.</div>';
+  }
+  members.forEach(function(h) {
+    var a = h.attrs || {};
+    var card = document.createElement('div');
+    card.style.cssText = 'width:260px;border:1px solid var(--border-gold,#8a6d2f);border-radius:8px;padding:12px;background:rgba(0,0,0,.25);text-align:left;';
+    var portrait = h.portraitCustom || h.portraitUrl || '';
+    var vitMax = a.vitality != null ? a.vitality : '?';
+    var vitCur = h.currentVitality != null ? h.currentVitality : vitMax;
+    var fort = (h.currentFortune != null ? h.currentFortune : (h.fortune != null ? h.fortune : 0));
+    var html = '';
+    html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">';
+    if (portrait) html += '<img src="' + portrait + '" alt="" onerror="this.style.display=\'none\'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;">';
+    html += '<div><div style="font-weight:bold;">' + (h.name || 'Hero') + '</div>';
+    html += '<div style="font-size:12px;opacity:.75;">' + (RACE_NAMES[h.raceId] || '') + ' ' + prettyClass(h.classId) + '</div></div></div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:12px;text-align:center;">';
+    PARTY_ATTRS.forEach(function(p) {
+      var v = a[p[0]];
+      if (p[0] === 'vitality') v = vitCur + '/' + vitMax;
+      else if (v == null) v = '\u2013';
+      html += '<div style="border:1px solid rgba(138,109,47,.4);border-radius:4px;padding:3px 2px;"><div style="opacity:.65;font-size:10px;">' + p[1] + '</div><div>' + v + '</div></div>';
+    });
+    html += '</div>';
+    html += '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;opacity:.85;">';
+    html += '<span>\uD83C\uDF40 Fortune: ' + fort + '</span><span>\uD83D\uDCB0 ' + (h.coins != null ? h.coins : 0) + ' coins</span><span>' + (h.vp != null ? h.vp + ' VP' : '') + '</span>';
+    html += '</div>';
+    card.innerHTML = html;
+    list.appendChild(card);
+  });
+  document.getElementById('modal-party').classList.add('show');
+}
+function closePartyPanel() {
+  document.getElementById('modal-party').classList.remove('show');
+}
+
 // ── CAMPAIGN OVERVIEW ─────────────────────────────────────
 function populateTerrSelect(selId) {
   var sel = document.getElementById(selId);
@@ -2089,8 +2182,16 @@ function initTravel() {
   }
   renderMap();
   refreshTravelPanel();
-  // First visit: show the campaign overview to set story and starting positions
-  if (!travelState.overviewSeen) openOverview();
+  // Starting positions come from campaign creation. Only show the overview
+  // on first open if this campaign has no starting territories set.
+  if (!travelState.overviewSeen) {
+    if (travelState.territoryId && travelState.dpStartId) {
+      travelState.overviewSeen = true;
+      saveTravel();
+    } else {
+      openOverview();
+    }
+  }
 }
 
 load();
