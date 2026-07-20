@@ -1479,6 +1479,17 @@ var ADJ_DIST = 320; // px — territories within this distance count as adjacent
 
 function terrById(id) { return TERRITORIES.find(function(t){ return t.id === id; }); }
 
+// Bridges: fixed river/road crossings between specific territory pairs (from the physical map),
+// not random Travel Event draws. Crossing one of these always plays the "Bridge" Places & Services card.
+var BRIDGES = [
+  ['t40','t47'], ['t60','t51'], ['t35','t34'], ['t26e','t44e'], ['t33','t39'], ['t64e','t65e']
+];
+function bridgeBetween(a, b) {
+  return BRIDGES.some(function(pair){
+    return (pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a);
+  });
+}
+
 function adjacentIds(id) {
   var t = terrById(id);
   if (!t) return [];
@@ -1568,10 +1579,16 @@ function travelTo(id, mode) {
   // Ask route once: road or overland (terrain deck). Settlements have no wilderness to cross.
   if (!mode) { promptTravelMode(id); return; }
   var from = terrById(travelState.territoryId);
+  var crossedBridge = from && bridgeBetween(from.id, id);
   travelState.territoryId  = id;
   travelState.inSettlement = false;
   var via = (mode === 'road') ? ' by road' : (mode === 'river') ? ' by river' : (mode === 'sea') ? ' by sea' : ' overland';
   travelState.log.unshift('Turn ' + travelState.turn + ': Travelled to ' + t.name + ' (' + t.region + ')' + (from ? ' from ' + from.name : '') + via + '.');
+  // Fixed bridge crossing: always plays the "Bridge" Places & Services card, before the normal event roll.
+  if (crossedBridge) {
+    travelState.log.unshift('· Crossed the bridge between ' + from.name + ' and ' + t.name + '.');
+    playBridgeCard();
+  }
   // Rulebook: event roll on ENTERING a territory — road/river/sea deck if travelling by path, else terrain deck
   var deckKey = (mode === 'road') ? 'road' : (mode === 'river') ? 'river' : (mode === 'sea') ? 'sea' : t.type;
   rollEvent(deckKey, 'Entering ' + t.name + (mode === 'road' ? ' (road)' : mode === 'river' ? ' (river)' : mode === 'sea' ? ' (sea)' : ''));
@@ -1890,6 +1907,15 @@ function visitLocation(key) {
 }
 function closePlacesCard() {
   document.getElementById('modal-places-card').classList.remove('show');
+}
+
+// Fixed bridge crossing — always shows the "Bridge" card directly, no picker needed.
+function playBridgeCard() {
+  var loc = PLACES_SERVICES.bridge;
+  if (!loc) return;
+  document.getElementById('pl-card-title').textContent = loc.title;
+  document.getElementById('pl-card-effect').textContent = loc.effect;
+  document.getElementById('modal-places-card').classList.add('show');
 }
 
 // After the heroes' travel event roll: move every marker one territory
