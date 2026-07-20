@@ -1208,17 +1208,24 @@ var TERRITORIES = [
 
 var TRAVEL_EVENTS = {
   // Threshold = minimum D6 roll to trigger an event. Cards drawn at random when triggered.
-  // Mountain deck transcribed from the physical DUN Travel Event cards.
+  // Mountain deck transcribed from the physical DUN Travel Event cards (EV056-060,062-065/110 base; EV129-131/133 expansion). 13 cards confirmed total.
+  // Earlier scan wrongly duplicated 6 Glacier cards into this deck - replaced with the real mountain pile.
   mountain: {
     threshold: 5,
     cards: [
-      { title:'Snowstorm!', effect:'A snowstorm falls upon you with such force it seems the gods are blowing against you. You must find a cave or you will have trouble surviving in the open. One of you must pass a Perception roll. If he fails, each Character suffers 2 damage dice against Natural Armor.', epic:null },
-      { title:'Travellers Camp', effect:'A group of travellers give you food and shelter. Each hero recovers 1 lost Vitality point. The group gets 1 Pack of Provisions.', epic:null },
-      { title:'Ambush in the Rocks', effect:'A group of enemies has ambushed you taking advantage of the shelter offered by the rocks on a hillside you pass through. All Characters suffer 2 damage dice.', epic:'Ambush in the Rocks' },
-      { title:"There's Something Out There", effect:'A Creature from that inhospitable landscape attacks the group. The hero with the lowest Movement (choose randomly if tied) suffers 4 damage dice.', epic:"There's Something Out There" },
-      { title:'The Ice is Cracking!', effect:'You are walking across a lake frozen solid when the ice starts cracking under your feet. All Characters must pass an Agility test. Those who fail suffer 2 damage dice against Natural Armor (4 if they equipped heavy armor).', epic:null },
-      { title:'Intense Cold', effect:'The area is so cold the wind feels like razors. Each hero suffers 2 damage dice against Natural Armor. Before rolling you may use a Flask of Greek Fire or a Torch to avoid this event.', epic:null },
-      { title:"It's Collapsing!", effect:'You walk under an ice bridge when you hear one of its blocks crack. All Characters must pass an Agility test. Those who fail suffer 3 damage dice against Natural Armor.', epic:null }
+      { title:'Corpse', effect:'You find the corpse of an explorer, or maybe a slain warrior whose belongings have been left untouched. You find 1D6 coins, a Broadsword, a Short Bow and a quiver full of arrows. You also find one random Common Object.', epic:null },
+      { title:'The path is cut', effect:'The way is cut by an obstacle. Characters must find an alternative route, which takes them a considerable time. Characters lose one campaign turn. You will be considered to have chosen to remain in the territory and you will have to roll for Travel Events if you wish to cross it.', epic:null },
+      { title:'Cavern', effect:'You find a cavern where you can shelter from the cold of the night. If you choose to go inside, roll 1D6 and check the result in the following chart:\n1-2) There\'s a bear in the cavern and it attacks you. One random hero suffers 3 damage dice. Epic event: play the quest "Wild Animals".\n3-5) You find nothing interesting inside.\n6) You find objects worth 1D6 coins.', epic:'Wild Animals' },
+      { title:'Huge creature!', effect:'Mountains are sometimes a shelter for giants, dragons, griffins and primal daemons. If some of them discovers you, you\'d better run! One of the heroes must roll Perception (pets may help). If he fails, all Characters and mercenaries must roll Movement. Characters who fail this roll will lose 1D6 Vitality point after being attacked by one of these Creatures. Epic Event: Play the event "Huge Creatures!".', epic:'Huge Creatures!' },
+      { title:'Landslide!', effect:'A landslide happens as you cross a black rock hillside. All Characters must pass an Agility test or else suffer 3 damage dice.', epic:null },
+      { title:'Privileged information', effect:'A local warns you about the dangers awaiting you in the area. The group of Characters get a +2 bonus on their next Perception roll, both during a Travel Event or a quest.', epic:null },
+      { title:'Spring', effect:'You find a spring running from the heart of a mountain. The water is crystalline and cold and you can fill your canteens. All Characters recover 1 lost Vitality point.', epic:null },
+      { title:'The Pond of Dreams and Nightmares', effect:'You find a frozen pond on whose surface you see yourself reflected as if in front of a mirror. However, if you look closely, you can discover very revealing scenes about your future. Combats with horrible creatures, strains, wounds, feats, and terrible monsters. Each hero must pass a Courage test. Those who pass the test will get a +1 to Courage during the next quest. Otherwise, they will get a -1.', epic:null },
+      { title:'Monastery', effect:'You arrive at a small, isolated monastery inhabited by some ascetic warrior monks. Grateful to have news about the world outside, the novelty of your company and the chance to trade with simple objects, they allow you to train with them and rest at no cost for a few days. Regard that in this place there is an "inn" (the service of "recovery" will be free of cost) and a "combat school" (at the usual cost). Check the corresponding cards of Places and Services.', epic:null },
+      { title:'Spider Webs', effect:'Some forests in the mountains are inhabited by nasty creatures. Suddenly, you find yourselves surrounded by spider webs that obstruct the tree-lined paths. Each hero in the party must pass a test*. \u2713 Success: no effect. You manage to avoid the trap set by the arachnids. \u2717 Failure: you take 1 damage die against Natural Armor. If you lose any Vitality you get the Diseased condition. *Before rolling the dice, you can use a Flask of Greek Fire (Special Objects deck) to avoid this event. Epic event: play the quest "Giant Spiders".', epic:'Giant Spiders' },
+      { title:'Giant Eagles', effect:'An unexpected encounter with the queens of the skies endangers your journey. But it might also be an opportunity, if you give them what they want. Choose a hero from the group. He must roll Persuasion against the eagle. The eagle has Persuasion 3. \u2713 Success: the eagle does not attack you. If you roll a critical or decide to sacrifice a pet*, the eagles will help you (the group can move up to 4 territories away automatically without rolling for Travel Events). \u2717 Failure: the group must sacrifice* a pet or else a random hero will take 6 damage dice against Natural Armor. *Remove from play one of your average-sized pets. Epic event in case of failure: play the adventure "Huge Creatures!" and use the creature "Giant Eagle" (p. 47 from the Bestiary).', epic:'Huge Creatures!' },
+      { title:'Avalanche', effect:'Winter turns the mountain passes into treacherous traps. You must be vigilant and run as fast as possible if you hear the mountain roar. If the heroes are not in a Winter campaign turn, discard this card. Draw the next card from the Travel Events deck. Each character in the party must pass a test. \u2713 Success: no effect. You have managed to leave the place in time. \u2717 Failure: you take 4 damage dice against Natural Armor.', epic:null },
+      { title:'Ambush in the Rocks', effect:'A group of enemies has ambushed you taking advantage of the shelter offered by the rocks on a hillside you pass through. All Characters suffer 2 damage dice.', epic:'Ambush in the Rocks' }
     ]
   },
   // Road deck transcribed from the physical DUN Travel Event cards (EV 072–082).
@@ -1339,7 +1346,6 @@ var TRAVEL_EVENTS = {
     ]
   },
   // Glacier deck transcribed from the physical DUN Travel Event cards (EV 037–042).
-  // NOTE: overlaps heavily with the mountain deck — verify whether mountain shares these or was mis-scanned.
   glacier: {
     threshold: 5,
     cards: [
