@@ -416,9 +416,13 @@ function load() {
     playState = buildInitialState();
   }
   var img = document.getElementById('map-img');
+  var mapInited = false;
   function onImgReady() {
-    IMG_W = img.naturalWidth  || 2000;
-    IMG_H = img.naturalHeight || 722;
+    // Guard against double-init if load/error/timeout race each other.
+    if (mapInited) return;
+    mapInited = true;
+    IMG_W = img.naturalWidth  || 5000;
+    IMG_H = img.naturalHeight || 1792;
     var svg = document.getElementById('map-svg');
     svg.setAttribute('width',  IMG_W);
     svg.setAttribute('height', IMG_H);
@@ -431,7 +435,11 @@ function load() {
     initTravel();
   }
   if (img.complete && img.naturalWidth) onImgReady();
-  else img.onload = onImgReady;
+  else {
+    img.onload  = onImgReady;
+    img.onerror = onImgReady; // don't let a failed/blocked image load silently break travel setup
+    setTimeout(onImgReady, 4000); // safety net: map is a large image, don't wait forever on a slow connection
+  }
 }
 
 // Fallback pin positions spread across the map — used when a node has no mapPin.
