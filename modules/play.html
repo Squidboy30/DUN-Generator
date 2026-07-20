@@ -1280,7 +1280,24 @@ var TRAVEL_EVENTS = {
       { title:'Help!', effect:'A group of heroes with your alignment is fighting against a number of creatures. If you choose to help them, all heroes suffer 2 damage dice. However, they will reward you with 5 coins for the whole group.', epic:'Help!' }
     ]
   },
-  plains:     { threshold:5, cards:[{title:'Pending card scan', effect:'Upload Plains event card screenshots to add the real deck.', epic:null}] },
+  // Plains deck transcribed from the physical DUN Travel Event cards (EV001-012/110).
+  plains: {
+    threshold: 5,
+    cards: [
+      { title:'Scorched village', effect:'You enter a scorched village. If you choose to bury the dead a new danger marker will be placed on the Campaign map. If you decide not to do so, one of the survivors puts a curse on you. One random hero loses 1 Fortune point. If he has no Fortune points he is affected by the condition \'Diseased\'.', epic:null },
+      { title:'Ancient graveyard', effect:'You enter an ancient graveyard. The ground is covered in tall grass. Some crypts remain sealed while others look to have been looted by others. You can pass by or open those tombs still untouched and check the result in the following chart:\n1-2) Several living dead rise from their tombs and attack you. Each hero and mercenary suffers 2 damage dice. Epic event: play the quest \'The Dead Rise\'.\n3-4) Nothing relevant happens.\n5-6) You find rusty weapons and tools, but also objects worth 2 coins.', epic:'The Dead Rise' },
+      { title:'Crow', effect:'You spot a crow flying low which seems to have some parchment tied to its legs. You try to shoot at it and fail. It might be taking news about you to your enemies! The Dark Player will place a new danger marker on the Campaign map.', epic:null },
+      { title:'Ambush!', effect:"You've been ambushed by a group of enemies. They remained hidden and have waited for the right occasion to attack you while you rest. Each hero and mercenary in the party suffers 3 damage dice unless a Perception roll is passed. Epic event: play the quest \'Ambush!\'.", epic:'Ambush!' },
+      { title:'Farm', effect:'You are welcome in a small farm. The farmers give you 1 Pack of Provisions. Roll 1D6. On a result of 6, the owner gives you the chance of joining a random side quest among the ones available in that territory or the adjacent ones, in addition to the usual reward if you are successful.', epic:null },
+      { title:'Water Mill', effect:'You walk by an old water mill on the bank of a stream. When the miller finds you drinking from the stream, he gently offers you food and shelter. He has had a good year and he has victuals to spare. Each hero recovers up to 2 lost Vitality points. The group gets 1 Pack of Provisions for free.', epic:null },
+      { title:'Dark Clouds', effect:'You spot ominous clouds on the horizon, which could be read as bad omens. All the heroes must roll Courage. For every fail, the Dark Player will place a new danger marker on the Campaign map.', epic:null },
+      { title:'Sacred Stones', effect:'You reach a group of sacred stones in which magic rituals have been taking place since time immemorial. Each hero who chooses to make an offer to the ancient gods (any object with a selling price) must roll 1D6 and check the result in the following chart:\n1) The gods are offended by your offering. Character loses 1 Fortune point. If he had none, he instantly suffers 3 damage dice against Natural Armor.\n2-4) The gods seem to be busy somewhere else. Nothing relevant happens.\n5-6) Your offering pleases the gods. Character gets 1 extra Fortune point (once used, it won\'t be recovered).', epic:null },
+      { title:'Refugees', effect:"You meet a group of refugees escaping from a razed town. If you don't choose to help them, then nothing happens. If you choose to help them and escort them, each hero gets 1 coin, and the Dark Player will place a new danger marker on the Campaign map.", epic:null },
+      { title:'Rumours', effect:'You get some information about a forthcoming stage in your journey that keeps you alert. The Dark Player randomly removes a Danger marker among those placed on the Campaign map.', epic:null },
+      { title:'Deluge', effect:'A torrential rain falls for several consecutive days that delays the trip and forces you to double your effort. It is hardly possible to distinguish the roads from the rough land. All the Characters lose 1 Vitality point unless a Pack of Provisions is spent to feed everyone.', epic:null },
+      { title:'Windmill', effect:'You pass by an impressive windmill on top of a hill. The miller comes out to meet you as you approach and breathes a sigh of relief when he sees that you have no intention of stealing from him. He offers you accommodation in his home until the next day. Each Character recovers up to 2 Vitality and Mana points. You can buy up to 1 Fortune point at the usual price.', epic:null }
+    ]
+  },
   // Desert deck transcribed from the physical DUN cards (EV 013–018 base; EV 132–133 expansion).
   desert: {
     threshold: 5,
