@@ -248,6 +248,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
           Danger markers: <span id="tp-dp-count" style="color:#e06060;">0</span> / 10
         </div>
         <button class="tp-btn" onclick="restAtInn()" id="tp-btn-rest" style="display:none;">🛏 Rest at Inn (spawn roll)</button>
+        <button class="tp-btn" onclick="openPlacesList()" id="tp-btn-places" style="display:none;">📍 Visit a Location</button>
         <button class="tp-btn" onclick="addDangerManual()" style="font-size:11px;color:var(--text-muted);">＋ Place Danger Marker (manual)</button>
       </div>
 
@@ -324,6 +325,26 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
       <button class="ov-begin" style="flex:1;min-width:100px;" onclick="chooseTravelMode('river')">🚣 By River</button>
       <button class="ov-begin" style="flex:1;min-width:100px;" onclick="chooseTravelMode('sea')">⛵ By Sea</button>
     </div>
+  </div>
+</div>
+
+<!-- Places and Services: choose a location to visit -->
+<div class="ov-overlay" id="modal-places-list">
+  <div class="ov-modal" style="width:460px;">
+    <div class="ov-title">Places &amp; Services</div>
+    <div class="ov-sub">Available in <span id="pl-settlement-name">this settlement</span></div>
+    <div class="ov-hint" style="margin:10px 0 14px;">Choose a location to visit. Each plays its own Places &amp; Services card.</div>
+    <div id="pl-location-list" style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;"></div>
+    <button class="ov-begin" style="margin-top:14px;background:transparent;" onclick="closePlacesList()">Close</button>
+  </div>
+</div>
+
+<!-- Places and Services: card result -->
+<div class="ov-overlay" id="modal-places-card">
+  <div class="ov-modal" style="width:460px;text-align:center;">
+    <div class="ov-title" id="pl-card-title">Location</div>
+    <div class="ov-hint" style="margin:12px 0 4px;text-align:left;font-size:14px;line-height:1.5;" id="pl-card-effect"></div>
+    <button class="ov-begin" style="margin-top:14px;" onclick="closePlacesCard()">Close</button>
   </div>
 </div>
 
@@ -1032,124 +1053,124 @@ function mFit(){
 var TERRITORIES = [
   {id:'i1', name:'Column Islands', region:'Northern Islands', type:'forest', x:140, y:612},
   {id:'i2', name:'Argon Island', region:'Northern Islands', type:'mountain', x:303, y:648},
-  {id:'i3', name:'Milon Isle (Mitika)', region:'Northern Islands', type:'forest', x:441, y:551, settlement:'Mitika', settleKind:'settlement'},
+  {id:'i3', name:'Milon Isle (Mitika)', region:'Northern Islands', type:'forest', x:441, y:551, settlement:'Mitika', settleKind:'settlement', services:['herbalist','pier_dock','inn','kennel_and_breeding']},
   {id:'i4', name:'Folor Forest', region:'Northern Islands', type:'forest', x:148, y:791},
-  {id:'i5', name:'Trecia Highlands (Atnas)', region:'Kingdom of Trecia', type:'mountain', x:345, y:884, settlement:'Atnas', settleKind:'settlement'},
-  {id:'i6', name:'Trecia South (Zanom)', region:'Kingdom of Trecia', type:'plains', x:386, y:969, settlement:'Zanom', settleKind:'settlement'},
-  {id:'i7', name:'Trecia East (Peklos)', region:'Kingdom of Trecia', type:'forest', x:497, y:862, settlement:'Peklos', settleKind:'settlement'},
+  {id:'i5', name:'Trecia Highlands (Atnas)', region:'Kingdom of Trecia', type:'mountain', x:345, y:884, settlement:'Atnas', settleKind:'settlement', services:['alchemist','inn','combat_school','oracle','school_of_magic','king_or_governor','blacksmith_armory','market','physician','library']},
+  {id:'i6', name:'Trecia South (Zanom)', region:'Kingdom of Trecia', type:'plains', x:386, y:969, settlement:'Zanom', settleKind:'settlement', services:['market','inn','kennel_and_breeding','pier_dock']},
+  {id:'i7', name:'Trecia East (Peklos)', region:'Kingdom of Trecia', type:'forest', x:497, y:862, settlement:'Peklos', settleKind:'settlement', services:['combat_school','inn','blacksmith_armory','oracle','herbalist','tavern','king_or_governor','pier_dock','market']},
   {id:'i8', name:'Bronze Island', region:'Kingdom of Trecia', type:'mountain', x:464, y:745},
   {id:'i9', name:'Northern Isle', region:'Northern Islands', type:'plains', x:549, y:668},
-  {id:'i10', name:'Isle of Howls (Goromul)', region:'Isle of Howls', type:'volcanic', x:1888, y:124, settlement:'Goromul', settleKind:'evil'},
-  {id:'t1', name:'Raarkund', region:'Lance Peninsula', type:'plains', x:2398, y:82, settlement:'Raarkund', settleKind:'evil'},
-  {id:'t2', name:'Urakul', region:'Lance Peninsula', type:'plains', x:2086, y:245, settlement:'Urakul', settleKind:'evil'},
+  {id:'i10', name:'Isle of Howls (Goromul)', region:'Isle of Howls', type:'volcanic', x:1888, y:124, settlement:'Goromul', settleKind:'evil', services:['combat_school','blacksmith_armory','inn','oracle','sacred_place','pier_dock']},
+  {id:'t1', name:'Raarkund', region:'Lance Peninsula', type:'plains', x:2398, y:82, settlement:'Raarkund', settleKind:'evil', services:['blacksmith_armory','sacred_place','inn','oracle','alchemist','school_of_magic']},
+  {id:'t2', name:'Urakul', region:'Lance Peninsula', type:'plains', x:2086, y:245, settlement:'Urakul', settleKind:'evil', services:['physician','blacksmith_armory','combat_school','herbalist','inn','oracle','pier_dock']},
   {id:'t3', name:'South Lance Glacier', region:'Lance Peninsula', type:'glacier', x:2143, y:428},
   {id:'t4', name:'Frost Woods (E)', region:'Frost Woods', type:'forest', x:2407, y:522},
   {id:'t5', name:'Frost Woods (C)', region:'Frost Woods', type:'forest', x:2259, y:541},
-  {id:'t6', name:'Frost Woods (Nigazul)', region:'Frost Woods', type:'forest', x:2062, y:549, settlement:'Nigazul', settleKind:'evil'},
+  {id:'t6', name:'Frost Woods (Nigazul)', region:'Frost Woods', type:'forest', x:2062, y:549, settlement:'Nigazul', settleKind:'evil', services:['oracle','market','physician','herbalist','inn']},
   {id:'t7', name:'Frost Woods (W)', region:'Frost Woods', type:'forest', x:1858, y:530},
   {id:'t8', name:'Icy Deserts', region:'Icy Deserts', type:'desert', x:1631, y:515},
-  {id:'t9', name:'Kamhul Coast', region:'Icy Deserts', type:'plains', x:1443, y:388, settlement:'Kamhul', settleKind:'evil'},
+  {id:'t9', name:'Kamhul Coast', region:'Icy Deserts', type:'plains', x:1443, y:388, settlement:'Kamhul', settleKind:'evil', services:['blacksmith_armory','combat_school','inn']},
   {id:'t10', name:'Ascadia (N)', region:'Kingdom of Ascadia', type:'plains', x:1348, y:559},
   {id:'t11', name:'Ascadia (W)', region:'Kingdom of Ascadia', type:'plains', x:978, y:492},
   {id:'t12', name:'Ascadia (C)', region:'Kingdom of Ascadia', type:'plains', x:926, y:630},
-  {id:'t13', name:'Bear\'s Den', region:'Kingdom of Ascadia', type:'plains', x:1060, y:646, settlement:'The Bear\'s Den', settleKind:'settlement'},
+  {id:'t13', name:'Bear\'s Den', region:'Kingdom of Ascadia', type:'plains', x:1060, y:646, settlement:'The Bear\'s Den', settleKind:'settlement', services:['herbalist','kennel_and_breeding','combat_school','blacksmith_armory','inn']},
   {id:'t14', name:'Ascadia Forest', region:'Kingdom of Ascadia', type:'forest', x:1295, y:668},
-  {id:'t15', name:'Breten', region:'Kingdom of Ascadia', type:'plains', x:1482, y:714, settlement:'Breten', settleKind:'settlement'},
-  {id:'t16', name:'Toulounne Plains', region:'Kingdom of Lesonia', type:'plains', x:1649, y:717, settlement:'Toulounne', settleKind:'settlement'},
+  {id:'t15', name:'Breten', region:'Kingdom of Ascadia', type:'plains', x:1482, y:714, settlement:'Breten', settleKind:'settlement', services:['herbalist','stables','physician','inn']},
+  {id:'t16', name:'Toulounne Plains', region:'Kingdom of Lesonia', type:'plains', x:1649, y:717, settlement:'Toulounne', settleKind:'settlement', services:['combat_school','blacksmith_armory','physician','alchemist','king_or_governor','stables','market']},
   {id:'t17', name:'Lesonia (N)', region:'Kingdom of Lesonia', type:'plains', x:1921, y:655},
   {id:'t18', name:'Rur Forest', region:'Kingdom of Lesonia', type:'forest', x:1978, y:773},
   {id:'t19', name:'Lesonia Hills', region:'Kingdom of Lesonia', type:'mountain', x:2082, y:872},
   {id:'t20', name:'Lesonia (E)', region:'Kingdom of Lesonia', type:'plains', x:2214, y:719},
   {id:'t21', name:'Lesonia (NE)', region:'Kingdom of Lesonia', type:'plains', x:2371, y:691},
   {id:'t22', name:'Lesonia (SE)', region:'Kingdom of Lesonia', type:'plains', x:2410, y:865},
-  {id:'t23', name:'Aurion', region:'Kingdom of Lesonia', type:'plains', x:2199, y:862, settlement:'Aurion', settleKind:'settlement'},
+  {id:'t23', name:'Aurion', region:'Kingdom of Lesonia', type:'plains', x:2199, y:862, settlement:'Aurion', settleKind:'settlement', services:['blacksmith_armory','kennel_and_breeding','inn','combat_school','physician','herbalist']},
   {id:'t24', name:'Chettenaum Forest', region:'Chettenaum Forest', type:'forest', x:2165, y:1036},
   {id:'t25', name:'Alania (N)', region:'Kingdom of Alania', type:'plains', x:2350, y:1080},
   {id:'t26', name:'Alania (C)', region:'Kingdom of Alania', type:'plains', x:2373, y:1214},
   {id:'t27', name:'Alania (E)', region:'Kingdom of Alania', type:'plains', x:2383, y:1373},
   {id:'t28', name:'Alania (SE)', region:'Kingdom of Alania', type:'plains', x:2410, y:1600},
   {id:'t29', name:'Alania (S)', region:'Kingdom of Alania', type:'plains', x:2294, y:1719},
-  {id:'t30', name:'Besalar', region:'Kingdom of Alania', type:'plains', x:2248, y:1575, settlement:'Besalar', settleKind:'settlement'},
-  {id:'t31', name:'Canmor', region:'Kingdom of Alania', type:'plains', x:2192, y:1330, settlement:'Canmor', settleKind:'settlement'},
+  {id:'t30', name:'Besalar', region:'Kingdom of Alania', type:'plains', x:2248, y:1575, settlement:'Besalar', settleKind:'settlement', services:['alchemist','market','treasurer','king_or_governor','blacksmith_armory','physician']},
+  {id:'t31', name:'Canmor', region:'Kingdom of Alania', type:'plains', x:2192, y:1330, settlement:'Canmor', settleKind:'settlement', services:['stables','blacksmith_armory','tavern','inn']},
   {id:'t32', name:'Achlan Coast', region:'Achlan Bay', type:'plains', x:1997, y:1419},
-  {id:'t33', name:'Varinn Marsh', region:'Achlan Bay', type:'swamp', x:1926, y:1252, settlement:'Varinn', settleKind:'settlement'},
+  {id:'t33', name:'Varinn Marsh', region:'Achlan Bay', type:'swamp', x:1926, y:1252, settlement:'Varinn', settleKind:'settlement', services:['physician','school_of_magic','oracle','pier_dock','kennel_and_breeding','alchemist']},
   {id:'t34', name:'Garm Forest', region:'Kingdom of Alania', type:'forest', x:2092, y:1168},
   {id:'t35', name:'Lesonia (S)', region:'Kingdom of Lesonia', type:'plains', x:1979, y:991},
   {id:'t36', name:'Lesonia Lowlands', region:'Kingdom of Lesonia', type:'plains', x:1809, y:1102},
-  {id:'t37', name:'Silver', region:'Kingdom of Lesonia', type:'plains', x:1737, y:947, settlement:'Silver', settleKind:'settlement'},
-  {id:'t38', name:'Ridley', region:'Kingdom of Lesonia', type:'plains', x:1585, y:1060, settlement:'Ridley', settleKind:'settlement'},
+  {id:'t37', name:'Silver', region:'Kingdom of Lesonia', type:'plains', x:1737, y:947, settlement:'Silver', settleKind:'settlement', services:['blacksmith_armory','inn']},
+  {id:'t38', name:'Ridley', region:'Kingdom of Lesonia', type:'plains', x:1585, y:1060, settlement:'Ridley', settleKind:'settlement', services:['combat_school','market','kennel_and_breeding','pier_dock']},
   {id:'t39', name:'Valien Marsh', region:'Pulse Empire', type:'swamp', x:1581, y:1175},
   {id:'t40', name:'Pulse (N)', region:'Pulse Empire', type:'plains', x:1376, y:984},
   {id:'t41', name:'Mount Gypcian', region:'Pointy Mountains', type:'mountain', x:1522, y:906},
-  {id:'t42', name:'Pointy Mtns (Alcoy)', region:'Pointy Mountains', type:'mountain', x:1278, y:783, settlement:'Alcoy', settleKind:'settlement'},
+  {id:'t42', name:'Pointy Mtns (Alcoy)', region:'Pointy Mountains', type:'mountain', x:1278, y:783, settlement:'Alcoy', settleKind:'settlement', services:['inn','blacksmith_armory']},
   {id:'t43', name:'Pointy Mtns (W)', region:'Pointy Mountains', type:'mountain', x:1183, y:760},
-  {id:'t44', name:'Larche', region:'Pointy Mountains', type:'plains', x:1190, y:834, settlement:'Larche', settleKind:'settlement'},
-  {id:'t45', name:'Great Oak Grove (W)', region:'Great Oak Grove', type:'forest', x:1015, y:930, settlement:'Lamparshion', settleKind:'settlement'},
-  {id:'t46', name:'Great Oak Grove (E)', region:'Great Oak Grove', type:'forest', x:1139, y:934, settlement:'Lausan', settleKind:'settlement'},
-  {id:'t47', name:'Shanain Woods', region:'Pulse Empire', type:'forest', x:1269, y:1033, settlement:'Shanain', settleKind:'settlement'},
+  {id:'t44', name:'Larche', region:'Pointy Mountains', type:'plains', x:1190, y:834, settlement:'Larche', settleKind:'settlement', services:['market','tavern','inn','kennel_and_breeding']},
+  {id:'t45', name:'Great Oak Grove (W)', region:'Great Oak Grove', type:'forest', x:1015, y:930, settlement:'Lamparshion', settleKind:'settlement', services:['stables','blacksmith_armory','physician','inn','kennel_and_breeding']},
+  {id:'t46', name:'Great Oak Grove (E)', region:'Great Oak Grove', type:'forest', x:1139, y:934, settlement:'Lausan', settleKind:'settlement', services:['market','tavern','inn','kennel_and_breeding']},
+  {id:'t47', name:'Shanain Woods', region:'Pulse Empire', type:'forest', x:1269, y:1033, settlement:'Shanain', settleKind:'settlement', services:['inn','kennel_and_breeding','tavern','herbalist']},
   {id:'t48', name:'Valien Marsh (S)', region:'Pulse Empire', type:'swamp', x:1536, y:1254},
   {id:'t49', name:'Arlotar Forest', region:'Arlotar Forest', type:'forest', x:1595, y:1412},
   {id:'t50', name:'Pulse Heartland', region:'Pulse Empire', type:'plains', x:1440, y:1307},
-  {id:'t51', name:'Tesara Plains', region:'Pulse Empire', type:'plains', x:1265, y:1221, settlement:'Tesara', settleKind:'settlement'},
-  {id:'t52', name:'Bercy', region:'Western Peninsula', type:'plains', x:1002, y:1224, settlement:'Bercy', settleKind:'settlement'},
+  {id:'t51', name:'Tesara Plains', region:'Pulse Empire', type:'plains', x:1265, y:1221, settlement:'Tesara', settleKind:'settlement', services:['alchemist','combat_school','inn','lender','library','king_or_governor','blacksmith_armory','physician','market']},
+  {id:'t52', name:'Bercy', region:'Western Peninsula', type:'plains', x:1002, y:1224, settlement:'Bercy', settleKind:'settlement', services:['combat_school','blacksmith_armory','inn','stables']},
   {id:'t53', name:'W Peninsula (N)', region:'Western Peninsula', type:'plains', x:820, y:1040},
-  {id:'t54', name:'Caboalto', region:'Western Peninsula', type:'plains', x:542, y:1172, settlement:'Caboalto', settleKind:'settlement'},
+  {id:'t54', name:'Caboalto', region:'Western Peninsula', type:'plains', x:542, y:1172, settlement:'Caboalto', settleKind:'settlement', services:['inn','temple','pier_dock','herbalist','market','kennel_and_breeding','tavern']},
   {id:'t55', name:'Low Cape Forest', region:'Low Cape Forest', type:'forest', x:711, y:1266},
   {id:'t56', name:'W Peninsula (C)', region:'Western Peninsula', type:'plains', x:810, y:1169},
-  {id:'t57', name:'Monteazul', region:'Pulse Empire', type:'plains', x:804, y:1449, settlement:'Monteazul', settleKind:'settlement'},
+  {id:'t57', name:'Monteazul', region:'Pulse Empire', type:'plains', x:804, y:1449, settlement:'Monteazul', settleKind:'settlement', services:['inn','physician','lender','pier_dock','market','tavern','kennel_and_breeding']},
   {id:'t58', name:'Western Mtns (W)', region:'Western Mountains', type:'mountain', x:975, y:1390},
   {id:'t59', name:'Western Mtns (E)', region:'Western Mountains', type:'mountain', x:1074, y:1390},
-  {id:'t60', name:'Salzor', region:'Pulse Empire', type:'plains', x:1249, y:1409, settlement:'Salzor', settleKind:'settlement'},
-  {id:'t61', name:'Pulse (S)', region:'Pulse Empire', type:'plains', x:1354, y:1511, settlement:'Castro', settleKind:'settlement'},
-  {id:'t62', name:'Conor Coast', region:'Pulse Empire', type:'plains', x:1054, y:1612, settlement:'Conor', settleKind:'settlement'},
-  {id:'i1e', name:'Fang Island (Cromgull)', region:'Fang Island', type:'volcanic', x:2745, y:242, settlement:'Cromgull', settleKind:'evil'},
-  {id:'i2e', name:'Blood Kingdom (Uzhul)', region:'Blood Kingdom', type:'mountain', x:3335, y:321, settlement:'Uzhul', settleKind:'evil'},
+  {id:'t60', name:'Salzor', region:'Pulse Empire', type:'plains', x:1249, y:1409, settlement:'Salzor', settleKind:'settlement', services:['inn','combat_school','kennel_and_breeding']},
+  {id:'t61', name:'Pulse (S)', region:'Pulse Empire', type:'plains', x:1354, y:1511, settlement:'Castro', settleKind:'settlement', services:['combat_school','blacksmith_armory','inn','kennel_and_breeding']},
+  {id:'t62', name:'Conor Coast', region:'Pulse Empire', type:'plains', x:1054, y:1612, settlement:'Conor', settleKind:'settlement', services:['combat_school','inn','kennel_and_breeding','pier_dock']},
+  {id:'i1e', name:'Fang Island (Cromgull)', region:'Fang Island', type:'volcanic', x:2745, y:242, settlement:'Cromgull', settleKind:'evil', services:['herbalist','combat_school','pier_dock']},
+  {id:'i2e', name:'Blood Kingdom (Uzhul)', region:'Blood Kingdom', type:'mountain', x:3335, y:321, settlement:'Uzhul', settleKind:'evil', services:['blacksmith_armory','combat_school','alchemist']},
   {id:'i3e', name:'Red Island', region:'Blood Kingdom', type:'volcanic', x:3423, y:301},
-  {id:'i4e', name:'Northern Gate Island', region:'Northern Gate', type:'plains', x:3365, y:488, settlement:'Northern Gate', settleKind:'settlement'},
+  {id:'i4e', name:'Northern Gate Island', region:'Northern Gate', type:'plains', x:3365, y:488, settlement:'Northern Gate', settleKind:'settlement', services:['physician','inn','pier_dock']},
   {id:'i5e', name:'Snake Island', region:'Snake Island', type:'mountain', x:3630, y:316},
   {id:'i6e', name:'Roaring Island', region:'Roaring Island', type:'volcanic', x:4102, y:368},
   {id:'i7e', name:'Krogg (S)', region:'Kingdom of Krogg', type:'volcanic', x:4255, y:592},
-  {id:'i8e', name:'Crab Island (Maozz)', region:'Kingdom of Krogg', type:'volcanic', x:4380, y:395, settlement:'Maozz', settleKind:'evil'},
-  {id:'i9e', name:'Krogg (Krazz)', region:'Kingdom of Krogg', type:'mountain', x:4462, y:462, settlement:'Krazz', settleKind:'evil'},
+  {id:'i8e', name:'Crab Island (Maozz)', region:'Kingdom of Krogg', type:'volcanic', x:4380, y:395, settlement:'Maozz', settleKind:'evil', services:['oracle','market','physician','herbalist','inn']},
+  {id:'i9e', name:'Krogg (Krazz)', region:'Kingdom of Krogg', type:'mountain', x:4462, y:462, settlement:'Krazz', settleKind:'evil', services:['tavern','inn','kennel_and_breeding','combat_school']},
   {id:'i10e', name:'Anvil Island', region:'Anvil Island', type:'mountain', x:4932, y:240},
-  {id:'i11e', name:'Origin Island (White Havens)', region:'Origin Island', type:'mountain', x:4148, y:745, settlement:'White Havens', settleKind:'settlement'},
-  {id:'i12e', name:'Swamp Island (Burkabur)', region:'Swamp Island', type:'swamp', x:4523, y:1142, settlement:'Burkabur', settleKind:'evil'},
+  {id:'i11e', name:'Origin Island (White Havens)', region:'Origin Island', type:'mountain', x:4148, y:745, settlement:'White Havens', settleKind:'settlement', services:['school_of_magic','pier_dock','alchemist','oracle','kennel_and_breeding','physician']},
+  {id:'i12e', name:'Swamp Island (Burkabur)', region:'Swamp Island', type:'swamp', x:4523, y:1142, settlement:'Burkabur', settleKind:'evil', services:['alchemist','school_of_magic','pier_dock']},
   {id:'i13e', name:'Totem Island', region:'Totem Island', type:'mountain', x:4317, y:1234},
   {id:'t1e', name:'Lycanthrope Lands (N)', region:'Lycanthrope Lands', type:'forest', x:2614, y:457},
   {id:'t2e', name:'Lycanthrope Lands (E)', region:'Lycanthrope Lands', type:'forest', x:2769, y:457},
-  {id:'t3e', name:'Seal Bay (Larkfall)', region:'Seal Bay', type:'glacier', x:3003, y:471, settlement:'Larkfall', settleKind:'settlement'},
+  {id:'t3e', name:'Seal Bay (Larkfall)', region:'Seal Bay', type:'glacier', x:3003, y:471, settlement:'Larkfall', settleKind:'settlement', services:['inn']},
   {id:'t4e', name:'Frozen Moor (W)', region:'Frozen Moor', type:'plains', x:3184, y:587},
   {id:'t5e', name:'Frozen Moor (C)', region:'Frozen Moor', type:'plains', x:3454, y:520},
   {id:'t6e', name:'Frozen Moor (E)', region:'Frozen Moor', type:'plains', x:3732, y:532},
   {id:'t7e', name:'Asthalien Coast', region:'Kingdom of Asthalien', type:'plains', x:3913, y:604},
-  {id:'t8e', name:'Doren Coast', region:'Kingdom of Asthalien', type:'plains', x:4015, y:760, settlement:'Doren', settleKind:'settlement'},
-  {id:'t9e', name:'Asthal', region:'Kingdom of Asthalien', type:'plains', x:3827, y:691, settlement:'Asthal', settleKind:'settlement'},
+  {id:'t8e', name:'Doren Coast', region:'Kingdom of Asthalien', type:'plains', x:4015, y:760, settlement:'Doren', settleKind:'settlement', services:['market','kennel_and_breeding','pier_dock']},
+  {id:'t9e', name:'Asthal', region:'Kingdom of Asthalien', type:'plains', x:3827, y:691, settlement:'Asthal', settleKind:'settlement', services:['inn','alchemist','king_or_governor','library','physician','herbalist']},
   {id:'t10e', name:'Troll Forest (E)', region:'Troll Forest', type:'plains', x:3648, y:732},
-  {id:'t11e', name:'Grey Mountains (Orkhuz)', region:'Grey Mountains', type:'mountain', x:3552, y:643, settlement:'Orkhuz', settleKind:'evil'},
+  {id:'t11e', name:'Grey Mountains (Orkhuz)', region:'Grey Mountains', type:'mountain', x:3552, y:643, settlement:'Orkhuz', settleKind:'evil', services:['herbalist','kennel_and_breeding','blacksmith_armory','combat_school','inn']},
   {id:'t12e', name:'Troll Forest (C)', region:'Troll Forest', type:'forest', x:3474, y:780},
   {id:'t13e', name:'Troll Forest (W)', region:'Troll Forest', type:'forest', x:3335, y:845},
   {id:'t14e', name:'Frozen Moor (S)', region:'Frozen Moor', type:'plains', x:3151, y:726},
-  {id:'t15e', name:'Torath Forest (Varzul)', region:'Torath Forest', type:'forest', x:3030, y:587, settlement:'Varzul', settleKind:'evil'},
-  {id:'t16e', name:'Torath Forest (Thorzul)', region:'Torath Forest', type:'forest', x:2884, y:546, settlement:'Thorzul', settleKind:'evil'},
+  {id:'t15e', name:'Torath Forest (Varzul)', region:'Torath Forest', type:'forest', x:3030, y:587, settlement:'Varzul', settleKind:'evil', services:['alchemist','market','herbalist','tavern','inn']},
+  {id:'t16e', name:'Torath Forest (Thorzul)', region:'Torath Forest', type:'forest', x:2884, y:546, settlement:'Thorzul', settleKind:'evil', services:['blacksmith_armory','tavern','combat_school','stables','inn']},
   {id:'t17e', name:'Torath Hills', region:'Torath Forest', type:'mountain', x:2687, y:543},
-  {id:'t18e', name:'Torath (Rizul)', region:'Torath Forest', type:'forest', x:2565, y:580, settlement:'Rizul', settleKind:'evil'},
+  {id:'t18e', name:'Torath (Rizul)', region:'Torath Forest', type:'forest', x:2565, y:580, settlement:'Rizul', settleKind:'evil', services:['tavern','physician','inn','herbalist','market','kennel_and_breeding']},
   {id:'t19e', name:'Torath (S)', region:'Torath Forest', type:'forest', x:2694, y:643},
   {id:'t20e', name:'Bibal (N)', region:'Kingdom of Bibal', type:'plains', x:2826, y:702},
-  {id:'t21e', name:'Bibal Lake (Bibal)', region:'Kingdom of Bibal', type:'plains', x:2824, y:964, settlement:'Bibal', settleKind:'settlement'},
-  {id:'t22e', name:'Vallack Woods', region:'Kingdom of Bibal', type:'forest', x:2575, y:1006, settlement:'Vallack', settleKind:'settlement'},
-  {id:'t23e', name:'Barrock', region:'Kingdom of Alania (E)', type:'plains', x:2561, y:1307, settlement:'Barrock', settleKind:'settlement'},
-  {id:'t24e', name:'Aitania', region:'Kingdom of Alania (E)', type:'plains', x:2571, y:1419, settlement:'Aitania', settleKind:'settlement'},
+  {id:'t21e', name:'Bibal Lake (Bibal)', region:'Kingdom of Bibal', type:'plains', x:2824, y:964, settlement:'Bibal', settleKind:'settlement', services:['physician','market','alchemist','king_or_governor','pier_dock','blacksmith_armory','inn','lender']},
+  {id:'t22e', name:'Vallack Woods', region:'Kingdom of Bibal', type:'forest', x:2575, y:1006, settlement:'Vallack', settleKind:'settlement', services:['market','tavern']},
+  {id:'t23e', name:'Barrock', region:'Kingdom of Alania (E)', type:'plains', x:2561, y:1307, settlement:'Barrock', settleKind:'settlement', services:['stables','blacksmith_armory','inn']},
+  {id:'t24e', name:'Aitania', region:'Kingdom of Alania (E)', type:'plains', x:2571, y:1419, settlement:'Aitania', settleKind:'settlement', services:['stables','blacksmith_armory','inn','combat_school','alchemist']},
   {id:'t25e', name:'Guardian Woods', region:'Kingdom of Alania (E)', type:'forest', x:2670, y:1558},
-  {id:'t26e', name:'Verneck', region:'Kingdom of Alania (E)', type:'plains', x:2680, y:1673, settlement:'Verneck', settleKind:'settlement'},
-  {id:'t27e', name:'Carrick', region:'Kingdom of Alania (E)', type:'plains', x:2779, y:1380, settlement:'Carrick', settleKind:'settlement'},
+  {id:'t26e', name:'Verneck', region:'Kingdom of Alania (E)', type:'plains', x:2680, y:1673, settlement:'Verneck', settleKind:'settlement', services:['market','lender','treasurer','king_or_governor','inn','physician','tavern']},
+  {id:'t27e', name:'Carrick', region:'Kingdom of Alania (E)', type:'plains', x:2779, y:1380, settlement:'Carrick', settleKind:'settlement', services:['kennel_and_breeding','inn','pier_dock']},
   {id:'t28e', name:'Guardian Hills', region:'Kingdom of Alania (E)', type:'mountain', x:2717, y:1241},
-  {id:'t29e', name:'Sudfall', region:'Kingdom of Alania (E)', type:'plains', x:2943, y:1115, settlement:'Sudfall', settleKind:'settlement'},
-  {id:'t30e', name:'Norkfall', region:'Kingdom of Alania (E)', type:'plains', x:3080, y:1015, settlement:'Norkfall', settleKind:'settlement'},
+  {id:'t29e', name:'Sudfall', region:'Kingdom of Alania (E)', type:'plains', x:2943, y:1115, settlement:'Sudfall', settleKind:'settlement', services:['market','inn']},
+  {id:'t30e', name:'Norkfall', region:'Kingdom of Alania (E)', type:'plains', x:3080, y:1015, settlement:'Norkfall', settleKind:'settlement', services:['physician','inn','kennel_and_breeding','king_or_governor','tavern']},
   {id:'t31e', name:'Bibal Lake (E)', region:'Kingdom of Bibal', type:'plains', x:3006, y:888},
-  {id:'t32e', name:'Nimfall', region:'Kingdom of Alania (E)', type:'plains', x:3396, y:988, settlement:'Nimfall', settleKind:'settlement'},
+  {id:'t32e', name:'Nimfall', region:'Kingdom of Alania (E)', type:'plains', x:3396, y:988, settlement:'Nimfall', settleKind:'settlement', services:['herbalist','market','kennel_and_breeding','inn','pier_dock']},
   {id:'t33e', name:'Kurgan Border', region:'Kurgan Clans', type:'plains', x:3521, y:878},
   {id:'t34e', name:'Kamaer Mtns (W)', region:'Kamaer Mountains', type:'mountain', x:3667, y:862},
-  {id:'t35e', name:'Menoa', region:'Kingdom of Kamaer', type:'mountain', x:3827, y:787, settlement:'Menoa', settleKind:'settlement'},
+  {id:'t35e', name:'Menoa', region:'Kingdom of Kamaer', type:'mountain', x:3827, y:787, settlement:'Menoa', settleKind:'settlement', services:['inn','kennel_and_breeding','alchemist','king_or_governor','oracle','library','blacksmith_armory','physician','herbalist','school_of_magic']},
   {id:'t36e', name:'Kamaer (S)', region:'Kingdom of Kamaer', type:'mountain', x:3946, y:831},
   {id:'t38e', name:'S Eternal Forest', region:'Kingdom of Kamaer', type:'forest', x:3768, y:1030},
   {id:'t39e', name:'Kamaer Lowlands', region:'Kingdom of Kamaer', type:'plains', x:3637, y:1070},
@@ -1157,10 +1178,10 @@ var TERRITORIES = [
   {id:'t41e', name:'Muddy Hills (W)', region:'The Muddy Hills', type:'swamp', x:3188, y:1224},
   {id:'t42e', name:'Asdurag Marsh', region:'Kingdom of Alania (E)', type:'swamp', x:3020, y:1381},
   {id:'t43e', name:'Thai Border', region:'Thai-Shiang Empire', type:'plains', x:2900, y:1575},
-  {id:'t44e', name:'Issi-Thai', region:'Thai-Shiang Empire', type:'plains', x:2917, y:1723, settlement:'Issi-Thai', settleKind:'settlement'},
+  {id:'t44e', name:'Issi-Thai', region:'Thai-Shiang Empire', type:'plains', x:2917, y:1723, settlement:'Issi-Thai', settleKind:'settlement', services:['combat_school','king_or_governor']},
   {id:'t45e', name:'Thai Plains', region:'Thai-Shiang Empire', type:'plains', x:3178, y:1723},
   {id:'t46e', name:'Tamor Forest', region:'Tamor Forest', type:'forest', x:3064, y:1600},
-  {id:'t47e', name:'Aris-Thai', region:'Thai-Shiang Empire', type:'plains', x:3211, y:1449, settlement:'Aris-Thai', settleKind:'settlement'},
+  {id:'t47e', name:'Aris-Thai', region:'Thai-Shiang Empire', type:'plains', x:3211, y:1449, settlement:'Aris-Thai', settleKind:'settlement', services:['combat_school','inn','kennel_and_breeding']},
   {id:'t48e', name:'Muddy Hills (S)', region:'The Muddy Hills', type:'plains', x:3382, y:1362},
   {id:'t49e', name:'Barbarian Steppes', region:'Barbarian Steppes', type:'plains', x:3584, y:1307},
   {id:'t50e', name:'Kurgan (E)', region:'Kurgan Clans', type:'plains', x:3778, y:1165},
@@ -1168,40 +1189,40 @@ var TERRITORIES = [
   {id:'t52e', name:'Kamaer Coast', region:'Kingdom of Kamaer', type:'plains', x:4089, y:1020},
   {id:'t53e', name:'East Steppe', region:'Barbarian Steppes', type:'plains', x:4197, y:1175},
   {id:'t54e', name:'Cave Hills (E)', region:'Cave Hills', type:'mountain', x:4090, y:1306},
-  {id:'t55e', name:'Cave Hills (Drunn)', region:'Cave Hills', type:'mountain', x:3926, y:1313, settlement:'Drunn', settleKind:'settlement'},
+  {id:'t55e', name:'Cave Hills (Drunn)', region:'Cave Hills', type:'mountain', x:3926, y:1313, settlement:'Drunn', settleKind:'settlement', services:['kennel_and_breeding']},
   {id:'t56e', name:'Drugni Tribes', region:'Drugni Tribes', type:'plains', x:4086, y:1438},
   {id:'t57e', name:'Shaman\'s Forest', region:'Siaron Tribes', type:'forest', x:3940, y:1515},
   {id:'t58e', name:'Gagarian Tribes', region:'Gagarian Tribes', type:'desert', x:3785, y:1307},
   {id:'t59e', name:'Steppe (S)', region:'Barbarian Steppes', type:'plains', x:3590, y:1442},
-  {id:'t60e', name:'Thamor', region:'Barbarian Steppes', type:'plains', x:3392, y:1505, settlement:'Thamor', settleKind:'settlement'},
-  {id:'t61e', name:'Thamey', region:'Thai-Shiang Empire', type:'plains', x:3422, y:1713, settlement:'Thamey', settleKind:'settlement'},
-  {id:'t62e', name:'Shion-Thai', region:'Thai-Shiang Empire', type:'plains', x:3538, y:1699, settlement:'Shion-Thai', settleKind:'settlement'},
+  {id:'t60e', name:'Thamor', region:'Barbarian Steppes', type:'plains', x:3392, y:1505, settlement:'Thamor', settleKind:'settlement', services:['physician','stables']},
+  {id:'t61e', name:'Thamey', region:'Thai-Shiang Empire', type:'plains', x:3422, y:1713, settlement:'Thamey', settleKind:'settlement', services:['physician','alchemist','herbalist','market','oracle','king_or_governor','stables','school_of_magic','tavern']},
+  {id:'t62e', name:'Shion-Thai', region:'Thai-Shiang Empire', type:'plains', x:3538, y:1699, settlement:'Shion-Thai', settleKind:'settlement', services:['combat_school','blacksmith_armory','stables','inn','kennel_and_breeding']},
   {id:'t63e', name:'Wild Boar Forest', region:'Wild Boar Forest', type:'forest', x:3653, y:1554},
   {id:'t64e', name:'Isdra Swamps (W)', region:'Isdra Swamps', type:'swamp', x:3899, y:1717},
   {id:'t65e', name:'Isdra Swamps (E)', region:'Isdra Swamps', type:'swamp', x:4141, y:1691},
   {id:'t66e', name:'Ibram Approach', region:'Ibram Bay', type:'plains', x:4213, y:1469},
   {id:'t67e', name:'Ibram Bay (W)', region:'Ibram Bay', type:'plains', x:4370, y:1524},
-  {id:'t68e', name:'Krazmor', region:'Kingdom of Bandmor', type:'volcanic', x:4229, y:1714, settlement:'Krazmor', settleKind:'evil'},
+  {id:'t68e', name:'Krazmor', region:'Kingdom of Bandmor', type:'volcanic', x:4229, y:1714, settlement:'Krazmor', settleKind:'evil', services:['inn','blacksmith_armory','tavern','lender']},
   {id:'t69e', name:'Mtns of Doom (W)', region:'Kingdom of Bandmor', type:'mountain', x:4410, y:1740},
   {id:'t70e', name:'Mtns of Doom (E)', region:'Kingdom of Bandmor', type:'mountain', x:4631, y:1740},
   {id:'t71e', name:'Red River Coast', region:'Kingdom of Bandmor', type:'plains', x:4909, y:1714},
   {id:'t72e', name:'Bandmor (SE)', region:'Kingdom of Bandmor', type:'mountain', x:4753, y:1737},
-  {id:'t73e', name:'Bandmor City', region:'Kingdom of Bandmor', type:'mountain', x:4739, y:1652, settlement:'Bandmor', settleKind:'evil'},
-  {id:'t74e', name:'Agramor', region:'Kingdom of Bandmor', type:'mountain', x:4592, y:1632, settlement:'Agramor', settleKind:'evil'},
+  {id:'t73e', name:'Bandmor City', region:'Kingdom of Bandmor', type:'mountain', x:4739, y:1652, settlement:'Bandmor', settleKind:'evil', services:['inn','kennel_and_breeding','alchemist','oracle','king_or_governor','physician','combat_school']},
+  {id:'t74e', name:'Agramor', region:'Kingdom of Bandmor', type:'mountain', x:4592, y:1632, settlement:'Agramor', settleKind:'evil', services:['blacksmith_armory']},
   {id:'t75e', name:'Bandmor (W)', region:'Kingdom of Bandmor', type:'mountain', x:4419, y:1656},
-  {id:'t76e', name:'Maramor', region:'Kingdom of Bandmor', type:'mountain', x:4523, y:1544, settlement:'Maramor', settleKind:'evil'},
+  {id:'t76e', name:'Maramor', region:'Kingdom of Bandmor', type:'mountain', x:4523, y:1544, settlement:'Maramor', settleKind:'evil', services:['herbalist','pier_dock','market','kennel_and_breeding','inn']},
   {id:'t77e', name:'Bandmor (N)', region:'Kingdom of Bandmor', type:'mountain', x:4651, y:1509},
   {id:'t78e', name:'Bandmor Volcano', region:'Kingdom of Bandmor', type:'volcanic', x:4775, y:1538},
   {id:'t79e', name:'Iron Hills', region:'The Iron Hills', type:'mountain', x:4932, y:1492},
   {id:'t80e', name:'Grim Lands', region:'Grim Lands', type:'plains', x:4886, y:1289},
-  {id:'t81e', name:'Thoronbur Woods', region:'Kingdom of the Reborn', type:'forest', x:4719, y:1332, settlement:'Thoronbur', settleKind:'evil'},
+  {id:'t81e', name:'Thoronbur Woods', region:'Kingdom of the Reborn', type:'forest', x:4719, y:1332, settlement:'Thoronbur', settleKind:'evil', services:['alchemist','inn']},
   {id:'t82e', name:'Ibram Bay (E)', region:'Kingdom of the Reborn', type:'plains', x:4606, y:1352},
   {id:'t83e', name:'Reborn Marsh (S)', region:'Kingdom of the Reborn', type:'swamp', x:4635, y:1234},
   {id:'t84e', name:'Reborn Marsh (E)', region:'Kingdom of the Reborn', type:'swamp', x:4778, y:1224},
-  {id:'t85e', name:'Vulgrabur', region:'Kingdom of the Reborn', type:'plains', x:4939, y:1077, settlement:'Vulgrabur', settleKind:'evil'},
+  {id:'t85e', name:'Vulgrabur', region:'Kingdom of the Reborn', type:'plains', x:4939, y:1077, settlement:'Vulgrabur', settleKind:'evil', services:['blacksmith_armory','alchemist','oracle']},
   {id:'t86e', name:'Cemetery Marshes', region:'Kingdom of the Reborn', type:'swamp', x:4716, y:1070},
   {id:'t87e', name:'Forest of the Witches', region:'Forest of the Witches', type:'forest', x:4860, y:989},
-  {id:'t88e', name:'Kirfall', region:'Kingdom of the Reborn', type:'plains', x:4884, y:860, settlement:'Kirfall', settleKind:'settlement'},
+  {id:'t88e', name:'Kirfall', region:'Kingdom of the Reborn', type:'plains', x:4884, y:860, settlement:'Kirfall', settleKind:'settlement', services:['camp','pier_dock']},
   {id:'t89e', name:'Reborn Coast', region:'Kingdom of the Reborn', type:'plains', x:4905, y:742},
   {id:'t37e', name:'Kamaer Vale', region:'Kingdom of Kamaer', type:'mountain', x:3781, y:950},
 ];
@@ -1717,6 +1738,7 @@ function refreshTravelPanel() {
   document.getElementById('tp-dp-start').textContent = dpT ? dpT.id.toUpperCase() + ' — ' + dpT.name : 'not set (see Overview)';
   document.getElementById('tp-dp-count').textContent = travelState.dangers.length;
   document.getElementById('tp-btn-rest').style.display = (t && travelState.inSettlement) ? 'block' : 'none';
+  document.getElementById('tp-btn-places').style.display = (t && travelState.inSettlement && t.services && t.services.length) ? 'block' : 'none';
 
   var logDiv = document.getElementById('tp-log');
   logDiv.innerHTML = travelState.log.length
@@ -1838,6 +1860,37 @@ function addDangerManual() {
   } else if (travelState.dpStartId) {
     alert('Maximum of 10 danger markers already on the map.');
   }
+}
+
+// ── Places and Services: choose a location, play its card ──
+function openPlacesList() {
+  var t = terrById(travelState.territoryId);
+  if (!t || !travelState.inSettlement || !t.services || !t.services.length) return;
+  document.getElementById('pl-settlement-name').textContent = t.settlement || t.name;
+  var list = document.getElementById('pl-location-list');
+  list.innerHTML = t.services.map(function(key){
+    var loc = PLACES_SERVICES[key];
+    if (!loc) return '';
+    return '<button class="tp-btn" style="text-align:left;" onclick="visitLocation(\'' + key + '\')">' + loc.title + '</button>';
+  }).join('');
+  document.getElementById('modal-places-list').classList.add('show');
+}
+function closePlacesList() {
+  document.getElementById('modal-places-list').classList.remove('show');
+}
+function visitLocation(key) {
+  var t = terrById(travelState.territoryId);
+  var loc = PLACES_SERVICES[key];
+  if (!loc) return;
+  closePlacesList();
+  document.getElementById('pl-card-title').textContent = loc.title;
+  document.getElementById('pl-card-effect').textContent = loc.effect;
+  document.getElementById('modal-places-card').classList.add('show');
+  travelState.log.unshift('Turn ' + travelState.turn + ': Visited ' + loc.title + ' in ' + (t ? (t.settlement || t.name) : '') + '.');
+  saveTravel(); refreshTravelPanel();
+}
+function closePlacesCard() {
+  document.getElementById('modal-places-card').classList.remove('show');
 }
 
 // After the heroes' travel event roll: move every marker one territory
