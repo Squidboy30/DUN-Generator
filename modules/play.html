@@ -342,6 +342,7 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 <!-- Places and Services: card result -->
 <div class="ov-overlay" id="modal-places-card">
   <div class="ov-modal" style="width:460px;text-align:center;">
+    <img id="pl-card-img" src="" alt="" style="display:none;max-width:100%;max-height:400px;border:2px solid var(--border-gold);border-radius:6px;margin-bottom:12px;">
     <div class="ov-title" id="pl-card-title">Location</div>
     <div class="ov-hint" style="margin:12px 0 4px;text-align:left;font-size:14px;line-height:1.5;" id="pl-card-effect"></div>
     <button class="ov-begin" style="margin-top:14px;" onclick="closePlacesCard()">Close</button>
@@ -1895,7 +1896,9 @@ function openPlacesList() {
   list.innerHTML = t.services.map(function(key){
     var loc = PLACES_SERVICES[key];
     if (!loc) return '';
-    return '<button class="tp-btn" style="text-align:left;" onclick="visitLocation(\'' + key + '\')">' + loc.title + '</button>';
+    return '<button class="tp-btn" style="text-align:left;display:flex;align-items:center;gap:8px;" onclick="visitLocation(\'' + key + '\')">' +
+      '<img src="../src/cards/places/' + key + '.jpg" alt="" style="width:28px;height:auto;border-radius:3px;flex-shrink:0;" onerror="this.style.display=\'none\'">' +
+      '<span>' + loc.title + '</span></button>';
   }).join('');
   document.getElementById('modal-places-list').classList.add('show');
 }
@@ -1907,9 +1910,7 @@ function visitLocation(key) {
   var loc = PLACES_SERVICES[key];
   if (!loc) return;
   closePlacesList();
-  document.getElementById('pl-card-title').textContent = loc.title;
-  document.getElementById('pl-card-effect').textContent = loc.effect;
-  document.getElementById('modal-places-card').classList.add('show');
+  showPlacesCard(key);
   travelState.log.unshift('Turn ' + travelState.turn + ': Visited ' + loc.title + ' in ' + (t ? (t.settlement || t.name) : '') + '.');
   saveTravel(); refreshTravelPanel();
 }
@@ -1917,13 +1918,23 @@ function closePlacesCard() {
   document.getElementById('modal-places-card').classList.remove('show');
 }
 
-// Fixed bridge crossing — always shows the "Bridge" card directly, no picker needed.
-function playBridgeCard() {
-  var loc = PLACES_SERVICES.bridge;
+// Shared renderer for the Places & Services card popup (image + title + text).
+function showPlacesCard(key) {
+  var loc = PLACES_SERVICES[key];
   if (!loc) return;
   document.getElementById('pl-card-title').textContent = loc.title;
   document.getElementById('pl-card-effect').textContent = loc.effect;
+  var img = document.getElementById('pl-card-img');
+  img.src = '../src/cards/places/' + key + '.jpg';
+  img.alt = loc.title;
+  img.style.display = 'block';
+  img.onerror = function() { img.style.display = 'none'; };
   document.getElementById('modal-places-card').classList.add('show');
+}
+
+// Fixed bridge crossing — always shows the "Bridge" card directly, no picker needed.
+function playBridgeCard() {
+  showPlacesCard('bridge');
 }
 
 // After the heroes' travel event roll: move every marker one territory
