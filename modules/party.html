@@ -542,9 +542,10 @@ body {
   background: none; border: none; border-bottom: 2px solid transparent;
   padding: 6px 14px; font-family: 'Cinzel', serif; font-size:13px;
   cursor: pointer; letter-spacing: 1px; opacity: .6; transition: opacity .15s;
+  color: var(--text-muted);
 }
 .skill-browser-tab:hover { opacity: .9; }
-.skill-browser-tab.active { opacity: 1; }
+.skill-browser-tab.active { opacity: 1; color: var(--gold-bright); }
 .skill-browser-card {
   position: relative; width: 120px; flex-shrink: 0;
   cursor: pointer; border: 2px solid transparent;
@@ -3559,7 +3560,10 @@ function renderStepSkills() {
       <img src="${imgUrl}" alt="${s.name}" loading="lazy"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <div class="skill-browser-fallback" style="display:none">
-        <div style="font-size:13px;text-align:center;padding:8px;">${s.name}</div>
+        <div>
+          <div style="font-size:13px;font-weight:bold;margin-bottom:4px;">${s.name}</div>
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.4;">${(SKILL_DESC[s.name]||'').slice(0,120)}${(SKILL_DESC[s.name]||'').length>120?'…':''}</div>
+        </div>
       </div>
       ${badge}
     </div>`;
@@ -4726,12 +4730,13 @@ function renderCardsPanel(h) {
   // ── SKILLS ──────────────────────────────────────────────────
   if (h.skills && h.skills.length) {
     const skillCards = h.skills.map(sName => {
-      const sk = SKILL_DB.find(s => s.name === sName);
+      const sk = SKILL_DB.find(s => s.name === sName)
+                 || SKILL_DB.find(s => s.name.toLowerCase() === sName.toLowerCase());
       return renderDunCard({
         title: sName,
         type: sk?.type || 'combat',
         imgPath: sk ? `skills/${sk.id}.jpg` : null,
-        desc: SKILL_DESC[sName] || sName
+        desc: SKILL_DESC[sName] || SKILL_DESC[Object.keys(SKILL_DESC).find(k => k.toLowerCase() === sName.toLowerCase())] || sName
       });
     }).join('');
     sections.push(`<div class="cards-panel-section">
