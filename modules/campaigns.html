@@ -1369,6 +1369,13 @@ body {
       <textarea class="form-textarea" id="nc-desc" placeholder="Brief description of the campaign..."></textarea>
     </div>
     <div class="form-group">
+      <label class="form-label">Party</label>
+      <select class="form-input" id="nc-party" style="cursor:pointer;">
+        <option value="">— Use active party —</option>
+      </select>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Which party (from the Party Manager) plays this campaign?</div>
+    </div>
+    <div class="form-group">
       <label class="form-label">Party Starting Territory</label>
       <select class="form-input" id="nc-territory" style="cursor:pointer;">
         <option value="">— Choose starting location —</option>
@@ -2606,6 +2613,21 @@ function saveCampaign() {
 function newCampaign() {
   document.getElementById('nc-name').value = '';
   document.getElementById('nc-desc').value = '';
+  // Populate party dropdown from the Party Manager
+  var psel = document.getElementById('nc-party');
+  if (psel) {
+    while (psel.options.length > 1) psel.remove(1);
+    var partiesArr = [], activeP = '';
+    try { partiesArr = JSON.parse(localStorage.getItem('dun_parties_v2') || '[]'); } catch(e) {}
+    try { activeP = localStorage.getItem('dun_active_party') || ''; } catch(e) {}
+    partiesArr.forEach(function(p) {
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name + ' (' + (p.heroIds ? p.heroIds.length : 0) + ' heroes)';
+      psel.appendChild(opt);
+    });
+    psel.value = activeP && partiesArr.some(function(p){ return p.id === activeP; }) ? activeP : '';
+  }
   // Populate territory dropdowns from TERRITORIES data
   ['nc-territory','nc-dp-territory'].forEach(function(selId){
     var tsel = document.getElementById(selId);
@@ -2632,7 +2654,8 @@ function createCampaign() {
   var desc = document.getElementById('nc-desc').value.trim();
   var territory = document.getElementById('nc-territory').value;
   var dpTerritory = document.getElementById('nc-dp-territory').value;
-  activeCampaign = { id: 'camp_' + Date.now(), name: name, description: desc, nodes: [], connections: [], startingTerritory: territory || null, dpStartingTerritory: dpTerritory || null };
+  var ncParty = document.getElementById('nc-party');
+  activeCampaign = { id: 'camp_' + Date.now(), name: name, description: desc, nodes: [], connections: [], startingTerritory: territory || null, dpStartingTerritory: dpTerritory || null, partyId: (ncParty && ncParty.value) || null };
   document.getElementById('campaign-name').value = name;
   saveLocal();
   closeModal('modal-new-campaign');

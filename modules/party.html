@@ -514,6 +514,9 @@ body {
   text-align: center;
 }
 
+/* Embed mode (inside play.html party overlay) */
+.embed-mode .app-header { display: none; }
+
 /* ── Card Lightbox ─────────────────────────────────────────────── */
 .card-lightbox {
   display: none; position: fixed; inset: 0; z-index: 500;
@@ -5374,6 +5377,23 @@ if (activePartyId) {
   if (tabBtn) tabBtn.style.display = '';
 }
 renderPartiesList();
+
+// Embed mode: opened from the campaign map (play.html). Hides the app
+// chrome and jumps straight to the campaign's party.
+(function() {
+  const q = new URLSearchParams(location.search);
+  if (q.get('embed') !== '1') return;
+  document.body.classList.add('embed-mode');
+  const pid = q.get('party');
+  const target = (pid && parties.some(p => p.id === pid)) ? pid : activePartyId;
+  if (target && parties.some(p => p.id === target)) {
+    activePartyId = target;   // view only — don't overwrite the saved active party
+    const tabBtn = document.getElementById('tab-party-view');
+    if (tabBtn) tabBtn.style.display = '';
+    showView('party-view');
+  }
+  // else: stay on the parties list so the user can pick one
+})();
 
 
 // Global attribute icon SVGs (DUN official icons from race/class cards)
