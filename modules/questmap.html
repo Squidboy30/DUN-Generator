@@ -54,6 +54,7 @@ body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;}
 <script src="../src/data/images.js"></script>
 <script src="../src/data/questmaps/2768.js"></script>
 <script src="../src/data/questmaps/buriedkings.js"></script>
+<script src="../src/data/element-images.js"></script>
 <script>
 (function(){
 'use strict';
@@ -141,6 +142,28 @@ Q.tiles.forEach(function(t){
   }
 });
 
+var elImgs={};
+function elImg(key){
+  if(!key || typeof ELEMENT_IMG==='undefined' || !ELEMENT_IMG[key]) return null;
+  if(!elImgs[key]){ var im=new Image(); im.onload=draw; im.src=ELEMENT_IMG[key]; elImgs[key]=im; }
+  return elImgs[key];
+}
+// draw an element image at its top-left (site px), sized by its native squares, rotated about centre
+function drawEl(x,y,rot,key,alpha){
+  var im=elImg(key);
+  if(!im || !im.complete || !im.naturalWidth) return false;
+  var w=im.naturalWidth/Q.gridPx*SQ, h=im.naturalHeight/Q.gridPx*SQ;
+  ctx.save(); if(alpha!=null) ctx.globalAlpha=ctx.globalAlpha*alpha;
+  ctx.translate(X(x)+w/2, Y(y)+h/2); ctx.rotate((rot||0)*Math.PI/180);
+  ctx.drawImage(im,-w/2,-h/2,w,h); ctx.restore();
+  return true;
+}
+function elFootprint(el,key){ // canvas rect for hit-testing
+  var im=elImg(key);
+  var w=(im&&im.naturalWidth?im.naturalWidth/Q.gridPx*SQ:SQ), h=(im&&im.naturalHeight?im.naturalHeight/Q.gridPx*SQ:SQ);
+  return {x:X(el.x), y:Y(el.y), w:w, h:h};
+}
+
 var levels=[]; Q.tiles.forEach(function(t){ if(levels.indexOf(t.level)<0) levels.push(t.level); });
 levels.sort();
 
@@ -195,10 +218,12 @@ function draw(){
     if(!visible[f.id]) return;
     var host=tileOfPoint(f.x,f.y); var dim=host&&dimmed(host);
     ctx.save(); ctx.globalAlpha=dim?0.15:1;
-    ctx.fillStyle='#8fce8f';
-    ctx.fillRect(X(f.x)+SQ*0.15, Y(f.y)+SQ*0.15, SQ*0.7, SQ*0.7);
-    ctx.fillStyle='#0a0908'; ctx.font='9px sans-serif'; ctx.textAlign='center';
-    ctx.fillText(f.name.substring(0,10), X(f.x)+SQ/2, Y(f.y)+SQ*0.6);
+    if(!drawEl(f.x,f.y,f.rot,f.name)){
+      ctx.fillStyle='#8fce8f';
+      ctx.fillRect(X(f.x)+SQ*0.15, Y(f.y)+SQ*0.15, SQ*0.7, SQ*0.7);
+      ctx.fillStyle='#0a0908'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+      ctx.fillText((f.name||'').substring(0,10), X(f.x)+SQ/2, Y(f.y)+SQ*0.6);
+    }
     ctx.restore();
   });
   // doors
@@ -207,36 +232,32 @@ function draw(){
     var host=tileOfPoint(d.x,d.y); var dim=host&&dimmed(host);
     ctx.save(); ctx.globalAlpha=dim?0.2:1;
     var open=opened[d.id];
-    var col=(d.kind==='puertad'?'#e0b0ff':d.kind==='puertad1'?'#80d0ff':'#ffd700');
-    if(open){
-      // stays in situ: hollow frame + swung-open leaf
-      ctx.strokeStyle=col; ctx.lineWidth=3;
-      ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
-      ctx.beginPath();
-      ctx.moveTo(X(d.x)-SQ*0.4, Y(d.y)+SQ*0.4);
-      ctx.lineTo(X(d.x)+SQ*0.25, Y(d.y)-SQ*0.25);
-      ctx.stroke(); ctx.lineWidth=1;
-    }else{
-      ctx.fillStyle=col;
-      ctx.fillRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
-      ctx.strokeStyle='#000'; ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+    if(!drawEl(d.x,d.y,d.rot,d.kind, open?0.35:1)){
+      var col=(d.kind==='puertad'?'#e0b0ff':d.kind==='puertad1'?'#80d0ff':'#ffd700');
+      if(open){
+        ctx.strokeStyle=col; ctx.lineWidth=3;
+        ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+        ctx.beginPath(); ctx.moveTo(X(d.x)-SQ*0.4, Y(d.y)+SQ*0.4); ctx.lineTo(X(d.x)+SQ*0.25, Y(d.y)-SQ*0.25); ctx.stroke(); ctx.lineWidth=1;
+      }else{
+        ctx.fillStyle=col; ctx.fillRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+        ctx.strokeStyle='#000'; ctx.strokeRect(X(d.x)-SQ*0.4, Y(d.y)-SQ*0.4, SQ*0.8, SQ*0.8);
+      }
     }
     ctx.restore();
   });
   // specials
-  function star(o,color,label){
+  function special(o,key,color,label){
     if(!o||!visible[o.id])return;
-    ctx.save();ctx.fillStyle=color;ctx.font='bold 22px sans-serif';ctx.textAlign='center';
-    ctx.fillText('★',X(o.x)+SQ/2,Y(o.y)+SQ*0.75);
-    ctx.font='10px Cinzel,serif';ctx.fillText(label,X(o.x)+SQ/2,Y(o.y)+SQ*1.15);ctx.restore();
+    if(!drawEl(o.x,o.y,o.rot,key)){
+      ctx.save();ctx.fillStyle=color;ctx.font='bold 22px sans-serif';ctx.textAlign='center';
+      ctx.fillText('★',X(o.x)+SQ/2,Y(o.y)+SQ*0.75);ctx.restore();
+    }
+    ctx.save();ctx.fillStyle=color;ctx.font='10px Cinzel,serif';ctx.textAlign='center';
+    ctx.fillText(label,X(o.x)+SQ/2,Y(o.y)-4);ctx.restore();
   }
-  star(Q.entrance,'#40e040','ENTRANCE');
-  star(Q.goal,'#ff5050','GOAL');
-  if(Q.leader&&visible[Q.leader.id]){
-    ctx.save();ctx.fillStyle='#ff2020';ctx.font='bold 20px sans-serif';ctx.textAlign='center';
-    ctx.fillText('✖',X(Q.leader.x)+SQ/2,Y(Q.leader.y)+SQ*0.7);
-    ctx.font='10px Cinzel,serif';ctx.fillText('LEADER',X(Q.leader.x)+SQ/2,Y(Q.leader.y)-4);ctx.restore();
-  }
+  special(Q.entrance,'entrada','#40e040','ENTRANCE');
+  special(Q.goal,'salafinal','#ff5050','GOAL');
+  special(Q.leader,'lider','#ff2020','LEADER');
   // markers
   Q.markers.forEach(function(m){
     if(!visible[m.id])return;
@@ -264,7 +285,9 @@ cv.addEventListener('click',function(ev){
   for(var i=0;i<Q.doors.length;i++){
     var d=Q.doors[i];
     if(!visible[d.id]||opened[d.id])continue;
-    if(Math.abs(mx-X(d.x))<SQ*0.5 && Math.abs(my-Y(d.y))<SQ*0.5){
+    var fp=elFootprint(d,d.kind);
+    var pad=SQ*0.3;
+    if(mx>=fp.x-pad && mx<=fp.x+fp.w+pad && my>=fp.y-pad && my<=fp.y+fp.h+pad){
       openDoor(d); return;
     }
   }
