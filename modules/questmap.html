@@ -53,18 +53,23 @@ body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;}
 </div>
 <script src="../src/data/images.js"></script>
 <script src="../src/data/questmaps/2768.js"></script>
+<script src="../src/data/questmaps/buriedkings.js"></script>
 <script>
 (function(){
 'use strict';
 var Q = (function(){
   var id = (location.search.match(/[?&]map=([^&]+)/)||[])[1];
+  var BUILTIN = {};
+  if (typeof QUESTMAP_2768!=='undefined')       BUILTIN['2768'] = QUESTMAP_2768;
+  if (typeof QUESTMAP_BURIEDKINGS!=='undefined') BUILTIN['buriedkings'] = QUESTMAP_BURIEDKINGS;
   if (id) {
     try {
       var store = JSON.parse(localStorage.getItem('dun_questmaps')||'{}');
       if (store[id]) return store[id];
     } catch(e){}
+    if (BUILTIN[id]) return BUILTIN[id];
   }
-  return QUESTMAP_2768; // built-in fallback
+  return QUESTMAP_BURIEDKINGS; // default to the imported Buried Kings map
 })();
 document.querySelector('.hdr-title').textContent = '⚔ ' + (Q.title || ('QUEST MAP ' + Q.mapId));
 document.title = (Q.title || 'Quest Map ' + Q.mapId) + ' — Dungeon Universalis';
