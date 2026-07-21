@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Element Image Mapper — Dungeon Universalis</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#12100c;color:#f0e4c8;font-family:'IM Fell English',serif;font-size:16px;}
+.hdr{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#1c1710;border-bottom:2px solid #e0b878;position:sticky;top:0;z-index:10;}
+.hdr-title{font-family:'Cinzel',serif;font-size:18px;color:#e0b878;letter-spacing:2px;}
+.hdr a{color:#f0e4c8;text-decoration:none;opacity:.8;font-size:15px;}
+.hdr a:hover{opacity:1;}
+.bar{margin-left:auto;display:flex;gap:8px;align-items:center;}
+button{background:#241c10;border:1px solid #d5c396;color:#e0b878;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:7px 14px;cursor:pointer;border-radius:4px;}
+button:hover{background:#2e2416;border-color:#e0b878;}
+button.primary{background:#e0b878;color:#3f2c13;font-weight:700;}
+.hint{font-size:14px;color:#cdbf9f;font-style:italic;padding:10px 16px;}
+.filter{padding:8px 16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.filter input{background:#0e0b07;border:1px solid #5a4428;color:#f0e4c8;font-family:inherit;font-size:15px;padding:6px 10px;border-radius:4px;min-width:200px;}
+.chip{background:#241c10;border:1px solid #5a4428;color:#cdbf9f;padding:4px 10px;border-radius:12px;cursor:pointer;font-size:13px;font-family:'Cinzel',serif;}
+.chip.on{background:#e0b878;color:#3f2c13;border-color:#e0b878;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;padding:12px 16px;}
+.card{background:#1c1710;border:1px solid #3a3226;border-radius:6px;padding:10px;display:flex;gap:12px;}
+.card .thumb{width:64px;height:64px;flex-shrink:0;background:#0a0908;border:1px solid #5a4428;border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.card .thumb img{max-width:100%;max-height:100%;display:block;}
+.card .thumb.none{color:#8a7a55;font-size:11px;text-align:center;font-style:italic;}
+.card .body{flex:1;min-width:0;}
+.card .nm{font-family:'Cinzel',serif;color:#f0e4c8;font-size:15px;}
+.card .ty{font-size:12px;color:#e0b878;text-transform:uppercase;letter-spacing:1px;}
+.card .rules{font-size:12px;color:#a99a78;line-height:1.35;margin-top:3px;max-height:48px;overflow:hidden;}
+.card .acts{margin-top:6px;display:flex;gap:6px;}
+.card .acts button{padding:4px 10px;font-size:12px;}
+.card.changed{border-color:#7a9a4a;}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;}
+.ov.show{display:flex;}
+.modal{background:#161209;border:2px solid #e0b878;border-radius:8px;width:92vw;max-width:1000px;max-height:88vh;display:flex;flex-direction:column;}
+.modal h3{font-family:'Cinzel',serif;color:#e0b878;padding:12px 16px;border-bottom:1px solid #5a4428;display:flex;align-items:center;gap:10px;}
+.modal h3 .x{margin-left:auto;cursor:pointer;color:#f0e4c8;font-size:20px;}
+.pgrid{overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;}
+.pitem{background:#0e0b07;border:1px solid #3a3226;border-radius:4px;padding:5px;cursor:pointer;text-align:center;}
+.pitem:hover{border-color:#e0b878;background:#241c10;}
+.pitem img{width:100%;height:70px;object-fit:contain;display:block;}
+.pitem .lbl{font-size:10px;color:#a99a78;margin-top:3px;line-height:1.15;height:24px;overflow:hidden;}
+.pfilter{padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #3a3226;}
+.pfilter input{flex:1;min-width:150px;background:#0e0b07;border:1px solid #5a4428;color:#f0e4c8;font-family:inherit;padding:6px 10px;border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <span class="hdr-title">&#9635; ELEMENT IMAGE MAPPER</span>
+  <a href="inventory.html">&#8592; Tiles</a>
+  <a href="campaign-menu.html">Campaigns</a>
+  <span class="bar">
+    <span id="status" style="font-size:13px;color:#cdbf9f;"></span>
+    <button onclick="resetAll()">Reset all</button>
+    <button class="primary" onclick="exportJs()">&#10515; Export elements.js</button>
+  </span>
+</div>
+<div class="hint">Click <b>Change image</b> on any element, then pick the correct art from the repository. Changes save instantly and show in the dungeon generator. When done, hit <b>Export elements.js</b> and send me the file to make it permanent.</div>
+<div class="filter">
+  <input id="search" placeholder="Search elements..." oninput="render()">
+  <span class="chip on" data-type="all" onclick="setType(this)">All</span>
+  <span class="chip" data-type="furniture" onclick="setType(this)">Furniture</span>
+  <span class="chip" data-type="special" onclick="setType(this)">Special</span>
+  <span class="chip" data-type="unmapped" onclick="setType(this)">No image</span>
+</div>
+<div class="grid" id="grid"></div>
+
+<div class="ov" id="picker">
+  <div class="modal">
+    <h3>Choose image for <span id="pk-target" style="color:#f0e4c8;">&nbsp;</span> <span class="x" onclick="closePicker()">&times;</span></h3>
+    <div class="pfilter">
+      <input id="psearch" placeholder="Filter images..." oninput="renderPicker()">
+      <span class="chip on" data-c="all" onclick="setPCat(this)">All</span>
+      <span class="chip" data-c="Furniture" onclick="setPCat(this)">Furniture</span>
+      <span class="chip" data-c="Special" onclick="setPCat(this)">Special</span>
+      <span class="chip" data-c="Door/Marker" onclick="setPCat(this)">Doors</span>
+      <span class="chip" data-c="Marker" onclick="setPCat(this)">Markers</span>
+    </div>
+    <div class="pgrid" id="pgrid"></div>
+  </div>
+</div>
+
+<script src="../src/data/element-images.js"></script>
+<script src="../src/data/elements.js"></script>
+<script>
+'use strict';
+var OV_KEY='dun_element_overrides';
+function loadOv(){ try{return JSON.parse(localStorage.getItem(OV_KEY)||'{}');}catch(e){return {};} }
+function saveOv(o){ localStorage.setItem(OV_KEY, JSON.stringify(o)); }
+var overrides=loadOv();
+var typeFilter='all';
+function curImg(el){ return (el.id in overrides) ? overrides[el.id] : (el.img||''); }
+function setType(chip){
+  document.querySelectorAll('.filter .chip').forEach(function(c){c.classList.remove('on');});
+  chip.classList.add('on'); typeFilter=chip.getAttribute('data-type'); render();
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function render(){
+  var q=(document.getElementById('search').value||'').toLowerCase();
+  var grid=document.getElementById('grid'); grid.innerHTML='';
+  var n=0;
+  ELEMENT_DB.forEach(function(el){
+    if(typeFilter==='furniture' && el.type!=='furniture') return;
+    if(typeFilter==='special' && el.type!=='special') return;
+    if(typeFilter==='unmapped' && curImg(el)) return;
+    if(q && el.name.toLowerCase().indexOf(q)<0) return;
+    n++;
+    var img=curImg(el);
+    var isChanged=(el.id in overrides);
+    var card=document.createElement('div');
+    card.className='card'+(isChanged?' changed':'');
+    card.innerHTML=
+      '<div class="thumb'+(img?'':' none')+'">'+(img?'<img src="'+img+'" onerror="this.parentElement.classList.add(\'none\');this.parentElement.textContent=\'missing\';">':'no image')+'</div>'+
+      '<div class="body"><div class="nm">'+esc(el.name)+'</div><div class="ty">'+el.type+(el.sz?' &middot; '+el.sz+'sq':'')+'</div>'+
+      '<div class="rules">'+esc(el.special||'')+'</div>'+
+      '<div class="acts"><button onclick="openPicker(\''+el.id+'\')">Change image</button>'+
+      (img?'<button onclick="clearImg(\''+el.id+'\')">Clear</button>':'')+
+      (isChanged?'<button onclick="revert(\''+el.id+'\')">Revert</button>':'')+'</div></div>';
+    grid.appendChild(card);
+  });
+  document.getElementById('status').textContent=n+' shown / '+Object.keys(overrides).length+' edited';
+}
+var pkTarget=null, pCat='all';
+function openPicker(id){
+  pkTarget=id; pCat='all';
+  var el=ELEMENT_DB.find(function(e){return e.id===id;});
+  document.getElementById('pk-target').textContent=el?el.name:id;
+  document.getElementById('psearch').value='';
+  document.querySelectorAll('.pfilter .chip').forEach(function(c){c.classList.toggle('on',c.getAttribute('data-c')==='all');});
+  renderPicker();
+  document.getElementById('picker').classList.add('show');
+}
+function closePicker(){ document.getElementById('picker').classList.remove('show'); }
+function setPCat(chip){
+  document.querySelectorAll('.pfilter .chip').forEach(function(c){c.classList.remove('on');});
+  chip.classList.add('on'); pCat=chip.getAttribute('data-c'); renderPicker();
+}
+function renderPicker(){
+  var q=(document.getElementById('psearch').value||'').toLowerCase();
+  var pg=document.getElementById('pgrid'); pg.innerHTML='';
+  (typeof ELEMENT_IMAGE_FILES!=='undefined'?ELEMENT_IMAGE_FILES:[]).forEach(function(f){
+    if(pCat!=='all' && f.c!==pCat) return;
+    if(q && (f.n+' '+f.p).toLowerCase().indexOf(q)<0) return;
+    var it=document.createElement('div'); it.className='pitem';
+    it.innerHTML='<img src="'+f.p+'" loading="lazy"><div class="lbl">'+esc(f.n)+'</div>';
+    it.onclick=function(){ assign(f.p); };
+    pg.appendChild(it);
+  });
+}
+function assign(path){ if(!pkTarget) return; overrides[pkTarget]=path; saveOv(overrides); closePicker(); render(); }
+function clearImg(id){ overrides[id]=''; saveOv(overrides); render(); }
+function revert(id){ delete overrides[id]; saveOv(overrides); render(); }
+function resetAll(){ if(confirm('Discard all your image edits?')){ overrides={}; saveOv(overrides); render(); } }
+function exportJs(){
+  var db=ELEMENT_DB.map(function(e){
+    var c=Object.assign({},e); var img=curImg(e);
+    if(img) c.img=img; else delete c.img;
+    return c;
+  });
+  var js='/* Element catalogue - img fields set via the Element Image Mapper. */\n'+
+         'var ELEMENT_DB = '+JSON.stringify(db,null,1)+';\n'+
+         '\n/* Apply element->image overrides from the Element Image Mapper, if any. */\n'+
+         'try {\n  var _elOv = JSON.parse(localStorage.getItem(\'dun_element_overrides\') || \'{}\');\n'+
+         '  if (typeof ELEMENT_DB !== \'undefined\') ELEMENT_DB.forEach(function(e){ if(_elOv[e.id]) e.img = _elOv[e.id]; });\n} catch(e) {}\n';
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([js],{type:'text/javascript'}));
+  a.download='elements.js'; a.click();
+}
+render();
+</script>
+</body>
+</html>

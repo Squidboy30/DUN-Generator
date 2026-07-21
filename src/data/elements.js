@@ -59,3 +59,9 @@ var ELEMENT_DB = [
   { id:'fu_brazier',    name:'Brazier',           img:'../src/tiles/mobiliario/25.jpg', type:'furniture', sz:1, impassable:false, cover:null,    auto:true,  searchable:false, cat:['dungeon','civilised'],            special:'Always illuminated. Provides light in section.' },
   { id:'fu_spice_table',name:'Spice Table',       img:'../src/tiles/mobiliario/42.jpg', type:'furniture', sz:2, impassable:true,  cover:null,    auto:false, searchable:true,  cat:['civilised'],                      special:'Search: 1D6 coins or rare alchemy ingredient.' },
 ];
+
+/* Apply user's element->image overrides (from the Element Image Mapper), if any. */
+try {
+  var _elOv = JSON.parse(localStorage.getItem('dun_element_overrides') || '{}');
+  if (typeof ELEMENT_DB !== 'undefined') ELEMENT_DB.forEach(function(e){ if(_elOv[e.id]) e.img = _elOv[e.id]; });
+} catch(e) {}
