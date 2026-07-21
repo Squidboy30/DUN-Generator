@@ -6,46 +6,10 @@ var QUESTMAP_BURIEDKINGS = {
  "gridPx": 50,
  "tiles": [
   {
-   "id": "t_ent",
-   "tile": "04A_e",
-   "x": 0,
-   "y": 600,
-   "rot": 0,
-   "w": 6,
-   "h": 2,
-   "hidden": false,
-   "stairs": false,
-   "level": 0
-  },
-  {
-   "id": "t_hall",
-   "tile": "13A_c",
-   "x": 300,
-   "y": 500,
-   "rot": 0,
-   "w": 6,
-   "h": 6,
-   "hidden": true,
-   "stairs": false,
-   "level": 0
-  },
-  {
-   "id": "t_cUp",
-   "tile": "21A_e",
-   "x": 350.0,
-   "y": 200.0,
-   "rot": 90,
-   "w": 6,
-   "h": 2,
-   "hidden": true,
-   "stairs": false,
-   "level": 0
-  },
-  {
    "id": "t_teal",
    "tile": "05A_c",
-   "x": 300,
-   "y": -100,
+   "x": 900,
+   "y": 50,
    "rot": 0,
    "w": 6,
    "h": 6,
@@ -56,8 +20,8 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "t_rune",
    "tile": "07A_c",
-   "x": 600,
-   "y": -100,
+   "x": 1200,
+   "y": 50,
    "rot": 0,
    "w": 6,
    "h": 6,
@@ -68,8 +32,8 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "t_cols",
    "tile": "12A_c",
-   "x": 600,
-   "y": 500,
+   "x": 900,
+   "y": 350,
    "rot": 0,
    "w": 6,
    "h": 6,
@@ -78,13 +42,25 @@ var QUESTMAP_BURIEDKINGS = {
    "level": 0
   },
   {
-   "id": "t_c22",
-   "tile": "22A_e",
-   "x": 900,
-   "y": 600,
+   "id": "t_lroom",
+   "tile": "14A_c",
+   "x": 600,
+   "y": 350,
    "rot": 0,
    "w": 6,
-   "h": 2,
+   "h": 6,
+   "hidden": true,
+   "stairs": false,
+   "level": 0
+  },
+  {
+   "id": "t_mid",
+   "tile": "13A_c",
+   "x": 1200,
+   "y": 350,
+   "rot": 0,
+   "w": 6,
+   "h": 6,
    "hidden": true,
    "stairs": false,
    "level": 0
@@ -92,8 +68,8 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "t_blood",
    "tile": "15A_c",
-   "x": 1200,
-   "y": 500,
+   "x": 1500,
+   "y": 350,
    "rot": 0,
    "w": 6,
    "h": 6,
@@ -102,10 +78,10 @@ var QUESTMAP_BURIEDKINGS = {
    "level": 0
   },
   {
-   "id": "t_g38a",
+   "id": "t_chest7",
    "tile": "38A_g",
-   "x": 1500,
-   "y": 500,
+   "x": 1800,
+   "y": 350,
    "rot": 0,
    "w": 6,
    "h": 6,
@@ -114,25 +90,61 @@ var QUESTMAP_BURIEDKINGS = {
    "level": 0
   },
   {
-   "id": "t_g38b",
-   "tile": "38B_g",
-   "x": 1500,
-   "y": 200,
-   "rot": 0,
-   "w": 6,
-   "h": 6,
-   "hidden": true,
-   "stairs": false,
-   "level": 0
-  },
-  {
-   "id": "t_cDn",
-   "tile": "33A_e",
-   "x": 1250.0,
-   "y": 800.0,
+   "id": "t_ent",
+   "tile": "04A_e",
+   "x": 300.0,
+   "y": 450.0,
    "rot": 90,
+   "w": 2,
+   "h": 6,
+   "hidden": false,
+   "stairs": false,
+   "level": 0
+  },
+  {
+   "id": "t_corrL",
+   "tile": "21A_e",
+   "x": 650,
+   "y": 650,
+   "rot": 0,
+   "w": 2,
+   "h": 6,
+   "hidden": true,
+   "stairs": false,
+   "level": 0
+  },
+  {
+   "id": "t_blroom",
+   "tile": "19A_d",
+   "x": 600,
+   "y": 950,
+   "rot": 0,
    "w": 6,
-   "h": 2,
+   "h": 4,
+   "hidden": true,
+   "stairs": false,
+   "level": 0
+  },
+  {
+   "id": "t_narrow",
+   "tile": "37A_g",
+   "x": 600.0,
+   "y": 1150.0,
+   "rot": 90,
+   "w": 1,
+   "h": 6,
+   "hidden": true,
+   "stairs": false,
+   "level": 0
+  },
+  {
+   "id": "t_downC",
+   "tile": "33A_e",
+   "x": 1550,
+   "y": 650,
+   "rot": 0,
+   "w": 2,
+   "h": 6,
    "hidden": true,
    "stairs": false,
    "level": 0
@@ -140,8 +152,8 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "t_boss",
    "tile": "01A_a",
-   "x": 1100,
-   "y": 1100,
+   "x": 1350,
+   "y": 950,
    "rot": 0,
    "w": 8,
    "h": 10,
@@ -152,8 +164,8 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "t_fire",
    "tile": "06A_c",
-   "x": 1500,
-   "y": 1200,
+   "x": 1750,
+   "y": 1000,
    "rot": 0,
    "w": 6,
    "h": 6,
@@ -162,10 +174,46 @@ var QUESTMAP_BURIEDKINGS = {
    "level": 0
   },
   {
+   "id": "t_sideB",
+   "tile": "38B_g",
+   "x": 1800,
+   "y": 650,
+   "rot": 0,
+   "w": 6,
+   "h": 6,
+   "hidden": true,
+   "stairs": false,
+   "level": 0
+  },
+  {
+   "id": "t_corrR",
+   "tile": "39B_g",
+   "x": 2100,
+   "y": 650,
+   "rot": 0,
+   "w": 2,
+   "h": 6,
+   "hidden": true,
+   "stairs": false,
+   "level": 0
+  },
+  {
+   "id": "t_bossC",
+   "tile": "22A_e",
+   "x": 1450,
+   "y": 1450,
+   "rot": 0,
+   "w": 2,
+   "h": 6,
+   "hidden": true,
+   "stairs": false,
+   "level": 0
+  },
+  {
    "id": "t_i113",
    "tile": "113B_i",
-   "x": 1100,
-   "y": 1600,
+   "x": 1350,
+   "y": 1750,
    "rot": 0,
    "w": 6,
    "h": 6,
@@ -176,59 +224,11 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "t_i112",
    "tile": "112B_i",
-   "x": 1400,
-   "y": 1600,
+   "x": 1650,
+   "y": 1750,
    "rot": 0,
    "w": 6,
    "h": 6,
-   "hidden": true,
-   "stairs": false,
-   "level": 0
-  },
-  {
-   "id": "t_crypt",
-   "tile": "14A_c",
-   "x": 300,
-   "y": 800,
-   "rot": 0,
-   "w": 6,
-   "h": 6,
-   "hidden": true,
-   "stairs": false,
-   "level": 0
-  },
-  {
-   "id": "t_narrow",
-   "tile": "37A_g",
-   "x": 300,
-   "y": 1100,
-   "rot": 0,
-   "w": 1,
-   "h": 6,
-   "hidden": true,
-   "stairs": false,
-   "level": 0
-  },
-  {
-   "id": "t_cup",
-   "tile": "19A_d",
-   "x": 0,
-   "y": 1100,
-   "rot": 0,
-   "w": 6,
-   "h": 6,
-   "hidden": true,
-   "stairs": false,
-   "level": 0
-  },
-  {
-   "id": "t_g39b",
-   "tile": "39B_g",
-   "x": 0.0,
-   "y": 1400.0,
-   "rot": 90,
-   "w": 6,
-   "h": 2,
    "hidden": true,
    "stairs": false,
    "level": 0
@@ -236,36 +236,36 @@ var QUESTMAP_BURIEDKINGS = {
  ],
  "doors": [
   {
-   "id": "d_ent_hall",
+   "id": "d_ent_lroom",
    "kind": "puertad",
-   "x": 300,
-   "y": 650.0,
+   "x": 600,
+   "y": 500.0,
    "rot": 0,
    "hidden": false,
    "reveals": [
-    "t_hall",
-    "d_hall_cUp",
-    "d_hall_cols",
-    "d_hall_crypt"
+    "t_lroom",
+    "d_lroom_cols",
+    "d_lroom_corrL"
    ]
   },
   {
-   "id": "d_hall_cUp",
+   "id": "d_lroom_cols",
    "kind": "puerta",
-   "x": 400.0,
-   "y": 500,
+   "x": 900,
+   "y": 500.0,
    "rot": 0,
    "hidden": true,
    "reveals": [
-    "t_cUp",
-    "d_cUp_teal"
+    "t_cols",
+    "d_cols_teal",
+    "d_cols_mid"
    ]
   },
   {
-   "id": "d_cUp_teal",
+   "id": "d_cols_teal",
    "kind": "puerta",
-   "x": 400.0,
-   "y": 200,
+   "x": 1050.0,
+   "y": 350,
    "rot": 0,
    "hidden": true,
    "reveals": [
@@ -276,8 +276,8 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "d_teal_rune",
    "kind": "puertad",
-   "x": 600,
-   "y": 50.0,
+   "x": 1200,
+   "y": 200.0,
    "rot": 0,
    "hidden": true,
    "reveals": [
@@ -285,95 +285,95 @@ var QUESTMAP_BURIEDKINGS = {
    ]
   },
   {
-   "id": "d_hall_cols",
-   "kind": "puerta",
-   "x": 600,
-   "y": 650.0,
-   "rot": 0,
-   "hidden": true,
-   "reveals": [
-    "t_cols",
-    "d_cols_c22"
-   ]
-  },
-  {
-   "id": "d_cols_c22",
-   "kind": "puerta",
-   "x": 900,
-   "y": 650.0,
-   "rot": 0,
-   "hidden": true,
-   "reveals": [
-    "t_c22",
-    "d_c22_blood"
-   ]
-  },
-  {
-   "id": "d_c22_blood",
+   "id": "d_cols_mid",
    "kind": "puerta",
    "x": 1200,
-   "y": 650.0,
+   "y": 500.0,
+   "rot": 0,
+   "hidden": true,
+   "reveals": [
+    "t_mid",
+    "d_mid_blood"
+   ]
+  },
+  {
+   "id": "d_mid_blood",
+   "kind": "puerta",
+   "x": 1500,
+   "y": 500.0,
    "rot": 0,
    "hidden": true,
    "reveals": [
     "t_blood",
-    "d_blood_g38a",
-    "d_blood_cDn"
+    "d_blood_chest7",
+    "d_blood_downC"
    ]
   },
   {
-   "id": "d_blood_g38a",
+   "id": "d_blood_chest7",
    "kind": "puerta",
-   "x": 1500,
-   "y": 650.0,
+   "x": 1800,
+   "y": 500.0,
    "rot": 0,
    "hidden": true,
    "reveals": [
-    "t_g38a",
-    "d_g38a_g38b"
+    "t_chest7",
+    "d_chest7_sideB"
    ]
   },
   {
-   "id": "d_g38a_g38b",
+   "id": "d_chest7_sideB",
    "kind": "puerta",
-   "x": 1650.0,
-   "y": 500,
+   "x": 1950.0,
+   "y": 650,
    "rot": 0,
    "hidden": true,
    "reveals": [
-    "t_g38b"
+    "t_sideB",
+    "d_sideB_corrR"
    ]
   },
   {
-   "id": "d_blood_cDn",
+   "id": "d_sideB_corrR",
    "kind": "puerta",
-   "x": 1300.0,
-   "y": 800,
+   "x": 2100,
+   "y": 800.0,
    "rot": 0,
    "hidden": true,
    "reveals": [
-    "t_cDn",
-    "d_cDn_boss"
+    "t_corrR"
    ]
   },
   {
-   "id": "d_cDn_boss",
+   "id": "d_blood_downC",
    "kind": "puerta",
-   "x": 1300.0,
-   "y": 1100,
+   "x": 1600.0,
+   "y": 650,
+   "rot": 0,
+   "hidden": true,
+   "reveals": [
+    "t_downC",
+    "d_downC_boss"
+   ]
+  },
+  {
+   "id": "d_downC_boss",
+   "kind": "puerta",
+   "x": 1600.0,
+   "y": 950,
    "rot": 0,
    "hidden": true,
    "reveals": [
     "t_boss",
     "d_boss_fire",
-    "d_boss_i113"
+    "d_boss_bossC"
    ]
   },
   {
    "id": "d_boss_fire",
    "kind": "puerta",
-   "x": 1500,
-   "y": 1350.0,
+   "x": 1750,
+   "y": 1150.0,
    "rot": 0,
    "hidden": true,
    "reveals": [
@@ -381,10 +381,22 @@ var QUESTMAP_BURIEDKINGS = {
    ]
   },
   {
-   "id": "d_boss_i113",
+   "id": "d_boss_bossC",
    "kind": "puerta",
-   "x": 1250.0,
-   "y": 1600,
+   "x": 1500.0,
+   "y": 1450,
+   "rot": 0,
+   "hidden": true,
+   "reveals": [
+    "t_bossC",
+    "d_bossC_i113"
+   ]
+  },
+  {
+   "id": "d_bossC_i113",
+   "kind": "puerta",
+   "x": 1500.0,
+   "y": 1750,
    "rot": 0,
    "hidden": true,
    "reveals": [
@@ -395,8 +407,8 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "d_i113_i112",
    "kind": "puerta",
-   "x": 1400,
-   "y": 1750.0,
+   "x": 1650,
+   "y": 1900.0,
    "rot": 0,
    "hidden": true,
    "reveals": [
@@ -404,163 +416,151 @@ var QUESTMAP_BURIEDKINGS = {
    ]
   },
   {
-   "id": "d_hall_crypt",
+   "id": "d_lroom_corrL",
    "kind": "puerta",
-   "x": 450.0,
-   "y": 800,
+   "x": 700.0,
+   "y": 650,
    "rot": 0,
    "hidden": true,
    "reveals": [
-    "t_crypt",
-    "d_crypt_narrow"
+    "t_corrL",
+    "d_corrL_blroom"
    ]
   },
   {
-   "id": "d_crypt_narrow",
+   "id": "d_corrL_blroom",
    "kind": "puerta",
-   "x": 325.0,
-   "y": 1100,
+   "x": 700.0,
+   "y": 950,
    "rot": 0,
    "hidden": true,
    "reveals": [
-    "t_narrow",
-    "d_narrow_cup"
+    "t_blroom",
+    "d_blroom_narrow"
    ]
   },
   {
-   "id": "d_narrow_cup",
+   "id": "d_blroom_narrow",
    "kind": "puerta",
-   "x": 300,
-   "y": 1250.0,
+   "x": 750.0,
+   "y": 1150,
    "rot": 0,
    "hidden": true,
    "reveals": [
-    "t_cup",
-    "d_cup_g39b"
-   ]
-  },
-  {
-   "id": "d_cup_g39b",
-   "kind": "puerta",
-   "x": 50.0,
-   "y": 1400,
-   "rot": 0,
-   "hidden": true,
-   "reveals": [
-    "t_g39b"
+    "t_narrow"
    ]
   }
  ],
  "furniture": [
   {
-   "id": "f_Amphoras_teal_0_-10",
+   "id": "f_Amphoras_teal_0_-15",
    "name": "Amphoras",
-   "x": 450.0,
-   "y": 0.0,
+   "x": 1050.0,
+   "y": 125.0,
    "rot": 0,
    "hidden": true
   },
   {
-   "id": "f_GreatTreasure_rune_0_-15",
+   "id": "f_GreatTreasure_rune_15_-15",
    "name": "Great Treasure",
-   "x": 750.0,
-   "y": -25.0,
+   "x": 1425.0,
+   "y": 125.0,
    "rot": 0,
    "hidden": true
   },
   {
    "id": "f_Chest_rune_15_10",
    "name": "Chest",
-   "x": 825.0,
-   "y": 100.0,
+   "x": 1425.0,
+   "y": 250.0,
    "rot": 0,
    "hidden": true
   },
   {
    "id": "f_Columns_cols_-10_-10",
    "name": "Columns",
-   "x": 700.0,
-   "y": 600.0,
+   "x": 1000.0,
+   "y": 450.0,
    "rot": 0,
    "hidden": true
   },
   {
-   "id": "f_Statues_blood_-10_10",
+   "id": "f_Statues_mid_0_10",
    "name": "Statues",
-   "x": 1300.0,
-   "y": 700.0,
+   "x": 1350.0,
+   "y": 550.0,
    "rot": 0,
    "hidden": true
   },
   {
-   "id": "f_Statues_blood_10_-10",
+   "id": "f_Statues_blood_0_-10",
    "name": "Statues",
-   "x": 1400.0,
-   "y": 600.0,
-   "rot": 0,
-   "hidden": true
-  },
-  {
-   "id": "f_Chest_g38a_0_0",
-   "name": "Chest",
    "x": 1650.0,
-   "y": 650.0,
+   "y": 450.0,
    "rot": 0,
    "hidden": true
   },
   {
-   "id": "f_Throne_boss_-10_10",
+   "id": "f_Chest_chest7_15_0",
+   "name": "Chest",
+   "x": 2025.0,
+   "y": 500.0,
+   "rot": 0,
+   "hidden": true
+  },
+  {
+   "id": "f_Throne_boss_-15_15",
    "name": "Throne",
-   "x": 1250.0,
-   "y": 1400.0,
+   "x": 1475.0,
+   "y": 1275.0,
    "rot": 0,
    "hidden": true
   },
   {
-   "id": "f_Statues_boss_0_-35",
+   "id": "f_Statues_boss_-15_-35",
    "name": "Statues",
-   "x": 1300.0,
-   "y": 1175.0,
-   "rot": 0,
-   "hidden": true
-  },
-  {
-   "id": "f_Chest_boss_-25_-10",
-   "name": "Chest",
-   "x": 1175.0,
-   "y": 1300.0,
-   "rot": 0,
-   "hidden": true
-  },
-  {
-   "id": "f_Cupboard_cup_0_0",
-   "name": "Cupboard",
-   "x": 150.0,
-   "y": 1250.0,
-   "rot": 0,
-   "hidden": true
-  },
-  {
-   "id": "f_Chest_crypt_10_0",
-   "name": "Chest",
-   "x": 500.0,
-   "y": 950.0,
-   "rot": 0,
-   "hidden": true
-  },
-  {
-   "id": "f_Crypt_crypt_0_15",
-   "name": "Crypt",
-   "x": 450.0,
+   "x": 1475.0,
    "y": 1025.0,
    "rot": 0,
    "hidden": true
   },
   {
-   "id": "f_Crypt_fire_0_-10",
+   "id": "f_Chest_boss_-30_-5",
+   "name": "Chest",
+   "x": 1400.0,
+   "y": 1175.0,
+   "rot": 0,
+   "hidden": true
+  },
+  {
+   "id": "f_Cupboard_lroom_0_15",
+   "name": "Cupboard",
+   "x": 750.0,
+   "y": 575.0,
+   "rot": 0,
+   "hidden": true
+  },
+  {
+   "id": "f_Chest_blroom_15_0",
+   "name": "Chest",
+   "x": 825.0,
+   "y": 1050.0,
+   "rot": 0,
+   "hidden": true
+  },
+  {
+   "id": "f_Crypt_blroom_-15_0",
    "name": "Crypt",
-   "x": 1650.0,
-   "y": 1300.0,
+   "x": 675.0,
+   "y": 1050.0,
+   "rot": 0,
+   "hidden": true
+  },
+  {
+   "id": "f_Crypt_fire_0_-15",
+   "name": "Crypt",
+   "x": 1900.0,
+   "y": 1075.0,
    "rot": 0,
    "hidden": true
   }
@@ -569,41 +569,41 @@ var QUESTMAP_BURIEDKINGS = {
   {
    "id": "m_secret3",
    "kind": "white",
-   "x": 575.0,
-   "y": 50.0,
+   "x": 1200.0,
+   "y": 250.0,
    "hidden": true
   },
   {
    "id": "m_portcullis1",
    "kind": "white",
-   "x": 450.0,
-   "y": 775.0,
+   "x": 750.0,
+   "y": 650.0,
    "hidden": true
   },
   {
    "id": "m_riddle2",
    "kind": "white",
-   "x": 750.0,
-   "y": 775.0,
+   "x": 900.0,
+   "y": 500.0,
    "hidden": true
   }
  ],
  "entrance": {
   "id": "e_start",
-  "x": 0,
-  "y": 600,
+  "x": 350.0,
+  "y": 500.0,
   "hidden": false
  },
  "goal": {
   "id": "g_boss",
-  "x": 1350.0,
-  "y": 1350.0,
+  "x": 1625.0,
+  "y": 1200.0,
   "hidden": true
  },
  "leader": {
   "id": "l_boss",
-  "x": 1300.0,
-  "y": 1350.0,
+  "x": 1550.0,
+  "y": 1200.0,
   "hidden": true
  },
  "notes": [
@@ -617,13 +617,13 @@ var QUESTMAP_BURIEDKINGS = {
    "text": "Special elements: a = Crypt, b = Great Treasure."
   },
   {
-   "text": "Furniture key: 1 Amphoras, 2 Cupboard, 3 Columns, 4 Trapdoor (links to matching trapdoor), 5 Throne, 6 Statues, 7 Chest."
+   "text": "Furniture key: 1 Amphoras, 2 Cupboard, 3 Columns, 4 Trapdoor, 5 Throne, 6 Statues, 7 Chest."
   },
   {
    "text": "Other elements: 1 Portcullis (no cost), 2 Riddle (no cost), 3 Secret Door."
   },
   {
-   "text": "Note: tiles 38A/g, 38B/g, 39B/g, 112B/i, 113B/i are not in the app's tile art set yet, so they render as labelled placeholders."
+   "text": "Tiles 38A/g, 38B/g, 39B/g, 112B/i, 113B/i have no art in the app tile set yet, so they render as labelled placeholders."
   }
  ],
  "annotations": [],
