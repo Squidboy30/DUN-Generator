@@ -105,6 +105,31 @@ function initVis(){
   Q.furniture.forEach(function(f){ if(!f.hidden) visible[f.id]=1; });
   Q.markers.forEach(function(m){ if(!m.hidden) visible[m.id]=1; });
   ['entrance','goal','leader'].forEach(function(k){ if(Q[k] && !Q[k].hidden) visible[Q[k].id]=1; });
+  // Fallback so imported maps are never blank: if the capture left every tile
+  // hidden, reveal a starting point. Open maps (no doors) have no fog to progress,
+  // so reveal everything; door maps reveal the entrance tile to begin exploration.
+  var anyTile = Q.tiles.some(function(t){ return visible[t.id]; });
+  if(!anyTile){
+    if(!Q.doors.length){
+      Q.tiles.forEach(function(t){ visible[t.id]=1; });
+      Q.furniture.forEach(function(f){ visible[f.id]=1; });
+      Q.markers.forEach(function(m){ visible[m.id]=1; });
+    } else if(Q.entrance){
+      var st = tileOfPoint(Q.entrance.x, Q.entrance.y);
+      if(!st){
+        var best=null, bd=1e18;
+        Q.tiles.forEach(function(t){ var b=bbox(t); var dx=(b.x+b.w/2)-Q.entrance.x, dy=(b.y+b.h/2)-Q.entrance.y, d=dx*dx+dy*dy; if(d<bd){bd=d;best=t;} });
+        st=best;
+      }
+      if(st){
+        visible[st.id]=1;
+        Q.doors.forEach(function(d){ var h=tileOfPoint(d.x,d.y); if(h&&h.id===st.id) visible[d.id]=1; });
+        Q.furniture.forEach(function(f){ var h=tileOfPoint(f.x,f.y); if(h&&h.id===st.id) visible[f.id]=1; });
+        Q.markers.forEach(function(m){ var h=tileOfPoint(m.x,m.y); if(h&&h.id===st.id) visible[m.id]=1; });
+      }
+    }
+  }
+  if(Q.entrance) visible[Q.entrance.id]=1;
 }
 initVis();
 
