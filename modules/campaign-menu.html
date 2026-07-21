@@ -62,6 +62,7 @@ body{background:#0a0806;display:flex;flex-direction:column;align-items:center;ju
   <div class="off-note">Quest maps imported from worldofarasca.dungeonuniversalis.com. Use Import to add more from the official campaigns.</div>
   <div class="off-list" id="off-list"></div>
   <a class="off-import" href="questimport.html">&#10515; IMPORT A QUEST MAP</a>
+  <button class="off-import" id="off-clear" style="cursor:pointer;font:inherit;" onclick="clearAll()">&#128465; REMOVE ALL</button>
 </div>
 
 <a class="back" href="../index.html">&#8592; BACK TO MAIN MENU</a>
@@ -76,23 +77,45 @@ function renderList() {
   var list = document.getElementById('off-list');
   list.innerHTML = '';
   var maps = loadImported();
-  // Built-in map 2768 always available
-  if (!maps['2768']) maps['2768'] = { mapId: 2768, builtin: true, title: '02 — La guarida de Rorg', tileCount: 10 };
-  var ids = Object.keys(maps).sort(function(a,b){ return Number(a)-Number(b); });
+  var ids = Object.keys(maps).sort(function(a,b){ return String(a).localeCompare(String(b), undefined, {numeric:true}); });
   ids.forEach(function(id) {
     var m = maps[id];
-    var a = document.createElement('a');
-    a.className = 'off-item';
-    a.href = 'questmap.html?map=' + id;
+    var row = document.createElement('div');
+    row.className = 'off-item';
+    row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.gap = '8px';
     var tiles = m.tileCount || (m.tiles ? m.tiles.length : '?');
+    var a = document.createElement('a');
+    a.href = 'questmap.html?map=' + id;
+    a.style.cssText = 'flex:1;display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;';
     a.innerHTML = '<span class="oi-icon">&#9876;</span>' +
       '<span class="oi-name">' + (m.title || ('Quest Map ' + id)) + '</span>' +
-      '<span class="oi-meta">' + tiles + ' tiles' + (m.builtin ? ' · built-in' : '') + '</span>';
-    list.appendChild(a);
+      '<span class="oi-meta">' + tiles + ' tiles</span>';
+    var del = document.createElement('button');
+    del.textContent = '\u2715';
+    del.title = 'Remove this quest map';
+    del.style.cssText = 'background:#2a1410;border:1px solid #7a4030;color:#e0a090;border-radius:4px;cursor:pointer;font-size:14px;padding:2px 9px;flex-shrink:0;';
+    del.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); delMap(id, m.title || id); };
+    row.appendChild(a); row.appendChild(del);
+    list.appendChild(row);
   });
   if (!ids.length) {
     list.innerHTML = '<div class="off-empty">No quest maps imported yet.</div>';
   }
+}
+function delMap(id, title) {
+  if (!confirm('Remove quest map "' + title + '"?')) return;
+  var maps = loadImported();
+  delete maps[id];
+  localStorage.setItem('dun_questmaps', JSON.stringify(maps));
+  renderList();
+}
+function clearAll() {
+  var maps = loadImported();
+  var n = Object.keys(maps).length;
+  if (!n) { alert('There are no imported quest maps to remove.'); return; }
+  if (!confirm('Remove ALL ' + n + ' imported quest map(s)? This cannot be undone.')) return;
+  localStorage.removeItem('dun_questmaps');
+  renderList();
 }
 function toggleOfficial(e) {
   e.preventDefault();
