@@ -11,6 +11,20 @@ function getTileImg(tileId){
   return img;
 }
 
+// Element art cache (furniture / special elements). Lazy-loads element images
+// (ELEMENT_DB[].img) and redraws once they arrive.
+const elImgCache = {};
+function getElImg(path){
+  if(!path) return null;
+  if(!elImgCache[path]){
+    const im = new Image();
+    im.onload = function(){ try{ draw(); }catch(e){} };
+    im.src = path;
+    elImgCache[path] = im;
+  }
+  return elImgCache[path];
+}
+
 // Pre-load all tile images into a cache
 
 
@@ -1304,41 +1318,43 @@ function drawElements(){
     const isAuto = pe.el.auto;
     const searched = pe.searched;
 
-    // Token background
-    ctx.save();
-    ctx.globalAlpha = searched ? 0.4 : 0.92;
-
-    // Colour by type
-    const bg   = isFurn ? 'rgba(60,40,10,0.88)'  : isAuto ? 'rgba(80,10,10,0.88)' : 'rgba(10,30,60,0.88)';
     const edge = isFurn ? '#c8a040' : isAuto ? '#d04030' : '#4080c0';
-    const r = Math.max(4, SQ*0.38);
-
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.roundRect(px+1, py+1, SQ-2, SQ-2, 4);
-    ctx.fill();
-    ctx.strokeStyle = edge;
-    ctx.lineWidth = searched ? 0.5 : 1.5;
-    ctx.stroke();
-
-    // Icon
-    ctx.globalAlpha = searched ? 0.3 : 0.95;
-    ctx.font = `bold ${Math.max(8, Math.round(SQ*0.42))}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const icon = searched ? '✓' : isFurn ? '⚱' : isAuto ? '!' : '?';
-    const iconCol = searched ? '#6a5030' : isFurn ? '#e8c060' : isAuto ? '#ff6040' : '#80c0ff';
-    ctx.fillStyle = iconCol;
-    ctx.fillText(icon, px+SQ/2, py+SQ/2);
-
-    // Auto-trigger marker
-    if(isAuto && !searched){
-      ctx.globalAlpha = 0.9;
-      ctx.font = `${Math.max(5, Math.round(SQ*0.25))}px serif`;
-      ctx.fillStyle = '#ff8060';
-      ctx.fillText('AUTO', px+SQ/2, py+SQ*0.82);
+    ctx.save();
+    ctx.globalAlpha = searched ? 0.45 : 0.98;
+    const elIm = getElImg(pe.el.img);
+    if(elIm && elIm.complete && elIm.naturalWidth){
+      // real element art — contain within the square, preserve aspect
+      const scale = Math.min(SQ/elIm.naturalWidth, SQ/elIm.naturalHeight);
+      const w = elIm.naturalWidth*scale, h = elIm.naturalHeight*scale;
+      ctx.drawImage(elIm, px+(SQ-w)/2, py+(SQ-h)/2, w, h);
+      ctx.strokeStyle = edge; ctx.lineWidth = searched ? 0.5 : 1;
+      ctx.strokeRect(px+0.5, py+0.5, SQ-1, SQ-1);
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      if(searched){
+        ctx.fillStyle='#3a8a3a'; ctx.font=`bold ${Math.max(8,Math.round(SQ*0.55))}px serif`;
+        ctx.fillText('✓', px+SQ/2, py+SQ/2);
+      } else if(isAuto){
+        ctx.globalAlpha=0.95; ctx.fillStyle='#ff8060';
+        ctx.font=`bold ${Math.max(6,Math.round(SQ*0.3))}px serif`;
+        ctx.fillText('!', px+SQ*0.82, py+SQ*0.22);
+      }
+    } else {
+      // fallback token + icon (no art for this element)
+      const bg = isFurn ? 'rgba(60,40,10,0.88)' : isAuto ? 'rgba(80,10,10,0.88)' : 'rgba(10,30,60,0.88)';
+      ctx.fillStyle = bg;
+      ctx.beginPath(); ctx.roundRect(px+1, py+1, SQ-2, SQ-2, 4); ctx.fill();
+      ctx.strokeStyle = edge; ctx.lineWidth = searched ? 0.5 : 1.5; ctx.stroke();
+      ctx.globalAlpha = searched ? 0.3 : 0.95;
+      ctx.font = `bold ${Math.max(8, Math.round(SQ*0.42))}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const icon = searched ? '✓' : isFurn ? '⚱' : isAuto ? '!' : '?';
+      const iconCol = searched ? '#6a5030' : isFurn ? '#e8c060' : isAuto ? '#ff6040' : '#80c0ff';
+      ctx.fillStyle = iconCol; ctx.fillText(icon, px+SQ/2, py+SQ/2);
+      if(isAuto && !searched){
+        ctx.globalAlpha = 0.9; ctx.font = `${Math.max(5, Math.round(SQ*0.25))}px serif`;
+        ctx.fillStyle = '#ff8060'; ctx.fillText('AUTO', px+SQ/2, py+SQ*0.82);
+      }
     }
-
     ctx.restore();
   });
 }
