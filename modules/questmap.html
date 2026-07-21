@@ -258,16 +258,26 @@ function draw(){
   special(Q.entrance,'entrada','#40e040','ENTRANCE');
   special(Q.goal,'salafinal','#ff5050','GOAL');
   special(Q.leader,'lider','#ff2020','LEADER');
-  // markers
+  // markers (custom map markers — e.g. numbered monster-spawn squares). Preserve colour, shape and number.
   Q.markers.forEach(function(m){
     if(!visible[m.id])return;
     var host=tileOfPoint(m.x,m.y); var dim=host&&dimmed(host);
-    ctx.save();ctx.globalAlpha=dim?0.15:0.9;
-    var col=m.kind==='white'?'#fff':'#5090ff';
-    ctx.strokeStyle=col;ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(X(m.x),Y(m.y),SQ*0.22,0,7);ctx.stroke();
-    if(annById[m.id]){ctx.fillStyle=col;ctx.font='bold 12px Cinzel,serif';ctx.textAlign='center';
-      ctx.fillText('?',X(m.x),Y(m.y)+4);}
+    ctx.save();ctx.globalAlpha=dim?0.15:0.95;
+    var col = m.color || (m.kind==='white' ? '#ffffff' : '#fffe01');
+    var sz  = ((m.size||40)/Q.gridPx)*SQ;      // markers are ~40px on the source grid
+    var x0=X(m.x), y0=Y(m.y), cx=x0+sz/2, cy=y0+sz/2;
+    ctx.fillStyle=col; ctx.strokeStyle='#000'; ctx.lineWidth=Math.max(1, SQ*0.05);
+    if(m.shape==='round'){
+      ctx.beginPath(); ctx.arc(cx, cy, sz/2, 0, 7); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.fillRect(x0, y0, sz, sz); ctx.strokeRect(x0, y0, sz, sz);
+    }
+    var label = (m.num!=null && m.num!=='') ? String(m.num) : (annById[m.id] ? '?' : '');
+    if(label){
+      ctx.fillStyle='#000'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font='bold '+Math.max(8, Math.round(sz*0.66))+'px Cinzel,serif';
+      ctx.fillText(label, cx, cy);
+    }
     ctx.restore();
   });
   status();
@@ -294,7 +304,8 @@ cv.addEventListener('click',function(ev){
   for(var j=0;j<Q.markers.length;j++){
     var m=Q.markers[j];
     if(!visible[m.id]||!annById[m.id])continue;
-    if(Math.abs(mx-X(m.x))<SQ*0.4 && Math.abs(my-Y(m.y))<SQ*0.4){
+    var msz=((m.size||40)/Q.gridPx)*SQ;
+    if(mx>=X(m.x) && mx<=X(m.x)+msz && my>=Y(m.y) && my<=Y(m.y)+msz){
       showDiscovery(annById[m.id]); return;
     }
   }

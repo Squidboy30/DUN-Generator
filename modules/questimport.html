@@ -40,7 +40,7 @@ tr.unknown td{background:rgba(160,60,40,.12);}
 <div class="step">
 <h2>Step 1 — Capture the map</h2>
 <div class="hint">With the quest map open on the official site, open DevTools (F12) &rarr; Console, paste this and press Enter. It fetches the map's scenario notes (objective, special rules, riddles) and downloads the page with them embedded:</div>
-<div class="codeblock">(async()=>{let t='';try{t=await(await fetch('ajax-mapas.php')).text();if(t.trim().length&lt;5){const idm=(location.search.match(/\d+/)||[''])[0];t=await(await fetch('ajax-mapas.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'idm='+idm})).text();}}catch(e){}const s=document.createElement('script');s.id='dun-annotations';s.type='application/json';s.textContent=t;document.body.appendChild(s);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([document.documentElement.outerHTML],{type:'text/html'}));a.download='mapaonline_'+(location.search.match(/\d+/)||['map'])[0]+'.html';a.click()})()</div>
+<div class="codeblock">(async()=>{let t='';try{t=await(await fetch('ajax-mapas.php')).text();if(t.trim().length&lt;5){const idm=(location.search.match(/\d+/)||[''])[0];t=await(await fetch('ajax-mapas.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'idm='+idm})).text();}}catch(e){}const s=document.createElement('script');s.id='dun-annotations';s.type='application/json';s.textContent=t;document.body.appendChild(s);document.querySelectorAll('[tipo="marcadorpersonalizado"]').forEach(function(m){var cs=getComputedStyle(m);m.setAttribute('data-mkcolor',cs.backgroundColor);m.setAttribute('data-mknum',(m.getAttribute('txt')||m.textContent||'').trim());m.setAttribute('data-mkshape',/cuadrado/.test(m.className)?'square':'round');});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([document.documentElement.outerHTML],{type:'text/html'}));a.download='mapaonline_'+(location.search.match(/\d+/)||['map'])[0]+'.html';a.click()})()</div>
 <div class="hint">Older captures made without this still import — you can load the annotations separately below.</div>
 </div>
 
@@ -194,7 +194,10 @@ function parseCapture(html) {
       x: parseFloat(left[1]), y: parseFloat(top[1]),
       rot: rot ? parseFloat(rot[1]) : 0,
       hidden: hidden,
-      reveals: abre ? abre.split(',') : []
+      reveals: abre ? abre.split(',') : [],
+      mkcolor: d.getAttribute('data-mkcolor') || '',
+      mknum:   (d.getAttribute('data-mknum') || d.getAttribute('txt') || '').trim(),
+      mkshape: d.getAttribute('data-mkshape') || (/cuadrado/.test(d.className||'') ? 'square' : 'round')
     };
   });
   // keep only reveal targets that exist (drop stale ids)
@@ -300,7 +303,11 @@ function buildQuest() {
     } else if (e.tipo==='elemento') {
       furniture.push({ id:e.id, name:e.nombre, x:e.x, y:e.y, rot:e.rot, hidden:e.hidden });
     } else if (e.tipo==='marcadorpersonalizado') {
-      markers.push({ id:e.id, kind:(e.nombre.indexOf('blanco')>=0?'white':'blue'),
+      markers.push({ id:e.id,
+        color: e.mkcolor || '',
+        shape: e.mkshape || 'square',
+        num:   e.mknum || '',
+        kind:  (e.nombre.indexOf('blanco')>=0?'white':'blue'),
         x:e.x, y:e.y, hidden:e.hidden });
     } else if (e.tipo==='exploratoria') {
       special[e.nombre] = { id:e.id, x:e.x, y:e.y, hidden:e.hidden };
