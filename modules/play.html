@@ -124,6 +124,8 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 
 /* ── TRAVEL PANEL ── */
 .travel-panel{width:260px;flex-shrink:0;background:var(--bg-panel,rgba(13,10,6,.98));border-left:2px solid var(--border-gold);z-index:10;display:flex;flex-direction:column;overflow:hidden;}
+.party-dock{position:absolute;top:0;right:0;width:340px;height:100%;background:rgba(13,10,6,.98);border-left:2px solid var(--border-gold);z-index:5;overflow:hidden;display:flex;flex-direction:column;}
+.party-dock iframe{width:100%;height:100%;border:0;display:block;}
 
 .tp-head{padding:8px 12px;border-bottom:1px solid var(--border);background:rgba(160,120,32,.08);display:flex;align-items:center;justify-content:space-between;}
 .tp-title{font-family:Cinzel,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
@@ -266,6 +268,11 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
         <button class="tp-btn" onclick="travelSetLocation()">⚑ Place Party (no roll)</button>
       </div>
     </div>
+  </div>
+
+  <!-- Active party cards docked on the right (reuses the party-screen cards) -->
+  <div class="party-dock" id="party-dock">
+    <iframe id="party-dock-frame" title="Active Party" src=""></iframe>
   </div>
 
   <!-- Brief panel — slides in from right -->
@@ -426,6 +433,10 @@ function load() {
   if (!campaign) { document.getElementById('hdr-title').textContent='Campaign not found'; return; }
   document.title = campaign.name+' — DUN Play';
   document.getElementById('hdr-title').textContent = campaign.name;
+  try {
+    var _pid = campaignPartyId();
+    document.getElementById('party-dock-frame').src = 'party.html?embed=1' + (_pid ? '&party=' + encodeURIComponent(_pid) : '');
+  } catch(e) {}
   var saved=null; try{saved=JSON.parse(localStorage.getItem('dun_play_'+id));}catch(e){}
   if (saved) {
     playState   = saved.state || saved;
