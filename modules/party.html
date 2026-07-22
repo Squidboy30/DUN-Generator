@@ -522,6 +522,14 @@ body {
 .embed-mode .view { padding: 8px; }
 .dock-mode #global-cards-panel { display: none; }
 .dock-mode .detail-overlay { display: none !important; }
+/* Solo mode: show ONLY the requested hero's sheet or cards, filling the window (map shows dimmed behind the parent modal) */
+.solo-mode { background: #12100c; }
+.solo-mode .app-header, .solo-mode .nav-tabs, .solo-mode .home-btn, .solo-mode .party-view-header,
+.solo-mode .hero-strip, .solo-mode .card-tracker, .solo-mode .companions-divider, .solo-mode .party-vp-badge { display: none !important; }
+.solo-mode .view { padding: 0 !important; }
+.solo-mode .detail-overlay { position: absolute; inset: 0; background: #12100c; display: block; overflow-y: auto; }
+.solo-mode .detail-overlay .detail-modal { margin: 0 auto; max-width: 960px; }
+.solo-mode #global-cards-panel { display: block !important; position: absolute; inset: 0; overflow-y: auto; padding: 14px; background: #12100c; }
 .card-tracker { display: none; }
 .embed-mode .card-tracker { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; margin-top: 3px; width: 220px; background: #0e0b07; border: 1px solid #3a2c12; border-radius: 4px; }
 .embed-mode .ct-item { display: flex; align-items: center; gap: 2px; background: #1a1206; border: 1px solid #3a2c12; border-radius: 3px; padding: 2px 3px; }
@@ -5548,6 +5556,7 @@ renderPartiesList();
   if (q.get('embed') !== '1') return;
   document.body.classList.add('embed-mode');
   if (q.get('dock') === '1') document.body.classList.add('dock-mode');
+  if (q.get('solo') === '1') document.body.classList.add('solo-mode');
   const pid = q.get('party');
   const target = (pid && parties.some(p => p.id === pid)) ? pid : activePartyId;
   if (target && parties.some(p => p.id === target)) {

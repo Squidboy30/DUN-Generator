@@ -366,12 +366,11 @@ body{background:var(--bg);font-family:'IM Fell English',Georgia,serif;color:var(
 </div>
 
 <!-- Party manager overlay: embeds the real Party Manager (exact cards & sheets) -->
-<div id="party-frame-wrap" style="display:none;position:fixed;inset:0;z-index:550;background:#0d0b08;">
-  <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;background:#1a1610;border-bottom:1px solid var(--border-gold,#8a6d2f);">
-    <button class="hdr-btn" onclick="closePartyView()">&#8592; Back to Map</button>
-    <span style="opacity:.8;">The Party</span>
+<div id="party-frame-wrap" style="display:none;position:fixed;inset:0;z-index:550;background:rgba(6,4,2,.6);align-items:center;justify-content:center;" onclick="if(event.target===this)closePartyView()">
+  <div style="position:relative;width:min(1000px,95vw);height:min(900px,92vh);background:#12100c;border:2px solid var(--border-gold,#8a6d2f);border-radius:6px;box-shadow:0 12px 60px rgba(0,0,0,.85);overflow:hidden;">
+    <button onclick="closePartyView()" title="Close" style="position:absolute;top:6px;right:8px;z-index:3;width:28px;height:28px;background:#1a1610;border:1px solid var(--border-gold,#8a6d2f);color:var(--gold,#e0b878);border-radius:50%;cursor:pointer;font-size:16px;line-height:1;">&times;</button>
+    <iframe id="party-frame" src="" style="width:100%;height:100%;border:0;display:block;background:transparent;"></iframe>
   </div>
-  <iframe id="party-frame" src="" style="width:100%;height:calc(100% - 46px);border:0;display:block;"></iframe>
 </div>
 
 <!-- Mission popover -->
@@ -2048,13 +2047,13 @@ function campaignPartyId() {
 window.addEventListener('message', function(ev){
   var d = ev.data; if (!d || d.type !== 'dun-open') return;
   var pid = campaignPartyId();
-  document.getElementById('party-frame').src = 'party.html?embed=1' + (pid ? '&party=' + encodeURIComponent(pid) : '') + '&open=' + encodeURIComponent(d.view + ':' + d.heroId);
-  document.getElementById('party-frame-wrap').style.display = 'block';
+  document.getElementById('party-frame').src = 'party.html?embed=1' + (pid ? '&party=' + encodeURIComponent(pid) : '') + '&open=' + encodeURIComponent(d.view + ':' + d.heroId) + '&solo=1';
+  document.getElementById('party-frame-wrap').style.display = 'flex';
 });
 function openPartyView() {
   var pid = campaignPartyId();
   document.getElementById('party-frame').src = 'party.html?embed=1' + (pid ? '&party=' + encodeURIComponent(pid) : '');
-  document.getElementById('party-frame-wrap').style.display = 'block';
+  document.getElementById('party-frame-wrap').style.display = 'flex';
 }
 function closePartyView() {
   document.getElementById('party-frame-wrap').style.display = 'none';
