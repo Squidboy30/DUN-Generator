@@ -521,6 +521,14 @@ body {
 .embed-mode .hero-strip { flex-direction: column; align-items: center; overflow-x: hidden; overflow-y: visible; gap: 12px; }
 .embed-mode .view { padding: 8px; }
 .embed-mode #global-cards-panel { display: none; }
+.card-tracker { display: none; }
+.embed-mode .card-tracker { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; margin-top: 3px; width: 220px; background: #0e0b07; border: 1px solid #3a2c12; border-radius: 4px; }
+.embed-mode .ct-item { display: flex; align-items: center; gap: 2px; background: #1a1206; border: 1px solid #3a2c12; border-radius: 3px; padding: 2px 3px; }
+.embed-mode .ct-item .ct-lbl { color: #d5c396; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: .5px; flex: 1; }
+.embed-mode .ct-item .ct-val { color: #f0e4c8; font-weight: bold; font-size: 12px; min-width: 16px; text-align: right; }
+.embed-mode .ct-item .ct-max { color: #8a6220; font-size: 10px; }
+.embed-mode .ct-item button { width: 17px; height: 17px; background: #241c10; border: 1px solid #6a4a18; color: #e0b878; border-radius: 3px; cursor: pointer; font-size: 13px; line-height: 1; padding: 0; flex-shrink: 0; }
+.embed-mode .ct-item button:hover { background: #2e2416; border-color: #e0b878; }
 
 /* ── Card Lightbox ─────────────────────────────────────────────── */
 .card-lightbox {
@@ -2001,6 +2009,7 @@ function renderDunHeroCard(h, inParty) {
       <button class="card-btn" onclick="quickRest('${h.id}')">Rest</button>
       ${inParty ? `<button class="card-btn remove-btn" onclick="removeHeroFromParty('${h.id}')">✕</button>` : ''}
     </div>
+    ${heroTracker(h)}
   </div>`;
 }
 
@@ -4459,11 +4468,33 @@ function adjustHeroVal(id, key, delta) {
   const cls = CLASS_DB.find(c => c.id === h.classId);
   let max = key === 'currentVitality' ? h.attrs.vitality
           : key === 'currentMana'     ? (h.attrs.mana != null ? h.attrs.mana : (cls?.startMana || 6))
-          : 999;
+          : key === 'currentFortune'  ? (h.fortune != null ? h.fortune : 6)
+          : 9999;
   h[key] = Math.max(0, Math.min(max, (h[key] || 0) + delta));
   save();
   const el = document.getElementById((key === 'currentVitality' ? 'qv-' : 'qm-') + id);
   if (el) el.textContent = h[key];
+  const trk = document.getElementById('trk-' + key + '-' + id);
+  if (trk) trk.textContent = h[key];
+}
+// Compact play tracker rendered at the bottom of each docked card (embed mode)
+function heroTracker(h){
+  var hasMana = h.attrs && h.attrs.mana != null;
+  function row(key,label,val,max){
+    return '<div class="ct-item">'
+      + '<button onclick="adjustHeroVal(\''+h.id+'\',\''+key+'\',-1)">\u2212</button>'
+      + '<span class="ct-lbl">'+label+'</span>'
+      + '<span class="ct-val" id="trk-'+key+'-'+h.id+'">'+val+'</span>'
+      + (max!=null?'<span class="ct-max">/'+max+'</span>':'')
+      + '<button onclick="adjustHeroVal(\''+h.id+'\',\''+key+'\',1)">+</button></div>';
+  }
+  var out='<div class="card-tracker">';
+  out+=row('currentVitality','VIT', (h.currentVitality!=null?h.currentVitality:h.attrs.vitality), h.attrs.vitality);
+  if(hasMana) out+=row('currentMana','MANA', (h.currentMana!=null?h.currentMana:h.attrs.mana), h.attrs.mana);
+  out+=row('currentFortune','FORT', (h.currentFortune!=null?h.currentFortune:(h.fortune||0)), (h.fortune||0));
+  out+=row('coins','GOLD', (h.coins||0), null);
+  out+='</div>';
+  return out;
 }
 
 function toggleFortune(id, idx) {
