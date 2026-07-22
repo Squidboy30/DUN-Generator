@@ -520,7 +520,8 @@ body {
 .embed-mode .nav-tabs, .embed-mode .home-btn { display: none; }
 .embed-mode .hero-strip { flex-direction: column; align-items: center; overflow-x: hidden; overflow-y: visible; gap: 12px; }
 .embed-mode .view { padding: 8px; }
-.embed-mode #global-cards-panel { display: none; }
+.dock-mode #global-cards-panel { display: none; }
+.dock-mode .detail-overlay { display: none !important; }
 .card-tracker { display: none; }
 .embed-mode .card-tracker { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; margin-top: 3px; width: 220px; background: #0e0b07; border: 1px solid #3a2c12; border-radius: 4px; }
 .embed-mode .ct-item { display: flex; align-items: center; gap: 2px; background: #1a1206; border: 1px solid #3a2c12; border-radius: 3px; padding: 2px 3px; }
@@ -2035,6 +2036,7 @@ function renderCompanionCard(c) {
 // CARDS PANEL TOGGLE
 // ═══════════════════════════════════════════════════════════════
 function toggleCardsPanel(heroId) {
+  if (document.body.classList.contains('dock-mode')) { try{ parent.postMessage({type:'dun-open', view:'cards', heroId:heroId}, '*'); }catch(e){} return; }
   const panel = document.getElementById('global-cards-panel');
   const prevSelected = selectedCardHeroId;
 
@@ -4139,6 +4141,7 @@ function finaliseHero() {
 // HERO DETAIL
 // ═══════════════════════════════════════════════════════════════
 function openDetail(id) {
+  if (document.body.classList.contains('dock-mode')) { try{ parent.postMessage({type:'dun-open', view:'sheet', heroId:id}, '*'); }catch(e){} return; }
   const h = heroes.find(h => h.id === id);
   if (!h) return;
   // Migrate old heroes
@@ -5544,6 +5547,7 @@ renderPartiesList();
   const q = new URLSearchParams(location.search);
   if (q.get('embed') !== '1') return;
   document.body.classList.add('embed-mode');
+  if (q.get('dock') === '1') document.body.classList.add('dock-mode');
   const pid = q.get('party');
   const target = (pid && parties.some(p => p.id === pid)) ? pid : activePartyId;
   if (target && parties.some(p => p.id === target)) {
@@ -5552,7 +5556,15 @@ renderPartiesList();
     if (tabBtn) tabBtn.style.display = '';
     showView('party-view');
   }
-  // else: stay on the parties list so the user can pick one
+  // full-window overlay may request a specific hero's sheet/cards
+  var open = q.get('open');
+  if (open) {
+    var parts = open.split(':'), view = parts[0], hid = parts[1];
+    setTimeout(function(){
+      if (view === 'sheet' && typeof openDetail === 'function') openDetail(hid);
+      else if (view === 'cards' && typeof toggleCardsPanel === 'function') toggleCardsPanel(hid);
+    }, 80);
+  }
 })();
 
 

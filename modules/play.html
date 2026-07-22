@@ -435,7 +435,7 @@ function load() {
   document.getElementById('hdr-title').textContent = campaign.name;
   try {
     var _pid = campaignPartyId();
-    document.getElementById('party-dock-frame').src = 'party.html?embed=1' + (_pid ? '&party=' + encodeURIComponent(_pid) : '');
+    document.getElementById('party-dock-frame').src = 'party.html?embed=1&dock=1' + (_pid ? '&party=' + encodeURIComponent(_pid) : '');
   } catch(e) {}
   var saved=null; try{saved=JSON.parse(localStorage.getItem('dun_play_'+id));}catch(e){}
   if (saved) {
@@ -2045,6 +2045,12 @@ function campaignPartyId() {
   if (parties.length === 1) return parties[0].id;
   return '';
 }
+window.addEventListener('message', function(ev){
+  var d = ev.data; if (!d || d.type !== 'dun-open') return;
+  var pid = campaignPartyId();
+  document.getElementById('party-frame').src = 'party.html?embed=1' + (pid ? '&party=' + encodeURIComponent(pid) : '') + '&open=' + encodeURIComponent(d.view + ':' + d.heroId);
+  document.getElementById('party-frame-wrap').style.display = 'block';
+});
 function openPartyView() {
   var pid = campaignPartyId();
   document.getElementById('party-frame').src = 'party.html?embed=1' + (pid ? '&party=' + encodeURIComponent(pid) : '');
