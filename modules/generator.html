@@ -23,7 +23,7 @@
 // Inject generator HTML then run script
 (function(){
   var req=new XMLHttpRequest();
-  req.open('GET','../src/fragments/generator_body.html',false);
+  req.open('GET','../src/fragments/generator_body.html?v='+Date.now(),false);
   req.send();
   document.body.innerHTML=req.responseText;
   // Add HOME button
