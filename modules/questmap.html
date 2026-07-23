@@ -17,6 +17,8 @@ body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;}
 #stage{flex:1;position:relative;overflow:auto;background:#0a0908;}
 #cv{display:block;image-rendering:pixelated;cursor:pointer;}
 .side{width:270px;background:var(--panel);border-left:2px solid var(--gold);padding:12px;overflow-y:auto;font-size:16px;}
+.party-dock{width:340px;flex-shrink:0;background:rgba(13,10,6,.98);border-left:2px solid var(--gold);overflow:hidden;display:flex;flex-direction:column;}
+.party-dock iframe{width:100%;height:100%;border:0;display:block;}
 .side h3{font-family:'Cinzel',serif;color:var(--gold);font-size:15px;letter-spacing:1px;margin:12px 0 6px;border-bottom:1px solid #3a3226;padding-bottom:3px;}
 .side h3:first-child{margin-top:0;}
 .note{background:#241e14;border:1px solid #3a3226;border-radius:4px;padding:6px 8px;margin-bottom:6px;font-size:15px;line-height:1.35;}
@@ -49,6 +51,17 @@ body{background:#12100c;color:var(--parch);font-family:'IM Fell English',serif;}
     <h3>Exploration Log</h3>
     <div id="log"></div>
     <div class="hint">Click a gold door to open it and reveal what lies beyond.</div>
+  </div>
+  <div class="party-dock" id="party-dock">
+    <iframe id="party-dock-frame" title="Active Party" src=""></iframe>
+  </div>
+</div>
+
+<!-- Party sheet/cards overlay (opened from dock) -->
+<div id="party-frame-wrap" style="display:none;position:fixed;inset:0;z-index:550;background:rgba(6,4,2,.6);align-items:center;justify-content:center;" onclick="if(event.target===this)closePartyView()">
+  <div style="position:relative;width:min(1000px,95vw);height:min(900px,92vh);background:#12100c;border:2px solid var(--gold);border-radius:6px;box-shadow:0 12px 60px rgba(0,0,0,.85);overflow:hidden;">
+    <button onclick="closePartyView()" title="Close" style="position:absolute;top:6px;right:8px;z-index:3;width:28px;height:28px;background:#1a1610;border:1px solid var(--gold);color:var(--gold);border-radius:50%;cursor:pointer;font-size:16px;line-height:1;">&times;</button>
+    <iframe id="party-frame" src="" style="width:100%;height:100%;border:0;display:block;background:transparent;"></iframe>
   </div>
 </div>
 <script src="../src/data/images.js"></script>
@@ -373,6 +386,30 @@ var nb=document.getElementById('notes');
 
 draw();
 setTimeout(draw,600); // after images decode
+
+// ---- active-party dock + sheet/cards overlay (same as campaign map) ----
+function questPartyId(){
+  var parties=[]; try{parties=JSON.parse(localStorage.getItem('dun_parties_v2')||'[]');}catch(e){}
+  function exists(id){return id && parties.some(function(p){return p.id===id;});}
+  var ap=''; try{ap=localStorage.getItem('dun_active_party')||'';}catch(e){}
+  if(exists(ap))return ap;
+  if(parties.length===1)return parties[0].id;
+  return '';
+}
+window.closePartyView=function(){
+  document.getElementById('party-frame-wrap').style.display='none';
+  document.getElementById('party-frame').src='';
+};
+window.addEventListener('message',function(ev){
+  var d=ev.data; if(!d||d.type!=='dun-open')return;
+  var pid=questPartyId();
+  document.getElementById('party-frame').src='party.html?embed=1'+(pid?'&party='+encodeURIComponent(pid):'')+'&open='+encodeURIComponent(d.view+':'+d.heroId)+'&solo=1';
+  document.getElementById('party-frame-wrap').style.display='flex';
+});
+try{
+  var _pid=questPartyId();
+  document.getElementById('party-dock-frame').src='party.html?embed=1&dock=1'+(_pid?'&party='+encodeURIComponent(_pid):'');
+}catch(e){}
 })();
 </script>
 </body>
