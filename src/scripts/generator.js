@@ -2458,6 +2458,38 @@ window.addEventListener('keydown', e => {
     else ctrl.appendChild(retBtn);
   }
 
+  // ── Active-party dock (campaign play session only) ──
+  (function(){
+    function partyId(cid){
+      var parties=[]; try{parties=JSON.parse(localStorage.getItem('dun_parties_v2')||'[]');}catch(e){}
+      function ex(id){return id&&parties.some(function(p){return p.id===id;});}
+      var camps=[]; try{camps=JSON.parse(localStorage.getItem('dun_campaigns')||'[]');}catch(e){}
+      var camp=camps.find(function(c){return c.id===cid;});
+      if(camp&&ex(camp.partyId))return camp.partyId;
+      var ap=''; try{ap=localStorage.getItem('dun_active_party')||'';}catch(e){}
+      if(ex(ap))return ap;
+      if(parties.length===1)return parties[0].id;
+      return '';
+    }
+    var pid=partyId(handoff.campaignId);
+    var dock=document.getElementById('party-dock');
+    var dframe=document.getElementById('party-dock-frame');
+    if(dock&&dframe){
+      dframe.src='party.html?embed=1&dock=1'+(pid?'&party='+encodeURIComponent(pid):'');
+      dock.style.display='flex';
+    }
+    window.closePartyView=function(){
+      var w=document.getElementById('party-frame-wrap'); if(w) w.style.display='none';
+      var pf=document.getElementById('party-frame'); if(pf) pf.src='';
+    };
+    window.addEventListener('message',function(ev){
+      var d=ev.data; if(!d||d.type!=='dun-open')return;
+      var pf=document.getElementById('party-frame');
+      pf.src='party.html?embed=1'+(pid?'&party='+encodeURIComponent(pid):'')+'&open='+encodeURIComponent(d.view+':'+d.heroId)+'&solo=1';
+      document.getElementById('party-frame-wrap').style.display='flex';
+    });
+  })();
+
   newDungeon();
   requestAnimationFrame(function(){ resizeCanvas(); fitDungeon(); draw(); });
 })();
